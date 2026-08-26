@@ -3,7 +3,7 @@
     'actionUrl' => null,
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-white rounded-2xl border border-slate-200 p-4 shadow-sm mb-6']) }}>
+<div {{ $attributes->merge(['class' => 'bg-white rounded-2xl border border-slate-200/80 px-4 py-3.5 shadow-sm mb-6']) }}>
     <div class="flex items-center gap-3 flex-wrap">
         {{ $slot }}
         @if($actionLabel)

@@ -7,34 +7,30 @@
     <title>{{ config('app.name', 'Sihandal') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        .hero-gradient {
-            background: linear-gradient(135deg, #0F4C81 0%, #0a3560 50%, #071f3a 100%);
+        .hero-bg {
+            background: linear-gradient(160deg, #0F4C81 0%, #0a3560 40%, #071f3a 100%);
         }
 
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
+        .fade-up {
+            animation: fadeUp 0.7s ease-out both;
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-12px);
-            }
+        .fade-up-d1 {
+            animation-delay: 0.15s;
         }
 
-        .fade-in {
-            animation: fadeIn 0.8s ease-out forwards;
+        .fade-up-d2 {
+            animation-delay: 0.3s;
         }
 
-        @keyframes fadeIn {
+        .fade-up-d3 {
+            animation-delay: 0.45s;
+        }
+
+        @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(24px);
             }
 
             to {
@@ -42,37 +38,28 @@
                 transform: translateY(0);
             }
         }
-
-        .fade-in-delay {
-            animation-delay: 0.2s;
-            opacity: 0;
-        }
-
-        .fade-in-delay-2 {
-            animation-delay: 0.4s;
-            opacity: 0;
-        }
     </style>
 </head>
 
-<body class="bg-white font-sans antialiased">
+<body class="bg-[var(--color-surface)] font-sans antialiased text-[var(--color-text)]">
+
     {{-- Navbar --}}
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[var(--color-border)]">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('logo.png') }}" alt="Sihandal" class="w-20 h-20 rounded-xl object-contain" />
-                <span class="text-lg font-bold text-slate-800">Sihandal</span>
+                <img src="{{ asset('logo.png') }}" alt="Sihandal" class="w-10 h-10 rounded-lg object-contain" />
+                <span class="text-base font-bold text-[var(--color-text)] tracking-tight">SIHANDAL</span>
             </div>
             <div class="flex items-center gap-3">
                 @if (Route::has('login'))
                     @auth
                         <a href="{{ url('/dashboard') }}"
-                            class="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm">
+                            class="px-5 py-2 bg-[var(--color-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-primary-light)] transition-colors shadow-sm">
                             Dashboard
                         </a>
                     @else
                         <a href="{{ route('login') }}"
-                            class="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm">
+                            class="px-5 py-2 bg-[var(--color-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-primary-light)] transition-colors shadow-sm">
                             Masuk
                         </a>
                     @endauth
@@ -82,137 +69,78 @@
     </nav>
 
     {{-- Hero Section --}}
-    <section class="hero-gradient min-h-screen flex items-center pt-16">
-        <div class="max-w-7xl mx-auto px-6 py-20 w-full">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                {{-- Left: Text --}}
-                <div class="fade-in">
+    <section class="hero-bg min-h-screen flex items-center pt-16">
+        <div class="max-w-6xl mx-auto px-6 py-20 w-full">
+            <div class="max-w-2xl fade-up">
+                <div class="flex items-center gap-3 mb-8">
                     <img src="{{ asset('logo.png') }}" alt="Sihandal"
-                        class="w-lg h-32 rounded-3xl object-contain bg-white p-8 mb-10  border border-white/20 shadow-lg" />
-                    <div
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white/80 text-sm font-medium mb-6 backdrop-blur-sm border border-white/10">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                        Sistem Informasi Keuangan Daerah
-                    </div>
-                    <h1 class="text-4xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                        Kelola Keuangan Daerah
-                        <span class="text-blue-300">Lebih Mudah</span>
-                    </h1>
-                    <p class="text-lg text-white/70 mb-8 max-w-lg leading-relaxed">
-                        Platform terpadu untuk pengelolaan anggaran, permintaan dana, dan monitoring realisasi keuangan
-                        daerah secara transparan dan akuntabel.
-                    </p>
-                    <div class="flex flex-wrap gap-4">
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}"
-                                class="px-8 py-3.5 bg-white text-primary text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-lg">
-                                Mulai Sekarang
-                            </a>
-                        @endif
-                        <a href="#fitur"
-                            class="px-8 py-3.5 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-all border border-white/20 backdrop-blur-sm">
-                            Pelajari Lebih Lanjut
-                        </a>
-                    </div>
+                        class="w-16 h-16 rounded-xl object-contain bg-white/10 p-2 border border-white/10" />
+                    <span class="text-sm font-semibold text-white/80 tracking-wide uppercase">Sihandal</span>
                 </div>
-
-                {{-- Right: Cards --}}
-                <div class="hidden lg:block fade-in fade-in-delay">
-                    <div class="relative">
-                        {{-- Main Card --}}
-                        <div
-                            class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 float-animation">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div class="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24"
-                                        stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-white/60 text-sm">Total Anggaran</p>
-                                    <p class="text-white text-2xl font-bold">Rp 89.2 M</p>
-                                </div>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-                                    <span class="text-white/70 text-sm">Penerimaan</span>
-                                    <span class="text-emerald-400 font-semibold">Rp 45.8 M</span>
-                                </div>
-                                <div class="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-                                    <span class="text-white/70 text-sm">Pengeluaran</span>
-                                    <span class="text-red-400 font-semibold">Rp 28.3 M</span>
-                                </div>
-                                <div class="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-                                    <span class="text-white/70 text-sm">Sisa Kas</span>
-                                    <span class="text-blue-300 font-semibold">Rp 17.5 M</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Floating Badge --}}
-                        <div class="absolute -top-4 -right-4 bg-white rounded-2xl p-4 shadow-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24"
-                                        stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-400">Pending</p>
-                                    <p class="text-sm font-bold text-slate-800">5 Permintaan</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <h1 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-4 fade-up fade-up-d1">
+                    Sistem Informasi Keuangan Daerah
+                </h1>
+                <p class="text-lg text-white/60 mb-10 max-w-xl leading-relaxed fade-up fade-up-d2">
+                    Platform terpadu untuk pengelolaan anggaran, permintaan dana, dan monitoring realisasi
+                    keuangan daerah secara transparan dan akuntabel.
+                </p>
+                <div class="flex flex-wrap gap-4 fade-up fade-up-d3">
+                    @if (Route::has('login'))
+                        <a href="{{ route('login') }}"
+                            class="inline-flex items-center gap-2 px-7 py-3 bg-white text-[var(--color-primary)] text-sm font-bold rounded-lg hover:bg-white/90 transition-colors shadow-lg">
+                            Masuk ke Sistem
+                            <x-heroicon-o-arrow-right class="w-4 h-4" />
+                        </a>
+                    @endif
+                    <a href="#fitur"
+                        class="inline-flex items-center gap-2 px-7 py-3 bg-white/10 text-white text-sm font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
+                        Pelajari Fitur
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
     {{-- Features Section --}}
-    <section id="fitur" class="py-24 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-6">
+    <section id="fitur" class="py-24 bg-white">
+        <div class="max-w-6xl mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-slate-800 mb-4">Fitur Unggulan</h2>
-                <p class="text-slate-500 max-w-2xl mx-auto">Solusi lengkap untuk pengelolaan keuangan daerah yang
-                    transparan dan efisien</p>
+                <h2 class="text-3xl font-bold text-[var(--color-text)] mb-3">Fitur Utama</h2>
+                <p class="text-[var(--color-text-secondary)] max-w-lg mx-auto">
+                    Solusi lengkap untuk pengelolaan keuangan daerah yang transparan dan efisien
+                </p>
             </div>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @php
                     $features = [
                         [
-                            'icon' => 'banknotes',
+                            'icon' => 'heroicon-o-banknotes',
                             'title' => 'Sumber Dana',
-                            'desc' =>
-                                'Kelola dan monitoring berbagai sumber dana seperti DAK, DAU, DBH, PAD, dan lainnya.',
+                            'desc' => 'Kelola dan monitor berbagai sumber dana seperti DAK, DAU, DBH, PAD, dan lainnya.',
                         ],
                         [
-                            'icon' => 'building-office-2',
+                            'icon' => 'heroicon-o-building-office-2',
                             'title' => 'Manajemen OPD',
                             'desc' => 'Koordinasi keuangan antar Organisasi Perangkat Daerah secara terpusat.',
                         ],
                         [
-                            'icon' => 'document-text',
+                            'icon' => 'heroicon-o-document-text',
                             'title' => 'Permintaan Dana',
                             'desc' => 'Proses permintaan dana dari OPD hingga realisasi dengan timeline yang jelas.',
                         ],
                         [
-                            'icon' => 'check-circle',
+                            'icon' => 'heroicon-o-check-circle',
                             'title' => 'Persetujuan',
                             'desc' => 'Alur persetujuan multi-level yang transparan dan terdokumentasi.',
                         ],
                         [
-                            'icon' => 'chart-bar',
+                            'icon' => 'heroicon-o-chart-bar',
                             'title' => 'Laporan Realtime',
                             'desc' => 'Dashboard analitik dengan visualisasi data keuangan real-time.',
                         ],
                         [
-                            'icon' => 'arrow-right-on-rectangle',
+                            'icon' => 'heroicon-o-arrow-right-on-rectangle',
                             'title' => 'Transfer Dana',
                             'desc' => 'Proses transfer dana yang aman dan terintegrasi dengan sistem perbankan.',
                         ],
@@ -221,37 +149,13 @@
 
                 @foreach ($features as $feature)
                     <div
-                        class="bg-white rounded-2xl p-8 border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all group">
+                        class="bg-white rounded-xl p-7 border border-[var(--color-border)] hover:shadow-lg hover:border-[var(--color-primary-100)] transition-all group">
                         <div
-                            class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-all">
-                            @switch($feature['icon'])
-                                @case('banknotes')
-                                    <x-heroicon-o-banknotes class="w-6 h-6 text-primary" />
-                                @break
-
-                                @case('building-office-2')
-                                    <x-heroicon-o-building-office-2 class="w-6 h-6 text-primary" />
-                                @break
-
-                                @case('document-text')
-                                    <x-heroicon-o-document-text class="w-6 h-6 text-primary" />
-                                @break
-
-                                @case('check-circle')
-                                    <x-heroicon-o-check-circle class="w-6 h-6 text-primary" />
-                                @break
-
-                                @case('chart-bar')
-                                    <x-heroicon-o-chart-bar class="w-6 h-6 text-primary" />
-                                @break
-
-                                @case('arrow-right-on-rectangle')
-                                    <x-heroicon-o-arrow-right-on-rectangle class="w-6 h-6 text-primary" />
-                                @break
-                            @endswitch
+                            class="w-11 h-11 bg-[var(--color-primary-50)] rounded-lg flex items-center justify-center mb-4 group-hover:bg-[var(--color-primary-100)] transition-colors">
+                            <x-dynamic-component :component="$feature['icon']" class="w-5 h-5 text-[var(--color-primary)]" />
                         </div>
-                        <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ $feature['title'] }}</h3>
-                        <p class="text-sm text-slate-500 leading-relaxed">{{ $feature['desc'] }}</p>
+                        <h3 class="text-base font-semibold text-[var(--color-text)] mb-1.5">{{ $feature['title'] }}</h3>
+                        <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ $feature['desc'] }}</p>
                     </div>
                 @endforeach
             </div>
@@ -259,14 +163,15 @@
     </section>
 
     {{-- Footer --}}
-    <footer class="bg-white border-t border-slate-200 py-8">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <footer class="bg-white border-t border-[var(--color-border)] py-8">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('logo.png') }}" alt="Sihandal" class="w-16 h-16 rounded-xl object-contain" />
-                <span class="text-sm text-slate-500">&copy; {{ date('Y') }} Sihandal. Sistem Informasi Keuangan
-                    Daerah.</span>
+                <img src="{{ asset('logo.png') }}" alt="Sihandal" class="w-8 h-8 rounded-lg object-contain" />
+                <span class="text-sm text-[var(--color-text-secondary)]">
+                    &copy; {{ date('Y') }} Sihandal &mdash; Sistem Informasi Keuangan Daerah
+                </span>
             </div>
-            <span class="text-xs text-slate-400">v{{ app()->version() }}</span>
+            <span class="text-xs text-[var(--color-text-muted)]">v{{ app()->version() }}</span>
         </div>
     </footer>
 </body>

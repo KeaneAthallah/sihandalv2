@@ -1,5 +1,16 @@
 <?php
 
+use App\Models\Opd;
+use App\Models\Penerimaan;
+use App\Models\Pengeluaran;
+use App\Models\PermintaanDana;
+use App\Models\Persetujuan;
+use App\Models\PosisiKas;
+use App\Models\Program;
+use App\Models\Rekening;
+use App\Models\SumberDana;
+use App\Models\TransferDana;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +58,111 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function seedFullDataset(): array
+{
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A', 'total_pagu' => 2000000000]);
+    $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B', 'total_pagu' => 1000000000]);
+
+    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)', 'pagu' => 1000000000, 'realisasi' => 400000000, 'persentase' => 40]);
+    SumberDana::create(['opd_id' => $opdB->id, 'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)', 'pagu' => 800000000, 'realisasi' => 200000000, 'persentase' => 25]);
+
+    $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Kas Daerah', 'tipe' => 'kas', 'saldo' => 150000000]);
+    Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan', 'saldo' => 0]);
+
+    Program::create([
+        'opd_id' => $opd->id,
+        'kode_kegiatan' => '1.2.3',
+        'nama_kegiatan' => 'Penyelenggaraan Kegiatan',
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'pagu' => 500000000,
+        'realisasi' => 100000000,
+        'persentase' => 20,
+    ]);
+
+    Penerimaan::create([
+        'opd_id' => $opd->id,
+        'rekening_id' => $rekening->id,
+        'kode_sumber_dana' => 'DAU',
+        'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'target' => 1000000000,
+        'realisasi' => 400000000,
+        'persentase' => 40,
+        'tanggal' => now(),
+    ]);
+
+    Pengeluaran::create([
+        'opd_id' => $opd->id,
+        'rekening_id' => $rekening->id,
+        'kode_kegiatan' => '1.2.3',
+        'nama_kegiatan' => 'Penyelenggaraan Kegiatan',
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'anggaran' => 500000000,
+        'realisasi' => 100000000,
+        'persentase' => 20,
+        'tanggal' => now(),
+    ]);
+
+    PosisiKas::create([
+        'opd_id' => $opd->id,
+        'rekening_id' => $rekening->id,
+        'tanggal' => now(),
+        'saldo_awal' => 100000000,
+        'penerimaan' => 50000000,
+        'pengeluaran' => 20000000,
+        'saldo_akhir' => 130000000,
+    ]);
+
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    $permintaanDraft = PermintaanDana::create([
+        'nomor_permintaan' => 'PD-0001/'.now()->year,
+        'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'jumlah' => 50000000,
+        'keperluan' => 'Operasional',
+        'status' => 'draft',
+    ]);
+
+    $permintaanMenunggu = PermintaanDana::create([
+        'nomor_permintaan' => 'PD-0002/'.now()->year,
+        'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'jumlah' => 30000000,
+        'keperluan' => 'Operasional 2',
+        'status' => 'menunggu',
+    ]);
+
+    PermintaanDana::create([
+        'nomor_permintaan' => 'PD-0003/'.now()->year,
+        'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'jumlah' => 20000000,
+        'keperluan' => 'Operasional 3',
+        'status' => 'disetujui',
+    ]);
+
+    Persetujuan::create([
+        'permintaan_dana_id' => $permintaanMenunggu->id,
+        'user_id' => $admin->id,
+        'keputusan' => 'disetujui',
+        'catatan' => 'Ok',
+    ]);
+
+    TransferDana::create([
+        'nomor_transfer' => 'TRF-0001',
+        'opd_id' => $opd->id,
+        'jumlah' => 50000000,
+        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'keterangan' => 'Transfer',
+        'status' => 'selesai',
+        'tanggal' => now(),
+    ]);
+
+    return compact('opd', 'opdB', 'admin', 'user', 'sumberDana', 'rekening', 'permintaanDraft', 'permintaanMenunggu');
 }

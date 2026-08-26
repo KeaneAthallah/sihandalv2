@@ -1,104 +1,116 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Edit Pengeluaran" :breadcrumbs="['Pengeluaran', 'Edit']" />
+        <x-page-header title="Edit Pengeluaran" :breadcrumbs="['Keuangan', 'Pengeluaran', 'Edit']" />
     </x-slot>
 
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="p-6 border-b border-slate-100">
-                <h2 class="text-lg font-semibold text-slate-800">Form Edit Pengeluaran</h2>
+        <x-card>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-2.5 rounded-xl bg-amber-50 text-amber-600">
+                    <x-heroicon-o-pencil-square class="w-5 h-5"/>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">Edit Pengeluaran</h2>
+                    <p class="text-xs text-slate-400">Ubah data pengeluaran yang telah terdaftar</p>
+                </div>
             </div>
+
             <form action="{{ route('pengeluaran.update', $pengeluaran) }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="p-6 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">OPD <span class="text-red-500">*</span></label>
-                        <select name="opd_id" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
-                            <option value="">Pilih OPD</option>
-                            @foreach($opds as $opd)
-                                <option value="{{ $opd->id }}" {{ old('opd_id', $pengeluaran->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
-                        @error('opd_id')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+
+                <div class="space-y-5">
+                    <div class="pb-5 border-b border-slate-100">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Informasi OPD & Rekening</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <x-input-label value="OPD" />
+                                <select name="opd_id" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all" required>
+                                    <option value="">Pilih OPD</option>
+                                    @foreach($opds as $opd)
+                                        <option value="{{ $opd->id }}" {{ old('opd_id', $pengeluaran->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('opd_id')" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <x-input-label value="Rekening" />
+                                <select name="rekening_id" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                                    <option value="">Pilih Rekening (Opsional)</option>
+                                    @foreach($rekenings as $rek)
+                                        <option value="{{ $rek->id }}" {{ old('rekening_id', $pengeluaran->rekening_id) == $rek->id ? 'selected' : '' }}>{{ $rek->nama }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('rekening_id')" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pb-5 border-b border-slate-100">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Kegiatan & Sumber Dana</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <x-input-label value="Kode Kegiatan" />
+                                <x-text-input name="kode_kegiatan" :value="old('kode_kegiatan', $pengeluaran->kode_kegiatan)" placeholder="Masukkan kode kegiatan" />
+                                <x-input-error :messages="$errors->get('kode_kegiatan')" />
+                            </div>
+                            <div>
+                                <x-input-label value="Nama Kegiatan" />
+                                <x-text-input name="nama_kegiatan" :value="old('nama_kegiatan', $pengeluaran->nama_kegiatan)" placeholder="Masukkan nama kegiatan" />
+                                <x-input-error :messages="$errors->get('nama_kegiatan')" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <x-input-label value="Sumber Dana" />
+                                <x-text-input name="sumber_dana" :value="old('sumber_dana', $pengeluaran->sumber_dana)" placeholder="Masukkan sumber dana" required />
+                                <x-input-error :messages="$errors->get('sumber_dana')" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pb-5 border-b border-slate-100">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Nilai & Tanggal</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <x-input-label value="Anggaran" />
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
+                                    <x-text-input name="anggaran" type="number" :value="old('anggaran', $pengeluaran->anggaran)" min="0" placeholder="0" class="pl-10" required />
+                                </div>
+                                <x-input-error :messages="$errors->get('anggaran')" />
+                            </div>
+                            <div>
+                                <x-input-label value="Realisasi" />
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
+                                    <x-text-input name="realisasi" type="number" :value="old('realisasi', $pengeluaran->realisasi)" min="0" placeholder="0" class="pl-10" />
+                                </div>
+                                <x-input-error :messages="$errors->get('realisasi')" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <x-input-label value="Tanggal" />
+                                <x-text-input name="tanggal" type="date" :value="old('tanggal', $pengeluaran->tanggal?->format('Y-m-d'))" />
+                                <x-input-error :messages="$errors->get('tanggal')" />
+                            </div>
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Rekening <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <select name="rekening_id" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                            <option value="">Pilih Rekening (opsional)</option>
-                            @foreach($rekenings as $rek)
-                                <option value="{{ $rek->id }}" {{ old('rekening_id', $pengeluaran->rekening_id) == $rek->id ? 'selected' : '' }}>{{ $rek->nama }}</option>
-                            @endforeach
-                        </select>
-                        @error('rekening_id')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Kode Kegiatan <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <input type="text" name="kode_kegiatan" value="{{ old('kode_kegiatan', $pengeluaran->kode_kegiatan) }}" placeholder="Masukkan kode kegiatan" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('kode_kegiatan')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Nama Kegiatan <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <input type="text" name="nama_kegiatan" value="{{ old('nama_kegiatan', $pengeluaran->nama_kegiatan) }}" placeholder="Masukkan nama kegiatan" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('nama_kegiatan')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Sumber Dana <span class="text-red-500">*</span></label>
-                        <input type="text" name="sumber_dana" value="{{ old('sumber_dana', $pengeluaran->sumber_dana) }}" placeholder="Masukkan sumber dana" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
-                        @error('sumber_dana')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Tanggal <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <input type="date" name="tanggal" value="{{ old('tanggal', $pengeluaran->tanggal?->format('Y-m-d')) }}" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('tanggal')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Anggaran <span class="text-red-500">*</span></label>
-                        <input type="number" name="anggaran" value="{{ old('anggaran', $pengeluaran->anggaran) }}" min="0" placeholder="0" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
-                        @error('anggaran')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Realisasi <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <input type="number" name="realisasi" value="{{ old('realisasi', $pengeluaran->realisasi) }}" min="0" placeholder="0" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('realisasi')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Keterangan <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <textarea name="keterangan" rows="3" placeholder="Masukkan keterangan (opsional)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">{{ old('keterangan', $pengeluaran->keterangan) }}</textarea>
-                        @error('keterangan')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Keterangan</h3>
+                        <textarea name="keterangan" rows="3" placeholder="Tambahkan keterangan jika diperlukan..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">{{ old('keterangan', $pengeluaran->keterangan) }}</textarea>
+                        <x-input-error :messages="$errors->get('keterangan')" />
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                    <a href="{{ route('pengeluaran.index') }}" class="px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Batal</a>
-                    <button type="submit" class="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all">Simpan</button>
+
+                <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
+                    <a href="{{ route('pengeluaran.index') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 transition-all">
+                        Batal
+                    </a>
+                    <x-primary-button class="px-6 py-2.5">
+                        <x-heroicon-o-check class="w-4 h-4 mr-1.5"/>
+                        Simpan Perubahan
+                    </x-primary-button>
                 </div>
             </form>
-        </div>
+        </x-card>
     </div>
 </x-app-layout>

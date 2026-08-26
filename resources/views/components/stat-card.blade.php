@@ -15,13 +15,22 @@
         'info' => 'bg-purple-50 text-purple-600',
         default => 'bg-primary/10 text-primary',
     };
+    $accentClasses = match($color) {
+        'primary' => 'bg-primary',
+        'success' => 'bg-emerald-500',
+        'danger' => 'bg-red-500',
+        'warning' => 'bg-amber-500',
+        'info' => 'bg-purple-500',
+        default => 'bg-primary',
+    };
 @endphp
 
-<div {{ $attributes->merge(['class' => 'bg-white rounded-2xl border border-slate-200 p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200']) }}>
-    <div class="flex items-start justify-between gap-3">
+<div {{ $attributes->merge(['class' => 'relative bg-white rounded-2xl border border-slate-200/80 p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-200 group']) }}>
+    <div class="absolute inset-y-3 left-0 w-1 rounded-r-full {{ $accentClasses }} opacity-60 group-hover:opacity-100 transition-opacity"></div>
+    <div class="flex items-start justify-between gap-3 pl-3">
         <div class="flex-1 min-w-0">
-            <p class="text-xs lg:text-sm font-medium text-slate-500">{{ $title }}</p>
-            <p class="mt-2 text-xl lg:text-2xl font-bold text-slate-800 truncate">{{ $value }}</p>
+            <p class="text-xs lg:text-sm font-medium text-slate-500 tracking-wide uppercase">{{ $title }}</p>
+            <p class="mt-1.5 text-xl lg:text-2xl font-bold text-slate-800 truncate tracking-tight">{{ $value }}</p>
             @if($change)
                 <div class="mt-2 flex items-center gap-1.5">
                     @if($changeType === 'up')

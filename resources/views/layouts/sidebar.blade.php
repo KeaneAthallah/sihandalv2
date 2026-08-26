@@ -4,6 +4,21 @@
     $pendingCount = \App\Models\PermintaanDana::where('status', 'menunggu')
         ->when(! $isAdmin, fn ($q) => $q->where('opd_id', Auth::user()->opd_id))
         ->count();
+
+    $isActive = fn (string $route) => request()->routeIs($route);
+    $isSectionActive = fn (array $routes) => collect($routes)->contains(fn ($r) => request()->routeIs($r));
+
+    $linkClass = <<<'blade'
+        group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium
+        transition-all duration-200 ease-in-out
+    blade;
+
+    $activeBg = 'bg-white/15 text-white';
+    $inactiveBg = 'text-white/60 hover:bg-white/[0.08] hover:text-white/90';
+
+    $userName = Auth::user()->name ?? 'User';
+    $initials = strtoupper(implode('', array_map(fn($w) => $w[0], array_slice(explode(' ', trim($userName)), 0, 2))));
+    $roleLabel = $isAdmin ? 'Administrator' : (Auth::user()->opd?->nama ?? 'OPD');
 @endphp
 
 <aside
@@ -13,171 +28,275 @@
         'lg:w-[76px]': sidebarCollapsed,
         'lg:w-[260px]': !sidebarCollapsed
     }"
-    class="fixed inset-y-0 left-0 z-50 w-[260px] bg-primary text-white flex flex-col transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden"
+    class="fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-primary-800 via-primary to-primary-700 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-xl shadow-primary-900/20"
 >
     {{-- Logo --}}
-    <div class="px-4 lg:px-5 py-5 border-b border-white/10 shrink-0">
-        <div :class="sidebarCollapsed ? 'lg:justify-center' : 'lg:justify-start'" class="flex items-center gap-3">
-            <img src="{{ asset('logo.png') }}" alt="Sihandal" class="w-14 h-14 rounded-xl object-contain bg-white/20 p-2 shrink-0" />
-            <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="min-w-0">
-                <div class="font-bold text-lg leading-tight">Sihandal</div>
-                <div class="text-xs text-white/60">Sistem Informasi Keuangan Daerah</div>
-            </div>
+    <div
+        :class="sidebarCollapsed ? 'px-2' : 'px-5'"
+        class="shrink-0 flex items-center gap-3 py-5 border-b border-white/[0.08] transition-all duration-300"
+    >
+        <div class="relative shrink-0">
+            <img
+                src="{{ asset('logo.png') }}"
+                alt="Sihandal"
+                class="w-10 h-10 rounded-lg object-contain bg-white/15 p-1 ring-2 ring-white/10"
+            />
+            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-primary-800"></div>
+        </div>
+        <div
+            :class="sidebarCollapsed ? 'lg:hidden opacity-0 w-0' : 'opacity-100'"
+            class="min-w-0 transition-all duration-300 overflow-hidden"
+        >
+            <div class="text-[15px] font-bold tracking-tight leading-tight">Sihandal</div>
+            <div class="text-[10px] text-white/45 font-medium tracking-wide uppercase mt-0.5">Keuangan Daerah</div>
         </div>
     </div>
 
     {{-- Navigation --}}
-    <nav class="flex-1 px-3 py-4 space-y-1">
-        @php
-            $linkBase = 'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all';
-            $activeClass = 'bg-white/20 text-white shadow-sm';
-            $inactiveClass = 'text-white/70 hover:bg-white/10 hover:text-white';
-        @endphp
-
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-0.5 custom-scrollbar">
+        {{-- Dashboard --}}
         <a href="{{ route('dashboard') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('dashboard') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-home class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Dashboard</span>
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('dashboard') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-home class="w-[18px] h-[18px] shrink-0" :class="$isActive('dashboard') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Dashboard</span>
+            @if($isActive('dashboard'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
         </a>
 
         {{-- MASTER DATA --}}
-        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-4 pb-2 px-3">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-white/40">Master Data</span>
+        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-5 pb-1.5 px-3 transition-opacity duration-200">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">Master Data</span>
         </div>
-        <a href="{{ route('sumber-dana.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('sumber-dana.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-banknotes class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Sumber Dana</span>
-        </a>
-        <a href="{{ route('opd.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('opd.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-building-office-2 class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">OPD</span>
-        </a>
-        <a href="{{ route('rekening-kas.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('rekening-kas.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-wallet class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Rekening Kas</span>
-        </a>
-        <a href="{{ route('program-kegiatan.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('program-kegiatan.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-list-bullet class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Program & Kegiatan</span>
-        </a>
 
-        {{-- PENGELOLAAN DANA --}}
-        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-4 pb-2 px-3">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-white/40">Pengelolaan Dana</span>
-        </div>
-        <a href="{{ route('posisi-kas.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('posisi-kas.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-currency-dollar class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Posisi Kas</span>
-        </a>
-        <a href="{{ route('penerimaan.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('penerimaan.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-arrow-down-left class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Penerimaan</span>
-        </a>
-        <a href="{{ route('pengeluaran.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('pengeluaran.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-arrow-up-right class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Pengeluaran</span>
-        </a>
-        <a href="{{ route('permintaan-dana.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('permintaan-dana.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-document-text class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Permintaan Dana</span>
-            @if($pendingCount > 0)
-                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{{ $pendingCount }}</span>
+        <a href="{{ route('sumber-dana.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('sumber-dana.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-banknotes class="w-[18px] h-[18px] shrink-0" :class="$isActive('sumber-dana.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Sumber Dana</span>
+            @if($isActive('sumber-dana.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
             @endif
         </a>
-        <a href="{{ route('persetujuan.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('persetujuan.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-check-circle class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Persetujuan</span>
+
+        <a href="{{ route('opd.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('opd.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-building-office-2 class="w-[18px] h-[18px] shrink-0" :class="$isActive('opd.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">OPD</span>
+            @if($isActive('opd.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
         </a>
+
+        <a href="{{ route('rekening-kas.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('rekening-kas.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-wallet class="w-[18px] h-[18px] shrink-0" :class="$isActive('rekening-kas.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Rekening Kas</span>
+            @if($isActive('rekening-kas.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('program-kegiatan.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('program-kegiatan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-list-bullet class="w-[18px] h-[18px] shrink-0" :class="$isActive('program-kegiatan.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Program & Kegiatan</span>
+            @if($isActive('program-kegiatan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        {{-- TRANSAKSI --}}
+        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-5 pb-1.5 px-3 transition-opacity duration-200">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">Transaksi</span>
+        </div>
+
+        <a href="{{ route('posisi-kas.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('posisi-kas.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-currency-dollar class="w-[18px] h-[18px] shrink-0" :class="$isActive('posisi-kas.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Posisi Kas</span>
+            @if($isActive('posisi-kas.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('penerimaan.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('penerimaan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-arrow-down-left class="w-[18px] h-[18px] shrink-0" :class="$isActive('penerimaan.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Penerimaan</span>
+            @if($isActive('penerimaan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('pengeluaran.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('pengeluaran.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-arrow-up-right class="w-[18px] h-[18px] shrink-0" :class="$isActive('pengeluaran.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Pengeluaran</span>
+            @if($isActive('pengeluaran.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('permintaan-dana.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('permintaan-dana.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-document-text class="w-[18px] h-[18px] shrink-0" :class="$isActive('permintaan-dana.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Permintaan Dana</span>
+            @if($pendingCount > 0)
+                <span :class="sidebarCollapsed ? 'hidden' : ''" class="ml-auto bg-red-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none backdrop-blur-sm">{{ $pendingCount }}</span>
+                <span :class="sidebarCollapsed ? '' : 'hidden'" class="absolute top-1.5 right-2.5 w-2 h-2 bg-red-400 rounded-full ring-2 ring-primary-800"></span>
+            @endif
+            @if($isActive('permintaan-dana.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('persetujuan.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('persetujuan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-check-circle class="w-[18px] h-[18px] shrink-0" :class="$isActive('persetujuan.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Persetujuan</span>
+            @if($isActive('persetujuan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
         <a href="{{ route('transfer-dana.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('transfer-dana.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Transfer Dana</span>
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('transfer-dana.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-arrows-right-left class="w-[18px] h-[18px] shrink-0" :class="$isActive('transfer-dana.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Transfer Dana</span>
+            @if($isActive('transfer-dana.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
         </a>
 
         {{-- LAPORAN --}}
-        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-4 pb-2 px-3">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-white/40">Laporan</span>
+        <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-5 pb-1.5 px-3 transition-opacity duration-200">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">Laporan</span>
         </div>
+
         <a href="{{ route('laporan-penerimaan.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('laporan-penerimaan.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-document-chart-bar class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Laporan Penerimaan</span>
-        </a>
-        <a href="{{ route('laporan-pengeluaran.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('laporan-pengeluaran.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-document-text class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Laporan Pengeluaran</span>
-        </a>
-        <a href="{{ route('laporan-posisi-kas.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('laporan-posisi-kas.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-banknotes class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Laporan Posisi Kas</span>
-        </a>
-        <a href="{{ route('rekap-permintaan-dana.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-           class="{{ $linkBase }} {{ request()->routeIs('rekap-permintaan-dana.*') ? $activeClass : $inactiveClass }}">
-            <x-heroicon-o-clipboard-document-list class="w-5 h-5 shrink-0"/>
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Rekap Permintaan Dana</span>
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('laporan-penerimaan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-document-chart-bar class="w-[18px] h-[18px] shrink-0" :class="$isActive('laporan-penerimaan.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Laporan Penerimaan</span>
+            @if($isActive('laporan-penerimaan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
         </a>
 
-        {{-- PENGATURAN --}}
+        <a href="{{ route('laporan-pengeluaran.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('laporan-pengeluaran.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-document-text class="w-[18px] h-[18px] shrink-0" :class="$isActive('laporan-pengeluaran.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Laporan Pengeluaran</span>
+            @if($isActive('laporan-pengeluaran.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('laporan-posisi-kas.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('laporan-posisi-kas.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-banknotes class="w-[18px] h-[18px] shrink-0" :class="$isActive('laporan-posisi-kas.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Laporan Posisi Kas</span>
+            @if($isActive('laporan-posisi-kas.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('rekap-permintaan-dana.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('rekap-permintaan-dana.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-clipboard-document-list class="w-[18px] h-[18px] shrink-0" :class="$isActive('rekap-permintaan-dana.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Rekap Permintaan Dana</span>
+            @if($isActive('rekap-permintaan-dana.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        {{-- ADMIN --}}
         @if($isAdmin)
-            <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-4 pb-2 px-3">
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-white/40">Pengaturan</span>
+            <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-5 pb-1.5 px-3 transition-opacity duration-200">
+                <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">Admin</span>
             </div>
+
             <a href="{{ route('user-management.index') }}"
-               :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-               class="{{ $linkBase }} {{ request()->routeIs('user-management.*') ? $activeClass : $inactiveClass }}">
-                <x-heroicon-o-users class="w-5 h-5 shrink-0"/>
-                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">User Management</span>
+               :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+               class="{{ $linkClass }} {{ $isActive('user-management.*') ? $activeBg : $inactiveBg }}">
+                <x-heroicon-o-users class="w-[18px] h-[18px] shrink-0" :class="$isActive('user-management.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">User Management</span>
+                @if($isActive('user-management.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+                @endif
             </a>
+
+            <a href="{{ route('tahun-anggaran.index') }}"
+               :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+               class="{{ $linkClass }} {{ $isActive('tahun-anggaran.*') ? $activeBg : $inactiveBg }}">
+                <x-heroicon-o-calendar class="w-[18px] h-[18px] shrink-0" :class="$isActive('tahun-anggaran.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Tahun Anggaran</span>
+                @if($isActive('tahun-anggaran.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+                @endif
+            </a>
+
             <a href="{{ route('pengaturan.index') }}"
-               :class="sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''"
-               class="{{ $linkBase }} {{ request()->routeIs('pengaturan.*') ? $activeClass : $inactiveClass }}">
-                <x-heroicon-o-cog-6-tooth class="w-5 h-5 shrink-0"/>
-                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate">Pengaturan</span>
+               :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+               class="{{ $linkClass }} {{ $isActive('pengaturan.*') ? $activeBg : $inactiveBg }}">
+                <x-heroicon-o-cog-6-tooth class="w-[18px] h-[18px] shrink-0" :class="$isActive('pengaturan.*') ? 'text-white' : 'text-white/50 group-hover:text-white/70'" />
+                <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Pengaturan</span>
+                @if($isActive('pengaturan.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+                @endif
             </a>
         @endif
     </nav>
 
-    {{-- Bottom User Info --}}
-    <div class="px-4 py-4 border-t border-white/10 shrink-0">
-        @php
-            $userName = Auth::user()->name ?? 'User';
-            $initials = strtoupper(implode('', array_map(fn($w) => $w[0], array_slice(explode(' ', trim($userName)), 0, 2))));
-            $roleLabel = $isAdmin ? 'Administrator' : (Auth::user()->opd?->nama ?? 'OPD');
-        @endphp
-        <div :class="sidebarCollapsed ? 'lg:justify-center' : 'lg:justify-start'" class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-sm font-semibold shrink-0">
-                {{ $initials }}
+    {{-- User Info --}}
+    <div
+        :class="sidebarCollapsed ? 'px-2 py-3' : 'px-4 py-4'"
+        class="shrink-0 border-t border-white/[0.08] transition-all duration-300"
+    >
+        <div :class="sidebarCollapsed ? 'justify-center' : ''" class="flex items-center gap-3">
+            <div class="relative shrink-0">
+                <div class="w-9 h-9 bg-white/15 rounded-full flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 backdrop-blur-sm">
+                    {{ $initials }}
+                </div>
+                <div class="absolute -bottom-px -right-px w-2.5 h-2.5 bg-emerald-400 rounded-full border-[1.5px] border-primary-800"></div>
             </div>
-            <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="flex-1 min-w-0">
-                <div class="text-sm font-medium truncate">{{ $userName }}</div>
-                <div class="text-[11px] text-white/50 truncate">{{ $roleLabel }}</div>
+            <div
+                :class="sidebarCollapsed ? 'lg:hidden opacity-0 w-0' : 'opacity-100'"
+                class="flex-1 min-w-0 transition-all duration-300 overflow-hidden"
+            >
+                <div class="text-[13px] font-semibold text-white truncate leading-tight">{{ $userName }}</div>
+                <div class="text-[11px] text-white/40 truncate mt-0.5">{{ $roleLabel }}</div>
             </div>
         </div>
     </div>
 </aside>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>

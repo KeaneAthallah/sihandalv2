@@ -3,6 +3,7 @@
 use App\Http\Controllers\LaporanPenerimaanController;
 use App\Http\Controllers\LaporanPengeluaranController;
 use App\Http\Controllers\LaporanPosisiKasController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OpdController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PengeluaranController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\ProgramKegiatanController;
 use App\Http\Controllers\RekapPermintaanDanaController;
 use App\Http\Controllers\RekeningKasController;
 use App\Http\Controllers\SumberDanaController;
+use App\Http\Controllers\TahunAnggaranController;
 use App\Http\Controllers\TransferDanaController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\Opd;
@@ -86,31 +88,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'posisi-kas' => 'posisiKas',
     ]);
 
-    Route::resource('permintaan-dana', PermintaanDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-    Route::post('/permintaan-dana/{permintaanDana}/submit', [PermintaanDanaController::class, 'submit'])->name('permintaan-dana.submit');
+    Route::resource('permintaan-dana', PermintaanDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->middleware('throttle:30');
+    Route::post('/permintaan-dana/{permintaanDana}/submit', [PermintaanDanaController::class, 'submit'])
+        ->name('permintaan-dana.submit')
+        ->middleware('throttle:10');
 
-    Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index');
-    Route::post('/persetujuan/{permintaanDana}/setujui', [PersetujuanController::class, 'setujui'])->name('persetujuan.setujui');
-    Route::post('/persetujuan/{permintaanDana}/tolak', [PersetujuanController::class, 'tolak'])->name('persetujuan.tolak');
+    Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index')->middleware('admin');
+    Route::post('/persetujuan/{permintaanDana}/setujui', [PersetujuanController::class, 'setujui'])
+        ->name('persetujuan.setujui')
+        ->middleware(['admin', 'throttle:20']);
+    Route::post('/persetujuan/{permintaanDana}/tolak', [PersetujuanController::class, 'tolak'])
+        ->name('persetujuan.tolak')
+        ->middleware(['admin', 'throttle:20']);
 
     Route::resource('transfer-dana', TransferDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
     Route::get('/laporan-penerimaan', [LaporanPenerimaanController::class, 'index'])->name('laporan-penerimaan.index');
+    Route::get('/laporan-penerimaan/export', [LaporanPenerimaanController::class, 'export'])->name('laporan-penerimaan.export');
 
     Route::get('/laporan-pengeluaran', [LaporanPengeluaranController::class, 'index'])->name('laporan-pengeluaran.index');
+    Route::get('/laporan-pengeluaran/export', [LaporanPengeluaranController::class, 'export'])->name('laporan-pengeluaran.export');
 
     Route::get('/rekap-permintaan-dana', [RekapPermintaanDanaController::class, 'index'])->name('rekap-permintaan-dana.index');
+    Route::get('/rekap-permintaan-dana/export', [RekapPermintaanDanaController::class, 'export'])->name('rekap-permintaan-dana.export');
 
     Route::get('/laporan-posisi-kas', [LaporanPosisiKasController::class, 'index'])->name('laporan-posisi-kas.index');
+    Route::get('/laporan-posisi-kas/export', [LaporanPosisiKasController::class, 'export'])->name('laporan-posisi-kas.export');
 
     Route::resource('user-management', UserManagementController::class)
         ->except(['show'])
         ->parameters(['user-management' => 'user'])
-        ->middleware('admin');
+        ->middleware(['admin', 'throttle:30']);
+
+    Route::get('/tahun-anggaran', [TahunAnggaranController::class, 'index'])->name('tahun-anggaran.index')->middleware('admin');
+    Route::post('/tahun-anggaran', [TahunAnggaranController::class, 'store'])->name('tahun-anggaran.store')->middleware('admin');
+    Route::put('/tahun-anggaran/{tahunAnggaran}', [TahunAnggaranController::class, 'update'])->name('tahun-anggaran.update')->middleware('admin');
+    Route::post('/tahun-anggaran/{tahunAnggaran}/activate', [TahunAnggaranController::class, 'activate'])->name('tahun-anggaran.activate')->middleware('admin');
+    Route::delete('/tahun-anggaran/{tahunAnggaran}', [TahunAnggaranController::class, 'destroy'])->name('tahun-anggaran.destroy')->middleware('admin');
 
     Route::get('/pengaturan', function () {
         return view('pengaturan.index');
     })->name('pengaturan.index');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 });
 
 Route::middleware('auth')->group(function () {

@@ -16,8 +16,10 @@
 
 <div x-data="{ show: true }" x-show="show"
      x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-     {{ $attributes->merge(['class' => 'mb-6 flex items-start gap-3 px-4 py-3 border rounded-xl text-sm ' . $config['wrapper']]) }}>
-    <x-dynamic-component :component="'heroicon-o-' . $config['name']" class="w-5 h-5 shrink-0 mt-0.5"/>
+     {{ $attributes->merge(['class' => 'mb-6 flex items-start gap-3 px-4 py-3.5 border rounded-xl text-sm ' . $config['wrapper']]) }}>
+    <div class="shrink-0 mt-0.5">
+        <x-dynamic-component :component="'heroicon-o-' . $config['name']" class="w-5 h-5 {{ $config['icon'] }}"/>
+    </div>
     <div class="flex-1 min-w-0">
         @if($title)
             <p class="font-semibold">{{ $title }}</p>
@@ -25,7 +27,7 @@
         <div class="leading-snug">{{ $slot }}</div>
     </div>
     @if($dismissible)
-        <button @click="show = false" class="shrink-0 opacity-60 hover:opacity-100 transition-all" aria-label="Tutup">
+        <button @click="show = false" class="shrink-0 p-0.5 -mr-1 opacity-50 hover:opacity-100 transition-opacity rounded-lg hover:bg-black/5" aria-label="Tutup">
             <x-heroicon-o-x-mark class="w-4 h-4"/>
         </button>
     @endif

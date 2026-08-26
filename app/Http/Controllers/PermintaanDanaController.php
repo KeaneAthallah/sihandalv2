@@ -6,7 +6,10 @@ use App\Http\Requests\StorePermintaanDanaRequest;
 use App\Http\Requests\UpdatePermintaanDanaRequest;
 use App\Models\PermintaanDana;
 use App\Models\SumberDana;
+use App\Models\User;
+use App\Notifications\PermintaanDanaNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PermintaanDanaController extends Controller
 {
@@ -50,9 +53,7 @@ class PermintaanDanaController extends Controller
         }
 
         $data['sumber_dana'] = $sumberDana->nama_sumber_dana;
-
-        $lastNumber = PermintaanDana::whereYear('created_at', now()->year)->count() + 1;
-        $data['nomor_permintaan'] = 'PD-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT).'/'.now()->format('Y');
+        $data['nomor_permintaan'] = $this->generateNomorPermintaan();
         $data['status'] = 'draft';
 
         PermintaanDana::create($data);
@@ -105,27 +106,53 @@ class PermintaanDanaController extends Controller
     {
         $this->authorizeOpdRecord($permintaanDana, request()->user());
 
-        if ($permintaanDana->status !== 'draft') {
-            return back()->withErrors(['status' => 'Hanya permintaan draft yang dapat diajukan.']);
+        DB::transaction(function () use ($permintaanDana) {
+            $permintaanDana = PermintaanDana::findOrFail($permintaanDana->id);
+
+            if ($permintaanDana->status !== 'draft') {
+                throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
+            }
+
+            $sumberDana = $permintaanDana->sumberDana;
+
+            if ($sumberDana === null) {
+                throw new \RuntimeException('Sumber dana tidak ditemukan.');
+            }
+
+            if ((float) $permintaanDana->jumlah > $sumberDana->availablePagu()) {
+                throw new \RuntimeException('Dana tidak mencukupi. Sisa pagu sumber dana: Rp '.number_format($sumberDana->availablePagu(), 0, ',', '.').'.');
+            }
+
+            $permintaanDana->update([
+                'status' => 'menunggu',
+                'tanggal' => $permintaanDana->tanggal ?? now(),
+            ]);
+
+            $sumberDana->commit((float) $permintaanDana->jumlah);
+        });
+
+        $admins = User::where('role', 'admin')->get();
+        $nomor = $permintaanDana->fresh()->nomor_permintaan;
+        $namaOpd = $permintaanDana->opd->nama ?? 'OPD';
+
+        foreach ($admins as $admin) {
+            $admin->notify(new PermintaanDanaNotification(
+                $permintaanDana->fresh(),
+                'Permintaan Dana Baru',
+                "Permintaan dana {$nomor} dari {$namaOpd} menunggu persetujuan.",
+                route('persetujuan.index'),
+            ));
         }
 
-        $sumberDana = $permintaanDana->sumberDana;
+        return back()->with('success', 'Permintaan dana berhasil diajukan. Dana telah di-commit.');
+    }
 
-        if ($sumberDana === null) {
-            return back()->withErrors(['sumber_dana' => 'Sumber dana tidak ditemukan.']);
-        }
+    protected function generateNomorPermintaan(): string
+    {
+        $year = now()->format('Y');
+        $lastNumber = (int) PermintaanDana::where('nomor_permintaan', 'like', "PD-%/{$year}")
+            ->count();
 
-        if ((float) $permintaanDana->jumlah > $sumberDana->availablePagu()) {
-            return back()->withErrors(['jumlah' => 'Dana tidak mencukupi. Sisa pagu sumber dana: Rp '.number_format($sumberDana->availablePagu(), 0, ',', '.').'.']);
-        }
-
-        $permintaanDana->update([
-            'status' => 'menunggu',
-            'tanggal' => $permintaanDana->tanggal ?? now(),
-        ]);
-
-        $sumberDana->commit((float) $permintaanDana->jumlah);
-
-        return back()->with('success', 'Permintaan dana berhasil diajukan. Dana sebesar Rp '.number_format($permintaanDana->jumlah, 0, ',', '.').' telah di-commit.');
+        return 'PD-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }

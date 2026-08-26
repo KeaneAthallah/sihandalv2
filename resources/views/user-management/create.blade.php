@@ -3,72 +3,88 @@
         <x-page-header title="Tambah User" :breadcrumbs="['Pengaturan', 'User Management', 'Tambah']" />
     </x-slot>
 
+    @if($errors->any())
+        <x-alert type="danger">
+            <ul class="list-disc list-inside space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </x-alert>
+    @endif
+
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="p-6 border-b border-slate-100">
-                <h2 class="text-lg font-semibold text-slate-800">Form Tambah User</h2>
-            </div>
+        <x-card>
             <form action="{{ route('user-management.store') }}" method="POST">
                 @csrf
-                <div class="p-6 space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Nama lengkap user" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required autofocus>
+                        <x-input-label value="Nama Lengkap" />
+                        <x-text-input type="text" name="name" value="{{ old('name') }}" placeholder="Masukkan nama lengkap" class="mt-1.5" required autofocus />
                         @error('name')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <x-input-error :messages="$message" class="mt-1.5" />
                         @enderror
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email <span class="text-red-500">*</span></label>
-                        <input type="email" name="email" value="{{ old('email') }}" placeholder="user@email.com" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
+                        <x-input-label value="Email" />
+                        <x-text-input type="email" name="email" value="{{ old('email') }}" placeholder="user@email.com" class="mt-1.5" required />
                         @error('email')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <x-input-error :messages="$message" class="mt-1.5" />
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Role <span class="text-red-500">*</span></label>
-                        <select name="role" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
-                            <option value="opd" {{ old('role', 'opd') == 'opd' ? 'selected' : '' }}>OPD</option>
-                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                        </select>
-                        @error('role')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <x-input-label value="Role" />
+                            <select name="role" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all" required>
+                                <option value="opd" {{ old('role', 'opd') == 'opd' ? 'selected' : '' }}>OPD</option>
+                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            </select>
+                            @error('role')
+                                <x-input-error :messages="$message" class="mt-1.5" />
+                            @enderror
+                        </div>
+
+                        <div>
+                            <x-input-label value="OPD" />
+                            <select name="opd_id" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                                <option value="">Pilih OPD</option>
+                                @foreach($opds as $opd)
+                                    <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                                @endforeach
+                            </select>
+                            @error('opd_id')
+                                <x-input-error :messages="$message" class="mt-1.5" />
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-4">Keamanan</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">OPD <span class="text-slate-400 font-normal">(wajib untuk role OPD)</span></label>
-                        <select name="opd_id" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                            <option value="">Pilih OPD</option>
-                            @foreach($opds as $opd)
-                                <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
-                        @error('opd_id')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Password <span class="text-red-500">*</span></label>
-                        <input type="password" name="password" placeholder="Minimal 8 karakter" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
+                        <x-input-label value="Password" />
+                        <x-text-input type="password" name="password" placeholder="Minimal 8 karakter" class="mt-1.5" required />
                         @error('password')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <x-input-error :messages="$message" class="mt-1.5" />
                         @enderror
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Konfirmasi Password <span class="text-red-500">*</span></label>
-                        <input type="password" name="password_confirmation" placeholder="Ulangi password" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" required>
+                        <x-input-label value="Konfirmasi Password" />
+                        <x-text-input type="password" name="password_confirmation" placeholder="Ulangi password" class="mt-1.5" required />
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                    <a href="{{ route('user-management.index') }}" class="px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Batal</a>
-                    <button type="submit" class="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all">Simpan</button>
+
+                <div class="mt-6 flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
+                    <a href="{{ route('user-management.index') }}">
+                        <x-secondary-button type="button">Batal</x-secondary-button>
+                    </a>
+                    <x-primary-button>Simpan User</x-primary-button>
                 </div>
             </form>
-        </div>
+        </x-card>
     </div>
 </x-app-layout>

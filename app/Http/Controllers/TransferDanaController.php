@@ -43,8 +43,7 @@ class TransferDanaController extends Controller
             $data['opd_id'] = $request->user()->opd_id;
         }
 
-        $lastNumber = TransferDana::whereYear('created_at', now()->year)->count() + 1;
-        $data['nomor_transfer'] = 'TF-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT).'/'.now()->format('Y');
+        $data['nomor_transfer'] = $this->generateNomorTransfer();
         $data['status'] = 'draft';
 
         TransferDana::create($data);
@@ -80,5 +79,14 @@ class TransferDanaController extends Controller
         $transferDana->delete();
 
         return back()->with('success', 'Transfer dana berhasil dihapus.');
+    }
+
+    protected function generateNomorTransfer(): string
+    {
+        $year = now()->format('Y');
+        $lastNumber = (int) TransferDana::where('nomor_transfer', 'like', "TF-%/{$year}")
+            ->count();
+
+        return 'TF-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }

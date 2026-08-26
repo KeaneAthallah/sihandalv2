@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PermintaanDana;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RekapPermintaanDanaController extends Controller
 {
@@ -25,5 +26,40 @@ class RekapPermintaanDanaController extends Controller
             'permintaanDanas', 'totalPermintaan', 'totalDisetujui',
             'totalDitolak', 'totalMenunggu', 'opds'
         ));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $user = $request->user();
+        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with('opd'), $user)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filename = 'rekap-permintaan-dana-'.now()->format('Y-m-d').'.csv';
+
+        return response()->stream(function () use ($permintaanDanas) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'No', 'Nomor Permintaan', 'Tanggal', 'OPD', 'Sumber Dana', 'Jumlah', 'Status',
+            ]);
+
+            foreach ($permintaanDanas as $idx => $item) {
+                fputcsv($handle, [
+                    $idx + 1,
+                    $item->nomor_permintaan,
+                    $item->tanggal?->format('d/m/Y') ?? '-',
+                    $item->opd->nama ?? '-',
+                    $item->sumber_dana,
+                    $item->jumlah,
+                    $item->status,
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }

@@ -3,7 +3,6 @@
         <x-page-header title="Persetujuan" :breadcrumbs="['Persetujuan']" />
     </x-slot>
 
-    {{-- Flash Messages --}}
     @if (session('success'))
         <x-alert type="success" :dismissible="true">{{ session('success') }}</x-alert>
     @endif
@@ -12,77 +11,141 @@
     @endif
 
     {{-- Stat Cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
         <x-stat-card title="Menunggu Persetujuan" value="{{ $totalMenunggu }}" change="perlu ditindaklanjuti" color="warning">
             <x-slot name="icon">
                 <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Total Nilai Menunggu" value="Rp {{ number_format($totalMenungguNilai / 1000000000, 1, ',', '.') }} M" change="total outstanding" color="primary">
+        <x-stat-card title="Total Nilai Menunggu" value="Rp {{ number_format($totalMenungguNilai, 0, ',', '.') }}" change="total outstanding" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-banknotes class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
+        <x-stat-card title="Rata-rata per Permintaan" value="{{ $totalMenunggu > 0 ? 'Rp ' . number_format($totalMenungguNilai / $totalMenunggu, 0, ',', '.') : 'Rp 0' }}" change="per permintaan" color="info">
+            <x-slot name="icon">
+                <x-heroicon-o-calculator class="w-6 h-6"/>
+            </x-slot>
+        </x-stat-card>
     </div>
 
-    {{-- Data Table --}}
+    {{-- Antrian Persetujuan --}}
     <x-card>
+        <x-slot name="header">
+            <div class="flex items-center gap-3">
+                <div class="p-2 rounded-xl bg-amber-50 text-amber-600">
+                    <x-heroicon-o-queue-list class="w-5 h-5"/>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-800 tracking-tight">Antrian Permintaan Dana</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
+                </div>
+            </div>
+        </x-slot>
+
         <div class="overflow-x-auto -mx-5 lg:-mx-6 px-5 lg:px-6">
-            <table class="w-full text-sm min-w-[900px]">
+            <table class="w-full text-sm min-w-[1100px]">
                 <thead>
                     <tr class="bg-slate-50/70">
                         <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">No</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">No Permintaan</th>
+                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pengaju</th>
                         <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">OPD</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sumber Dana</th>
                         <th class="text-right px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nilai</th>
+                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sumber Dana</th>
+                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Keperluan</th>
+                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
                         <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            <td class="px-4 py-4 text-slate-500">{{ $idx + 1 }}</td>
-                            <td class="px-4 py-4 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                        <tr class="hover:bg-slate-50/60 transition-colors group">
+                            <td class="px-4 py-4 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
                             <td class="px-4 py-4">
-                                <span class="text-sm font-medium text-primary font-mono">{{ $item->nomor_permintaan }}</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                                        {{ strtoupper(substr($item->opd->nama ?? 'O', 0, 2)) }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-slate-800 truncate">{{ $item->nomor_permintaan }}</p>
+                                        <p class="text-xs text-slate-400 truncate">{{ $item->catatan ?? '-' }}</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-4 py-4 text-slate-700 max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-4 py-4">
+                                <span class="text-sm text-slate-700 max-w-[180px] truncate block">{{ $item->opd->nama ?? '-' }}</span>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <span class="text-sm font-bold text-slate-900 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
+                            </td>
                             <td class="px-4 py-4">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4 font-semibold text-slate-800 text-right whitespace-nowrap">
-                                Rp {{ number_format($item->jumlah, 0, ',', '.') }}
+                            <td class="px-4 py-4">
+                                <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">
+                                    {{ Str::limit($item->keperluan, 40) ?: '-' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="text-xs text-slate-500">{{ $item->tanggal?->format('d M Y') ?? '-' }}</span>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all" title="Lihat Detail">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all" title="Lihat Detail">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
-                                    <form method="POST" action="{{ route('persetujuan.setujui', $item) }}" class="inline" @submit.prevent="if(confirm('Setujui permintaan {{ $item->nomor_permintaan }}?')) $el.submit()">
-                                        @csrf
-                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Setujui">
-                                            <x-heroicon-o-check class="w-4 h-4"/>
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('persetujuan.tolak', $item) }}" class="inline" @submit.prevent="if(confirm('Tolak permintaan {{ $item->nomor_permintaan }}?')) $el.submit()">
-                                        @csrf
-                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Tolak">
-                                            <x-heroicon-o-x-mark class="w-4 h-4"/>
-                                        </button>
-                                    </form>
+                                    <button
+                                        type="button"
+                                        x-data="{
+                                            item: {
+                                                id: {{ $item->id }},
+                                                nomor: '{{ $item->nomor_permintaan }}',
+                                                jumlah: '{{ number_format($item->jumlah, 0, ',', '.') }}',
+                                                opd: '{{ $item->opd->nama ?? '-' }}',
+                                                sumberDana: '{{ $item->sumber_dana }}',
+                                                keperluan: '{{ addslashes(Str::limit($item->keperluan, 60)) }}'
+                                            }
+                                        }"
+                                        @click="$dispatch('open-modal', 'approve-confirm'); window.selectedItem = $data.item"
+                                        class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                        title="Setujui"
+                                    >
+                                        <x-heroicon-o-check class="w-4 h-4"/>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-data="{
+                                            item: {
+                                                id: {{ $item->id }},
+                                                nomor: '{{ $item->nomor_permintaan }}',
+                                                jumlah: '{{ number_format($item->jumlah, 0, ',', '.') }}',
+                                                opd: '{{ $item->opd->nama ?? '-' }}',
+                                                sumberDana: '{{ $item->sumber_dana }}',
+                                                keperluan: '{{ addslashes(Str::limit($item->keperluan, 60)) }}'
+                                            }
+                                        }"
+                                        @click="$dispatch('open-modal', 'reject-confirm'); window.selectedItem = $data.item"
+                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                        title="Tolak"
+                                    >
+                                        <x-heroicon-o-x-mark class="w-4 h-4"/>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-14 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <x-heroicon-o-inbox class="w-10 h-10 text-slate-300"/>
-                                    <p class="text-sm text-slate-500">Tidak ada permintaan yang menunggu persetujuan</p>
+                            <td colspan="8" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-500">
+                                        <x-heroicon-o-check-badge class="w-10 h-10"/>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-700">Semua permintaan telah ditindaklanjuti</p>
+                                        <p class="text-xs text-slate-400 mt-1">Tidak ada permintaan dana yang menunggu persetujuan saat ini</p>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -95,4 +158,120 @@
             <p class="text-sm text-slate-500">Menampilkan {{ $permintaanDanas->count() }} permintaan menunggu persetujuan</p>
         </div>
     </x-card>
+
+    {{-- Modal Konfirmasi Setuju --}}
+    <x-modal name="approve-confirm" max-width="md">
+        <div class="p-6" x-data="{ get item() { return window.selectedItem || {} } }">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
+                    <x-heroicon-o-check-circle class="w-6 h-6"/>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Setujui Permintaan Dana</h3>
+                    <p class="text-sm text-slate-500">Konfirmasi persetujuan dana</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4 space-y-2.5 mb-5">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Nomor</span>
+                    <span class="font-semibold text-slate-800" x-text="item.nomor">-</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">OPD</span>
+                    <span class="font-semibold text-slate-800" x-text="item.opd">-</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Keperluan</span>
+                    <span class="font-medium text-slate-700 text-right max-w-[250px]" x-text="item.keperluan">-</span>
+                </div>
+                <div class="border-t border-slate-200 pt-2.5 mt-2.5">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-slate-600">Nilai yang Disetujui</span>
+                        <span class="text-lg font-bold text-emerald-700" x-text="'Rp ' + item.jumlah">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mb-5">
+                <div class="flex items-start gap-2.5">
+                    <x-heroicon-o-information-circle class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"/>
+                    <p class="text-sm text-emerald-700 leading-relaxed">
+                        Dengan menyetujui, dana sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> akan direalisasikan dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" @click="$dispatch('close-modal', 'approve-confirm')" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 transition">
+                    Batal
+                </button>
+                <form method="POST" :action="'/persetujuan/' + item.id + '/setujui'" class="inline">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:ring-offset-2 transition">
+                        <x-heroicon-s-check class="w-4 h-4"/>
+                        Ya, Setujui
+                    </button>
+                </form>
+            </div>
+        </div>
+    </x-modal>
+
+    {{-- Modal Konfirmasi Tolak --}}
+    <x-modal name="reject-confirm" max-width="md">
+        <div class="p-6" x-data="{ get item() { return window.selectedItem || {} } }">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2.5 rounded-xl bg-red-50 text-red-600">
+                    <x-heroicon-o-x-circle class="w-6 h-6"/>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Tolak Permintaan Dana</h3>
+                    <p class="text-sm text-slate-500">Konfirmasi penolakan dana</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4 space-y-2.5 mb-5">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Nomor</span>
+                    <span class="font-semibold text-slate-800" x-text="item.nomor">-</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">OPD</span>
+                    <span class="font-semibold text-slate-800" x-text="item.opd">-</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Keperluan</span>
+                    <span class="font-medium text-slate-700 text-right max-w-[250px]" x-text="item.keperluan">-</span>
+                </div>
+                <div class="border-t border-slate-200 pt-2.5 mt-2.5">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-slate-600">Nilai yang Ditolak</span>
+                        <span class="text-lg font-bold text-red-700" x-text="'Rp ' + item.jumlah">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-red-50 border border-red-200 rounded-xl p-3.5 mb-5">
+                <div class="flex items-start gap-2.5">
+                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 shrink-0 mt-0.5"/>
+                    <p class="text-sm text-red-700 leading-relaxed">
+                        Dengan menolak, komitmen dana sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan dilepaskan kembali.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" @click="$dispatch('close-modal', 'reject-confirm')" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 transition">
+                    Batal
+                </button>
+                <form method="POST" :action="'/persetujuan/' + item.id + '/tolak'" class="inline">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 transition">
+                        <x-heroicon-s-x-mark class="w-4 h-4"/>
+                        Ya, Tolak
+                    </button>
+                </form>
+            </div>
+        </div>
+    </x-modal>
 </x-app-layout>

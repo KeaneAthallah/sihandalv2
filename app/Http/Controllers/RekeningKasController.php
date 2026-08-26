@@ -21,16 +21,21 @@ class RekeningKasController extends Controller
 
     public function create()
     {
+        $this->authorizeAdmin();
+
         return view('rekening-kas.create');
     }
 
     public function edit(Rekening $rekening)
     {
+        $this->authorizeAdmin();
+
         return view('rekening-kas.edit', compact('rekening'));
     }
 
     public function store(StoreRekeningRequest $request)
     {
+        $this->authorizeAdmin();
         Rekening::create($request->validated());
 
         return back()->with('success', 'Rekening berhasil ditambahkan.');
@@ -38,6 +43,7 @@ class RekeningKasController extends Controller
 
     public function update(UpdateRekeningRequest $request, Rekening $rekening)
     {
+        $this->authorizeAdmin();
         $rekening->update($request->validated());
 
         return back()->with('success', 'Rekening berhasil diperbarui.');
@@ -45,8 +51,16 @@ class RekeningKasController extends Controller
 
     public function destroy(Rekening $rekening)
     {
+        $this->authorizeAdmin();
         $rekening->delete();
 
         return back()->with('success', 'Rekening berhasil dihapus.');
+    }
+
+    protected function authorizeAdmin(): void
+    {
+        if (! request()->user()->isAdmin()) {
+            abort(403, 'Hanya admin yang dapat mengelola rekening kas.');
+        }
     }
 }

@@ -4,72 +4,76 @@
     </x-slot>
 
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="p-6 border-b border-slate-100">
+        <x-card>
+            <div class="mb-6 pb-5 border-b border-slate-100">
                 <h2 class="text-lg font-semibold text-slate-800">Form Edit Transfer Dana</h2>
+                <p class="text-sm text-slate-400 mt-0.5">Ubah data transfer dana sesuai kebutuhan</p>
             </div>
-            <form action="{{ route('transfer-dana.update', $transferDana) }}" method="POST">
+
+            <form action="{{ route('transfer-dana.update', $transferDana) }}" method="POST" class="space-y-5">
                 @csrf
                 @method('PUT')
-                <div class="p-6 space-y-4">
+
+                <div>
+                    <x-input-label for="opd_id" value="OPD" />
+                    <select name="opd_id" id="opd_id" required class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                        <option value="">Pilih OPD</option>
+                        @foreach($opds as $opd)
+                            <option value="{{ $opd->id }}" {{ old('opd_id', $transferDana->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('opd_id')" class="mt-1.5" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="opd_id" class="block text-sm font-medium text-slate-700 mb-1.5">OPD <span class="text-red-500">*</span></label>
-                        <select name="opd_id" id="opd_id" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                            <option value="">Pilih OPD</option>
-                            @foreach($opds as $opd)
-                                <option value="{{ $opd->id }}" {{ old('opd_id', $transferDana->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
-                            @endforeach
-                        </select>
-                        @error('opd_id')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="jumlah" value="Jumlah *" />
+                        <div class="relative mt-1.5">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
+                            <input type="number" name="jumlah" id="jumlah" min="0" value="{{ old('jumlah', $transferDana->jumlah) }}" placeholder="0" required class="w-full pl-12 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                        </div>
+                        <x-input-error :messages="$errors->get('jumlah')" class="mt-1.5" />
                     </div>
                     <div>
-                        <label for="jumlah" class="block text-sm font-medium text-slate-700 mb-1.5">Jumlah <span class="text-red-500">*</span></label>
-                        <input type="number" name="jumlah" id="jumlah" min="0" value="{{ old('jumlah', $transferDana->jumlah) }}" placeholder="0" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('jumlah')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="sumber_dana" class="block text-sm font-medium text-slate-700 mb-1.5">Sumber Dana <span class="text-red-500">*</span></label>
-                        <input type="text" name="sumber_dana" id="sumber_dana" value="{{ old('sumber_dana', $transferDana->sumber_dana) }}" placeholder="Masukkan sumber dana" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('sumber_dana')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="tanggal" class="block text-sm font-medium text-slate-700 mb-1.5">Tanggal <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal', $transferDana->tanggal?->format('Y-m-d')) }}" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                        @error('tanggal')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-slate-700 mb-1.5">Status <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <select name="status" id="status" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                            <option value="">Pilih Status (opsional)</option>
-                            @foreach(['draft' => 'Draft', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'gagal' => 'Gagal'] as $value => $label)
-                                <option value="{{ $value }}" {{ old('status', $transferDana->status) === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('status')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="keterangan" class="block text-sm font-medium text-slate-700 mb-1.5">Keterangan <span class="text-slate-400 font-normal">(opsional)</span></label>
-                        <textarea name="keterangan" id="keterangan" rows="3" placeholder="Masukkan keterangan (opsional)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">{{ old('keterangan', $transferDana->keterangan) }}</textarea>
-                        @error('keterangan')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <x-input-label for="tanggal" value="Tanggal" />
+                        <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal', $transferDana->tanggal?->format('Y-m-d')) }}" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                        <x-input-error :messages="$errors->get('tanggal')" class="mt-1.5" />
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                    <a href="{{ route('transfer-dana.index') }}" class="px-4 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Batal</a>
-                    <button type="submit" class="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all">Simpan</button>
+
+                <div>
+                    <x-input-label for="sumber_dana" value="Sumber Dana" />
+                    <input type="text" name="sumber_dana" id="sumber_dana" value="{{ old('sumber_dana', $transferDana->sumber_dana) }}" placeholder="Masukkan sumber dana" required class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                    <x-input-error :messages="$errors->get('sumber_dana')" class="mt-1.5" />
+                </div>
+
+                <div>
+                    <x-input-label for="status" value="Status" />
+                    <select name="status" id="status" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                        <option value="">Pilih Status</option>
+                        @foreach(['draft' => 'Draft', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'gagal' => 'Gagal'] as $value => $label)
+                            <option value="{{ $value }}" {{ old('status', $transferDana->status) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('status')" class="mt-1.5" />
+                </div>
+
+                <div>
+                    <x-input-label for="keterangan" value="Keterangan" />
+                    <textarea name="keterangan" id="keterangan" rows="3" placeholder="Tulis keterangan jika diperlukan" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all resize-none">{{ old('keterangan', $transferDana->keterangan) }}</textarea>
+                    <x-input-error :messages="$errors->get('keterangan')" class="mt-1.5" />
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
+                    <a href="{{ route('transfer-dana.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 transition-all">
+                        Batal
+                    </a>
+                    <x-primary-button>
+                        <x-heroicon-o-check class="w-4 h-4 mr-1.5"/>
+                        Simpan Perubahan
+                    </x-primary-button>
                 </div>
             </form>
-        </div>
+        </x-card>
     </div>
 </x-app-layout>

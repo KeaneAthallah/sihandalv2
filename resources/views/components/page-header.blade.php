@@ -11,18 +11,20 @@
         <div class="min-w-0">
             <h1 class="text-xl lg:text-2xl font-bold text-slate-800 tracking-tight">{{ $title }}</h1>
             @if(count($breadcrumbs) > 0)
-                <div class="flex items-center gap-2 mt-1 text-sm">
+                <nav class="flex items-center gap-1.5 mt-1.5 text-sm" aria-label="Breadcrumb">
                     @foreach($breadcrumbs as $index => $crumb)
                         @if($loop->first)
-                            <span class="text-slate-400">{{ $crumb }}</span>
+                            <span class="text-slate-400 font-medium">{{ $crumb }}</span>
                         @else
-                            <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-                            </svg>
-                            <span class="text-slate-600 font-medium truncate">{{ $crumb }}</span>
+                            <x-heroicon-o-chevron-right class="w-3.5 h-3.5 text-slate-300 shrink-0"/>
+                            @if($loop->last)
+                                <span class="text-slate-700 font-medium truncate">{{ $crumb }}</span>
+                            @else
+                                <span class="text-slate-500 truncate">{{ $crumb }}</span>
+                            @endif
                         @endif
                     @endforeach
-                </div>
+                </nav>
             @endif
         </div>
         @if($action)
