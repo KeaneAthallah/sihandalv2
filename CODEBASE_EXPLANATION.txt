@@ -1,0 +1,313 @@
+================================================================================
+                        SIHANDAL V2 - CODEBASE EXPLANATION
+================================================================================
+
+Sihandal (Sistem Informasi Keuangan Daerah) is a Regional Financial Information
+System — a government financial management web application for Indonesian local/
+regional government agencies (OPD — Organisasi Perangkat Daerah).
+
+================================================================================
+                              TECH STACK
+================================================================================
+
+  Layer         Technology               Version
+  -----------   ----------------------   --------
+  Language      PHP                      8.3+ (targeting 8.5)
+  Framework     Laravel                  13.x
+  Auth          Laravel Breeze           2.x
+  Database      SQLite (default)         —
+  CSS           Tailwind CSS             4.x (via @tailwindcss/vite)
+  JS            Alpine.js                3.x
+  Charts        ApexCharts               5.x
+  Build         Vite                     8.x
+  Testing       Pest / PHPUnit           4.x / 12
+  Icons         Blade Heroicons          2.x
+
+================================================================================
+                           DIRECTORY STRUCTURE
+================================================================================
+
+  D:\sihandalv2\
+  ├── app/
+  │   ├── Console/Commands/
+  │   │   └── ImportSumberDana.php         # CLI command to import CSV budget data
+  │   ├── Http/
+  │   │   ├── Controllers/
+  │   │   │   ├── Auth/                    # 8 Breeze auth controllers
+  │   │   │   ├── Controller.php           # Base controller with OPD scoping helpers
+  │   │   │   ├── LaporanPenerimaanController.php
+  │   │   │   ├── LaporanPengeluaranController.php
+  │   │   │   ├── LaporanPosisiKasController.php
+  │   │   │   ├── OpdController.php
+  │   │   │   ├── PenerimaanController.php
+  │   │   │   ├── PengeluaranController.php
+  │   │   │   ├── PermintaanDanaController.php
+  │   │   │   ├── PersetujuanController.php
+  │   │   │   ├── PosisiKasController.php
+  │   │   │   ├── ProfileController.php
+  │   │   │   ├── ProgramKegiatanController.php
+  │   │   │   ├── RekapPermintaanDanaController.php
+  │   │   │   ├── RekeningKasController.php
+  │   │   │   ├── SumberDanaController.php
+  │   │   │   ├── TransferDanaController.php
+  │   │   │   └── UserManagementController.php
+  │   │   ├── Middleware/
+  │   │   │   └── EnsureUserIsAdmin.php    # Admin-only route guard
+  │   │   └── Requests/
+  │   │       ├── Concerns/
+  │   │       │   └── ValidatesPermintaanDana.php  # Shared validation trait
+  │   │       ├── ProfileUpdateRequest.php
+  │   │       └── Store/Update *Request.php  # 16 form request classes
+  │   ├── Models/                          # 11 Eloquent models
+  │   └── View/Components/
+  │       ├── AppLayout.php
+  │       └── GuestLayout.php
+  ├── config/                              # 10 standard Laravel config files
+  ├── database/
+  │   ├── migrations/                      # 15 migrations
+  │   ├── seeders/
+  │   │   ├── DatabaseSeeder.php
+  │   │   └── SampleDataSeeder.php
+  │   ├── factories/
+  │   │   └── UserFactory.php              # Has admin() and opd() states
+  │   └── database.sqlite
+  ├── plan/                                # Planning data (Excel, CSV, images)
+  ├── resources/
+  │   ├── css/app.css                      # Tailwind config with custom theme
+  │   ├── js/app.js                        # Alpine.js + ApexCharts bootstrap
+  │   └── views/
+  │       ├── auth/                        # 5 Breeze auth views
+  │       ├── components/                  # 23 reusable Blade components
+  │       ├── dashboard/index.blade.php
+  │       ├── layouts/
+  │       │   ├── app.blade.php            # Main layout (sidebar + navbar)
+  │       │   ├── guest.blade.php
+  │       │   ├── navbar.blade.php         # Top navbar with breadcrumbs
+  │       │   ├── navigation.blade.php     # Breeze default nav (kept)
+  │       │   └── sidebar.blade.php        # Full sidebar with sections
+  │       ├── opd/                         # 2 views (index, show)
+  │       ├── penerimaan/                  # 3 views (index, create, edit)
+  │       ├── pengeluaran/                 # 3 views
+  │       ├── permintaan-dana/             # 6 views (index, create, edit, etc.)
+  │       ├── persetujuan/                 # 1 view (index)
+  │       ├── posisi-kas/                  # 3 views
+  │       ├── program-kegiatan/            # 3 views
+  │       ├── rekening-kas/                # 3 views
+  │       ├── sumber-dana/                 # 3 views
+  │       ├── transfer-dana/               # 3 views
+  │       ├── laporan-penerimaan/          # 1 view (report)
+  │       ├── laporan-pengeluaran/         # 1 view
+  │       ├── laporan-posisi-kas/          # 1 view
+  │       ├── rekap-permintaan-dana/       # 1 view
+  │       ├── user-management/             # 3 views
+  │       ├── pengaturan/                  # 1 view (settings)
+  │       ├── profile/                     # edit + partials
+  │       └── welcome.blade.php            # Public landing page
+  ├── routes/
+  │   ├── web.php                          # All web routes
+  │   ├── auth.php                         # Breeze auth routes
+  │   └── console.php                      # Artisan console
+  └── tests/
+      ├── Feature/
+      │   ├── Auth/
+      │   ├── ExampleTest.php
+      │   ├── ModuleWorkflowTest.php       # Full CRUD workflow tests
+      │   ├── OpdScopingTest.php           # OPD data isolation tests
+      │   ├── PageSmokeTest.php            # All-page render tests
+      │   ├── PermintaanDanaCommitTest.php # Fund commit/realize/release tests
+      │   ├── ProfileTest.php
+      │   └── UserManagementTest.php
+      └── Unit/ExampleTest.php
+
+================================================================================
+                              KEY FEATURES
+================================================================================
+
+  Module                 Purpose
+  --------------------   ------------------------------------------------
+  Dashboard              Overview with charts (bar, donut, radial), stat cards
+  OPD Management         View all government departments, drill into details
+  Sumber Dana            Fund source management per OPD with pagu tracking
+  Rekening Kas           Cash account management (kas, pendapatan, belanja)
+  Program & Kegiatan     Activity/program budget tracking with codes
+  Penerimaan             Revenue recording with target vs realization
+  Pengeluaran            Expenditure tracking with budget vs actual
+  Posisi Kas             Cash position snapshots (saldo_awal +/- changes)
+  Permintaan Dana        Fund request workflow (draft -> submit -> approve/reject)
+  Persetujuan            Approval/rejection of pending fund requests
+  Transfer Dana          Fund transfer tracking with status workflow
+  Laporan                Read-only reports: penerimaan, pengeluaran, posisi kas
+  User Management        Admin-only user CRUD with role assignment
+  Data Import            CLI command to import budget data from CSV
+
+================================================================================
+                      FUND REQUEST WORKFLOW (Core Logic)
+================================================================================
+
+  1. Draft:       OPD creates a PermintaanDana with amount, fund source, purpose
+  2. Submit:      Validates available budget, calls SumberDana::commit() to
+                  temporarily lock funds
+  3. Pending:     Awaits admin/approver action
+  4. Approve:     Calls SumberDana::realize() to convert committed to realized
+  5. Reject:      Calls SumberDana::releaseCommit() to free up committed funds
+
+================================================================================
+                      DATABASE TABLES & RELATIONSHIPS
+================================================================================
+
+  users
+    role (enum: 'admin', 'opd')
+    opd_id (FK -> opds, nullable)
+    hasMany -> persetujuans
+
+  opds
+    kode (unique)
+    total_pagu (decimal 18,2)
+    hasMany -> sumberDanas, programs, penerimaans, pengeluarans,
+              permintaanDanas, transferDanas, posisiKas
+
+  sumber_danas
+    opd_id (FK -> opds)
+    nama_sumber_dana, pagu, realisasi, dana_di_commit, persentase
+    Methods: availablePagu(), commit(), releaseCommit(), realize()
+
+  programs
+    opd_id (FK -> opds)
+    kode_kegiatan, nama_kegiatan, kode/sub sub-kegiatan
+    sumber_dana (string), pagu, realisasi, persentase
+
+  rekenings
+    kode (unique), nama, tipe ('kas'|'non-kas'|'pendapatan'|'belanja'), saldo
+
+  penerimaans
+    opd_id (FK -> opds), rekening_id (FK -> rekenings, nullable)
+    kode_sumber_dana, nama_sumber_dana, target, realisasi, persentase
+    tanggal, keterangan
+
+  pengeluarans
+    opd_id (FK -> opds), rekening_id (FK -> rekenings, nullable)
+    kode_kegiatan, nama_kegiatan, sumber_dana (string)
+    anggaran, realisasi, persentase, tanggal, keterangan
+
+  permintaan_danas
+    nomor_permintaan (unique, e.g. "PD-0001/2026")
+    opd_id (FK -> opds), sumber_dana_id (FK -> sumber_danas, nullable)
+    jumlah, sumber_dana (string), keperluan
+    status (enum: 'draft'|'menunggu'|'disetujui'|'ditolak')
+    tanggal, tanggal_disetujui, catatan
+
+  persetujuans
+    permintaan_dana_id (FK -> permintaan_danas)
+    user_id (FK -> users)
+    keputusan ('disetujui'|'ditolak'), catatan
+
+  transfer_danas
+    nomor_transfer (unique, e.g. "TF-0001/2026")
+    opd_id (FK -> opds), jumlah, sumber_dana (string), keterangan
+    status (enum: 'draft'|'diproses'|'selesai'|'gagal')
+    tanggal, tanggal_selesai
+
+  posisi_kas
+    opd_id (FK -> opds), rekening_id (FK -> rekenings)
+    tanggal, saldo_awal, penerimaan, pengeluaran, saldo_akhir
+
+================================================================================
+                              ROUTES
+================================================================================
+
+  PUBLIC:
+    GET  /                                         -> welcome page
+
+  AUTH (Breeze):
+    GET/POST  /login                               -> login
+    POST       /logout                             -> logout
+    GET/POST  /forgot-password                     -> password reset request
+    GET/POST  /reset-password/{token}              -> password reset
+    GET        /verify-email                       -> email verification
+
+  AUTHENTICATED:
+    GET   /dashboard                               -> dashboard
+    GET   /opd                                     -> list all OPDs
+    GET   /opd/{opd}                               -> OPD detail page
+    CRUD  /sumber-dana                             -> fund source management
+    CRUD  /rekening-kas                            -> cash account management
+    CRUD  /program-kegiatan                        -> program/activity management
+    CRUD  /penerimaan                              -> revenue management
+    CRUD  /pengeluaran                             -> expenditure management
+    CRUD  /posisi-kas                              -> cash position management
+    CRUD  /permintaan-dana                         -> fund request management
+    POST  /permintaan-dana/{id}/submit             -> submit draft for approval
+    GET   /persetujuan                             -> list pending requests
+    POST  /persetujuan/{id}/setujui                -> approve request
+    POST  /persetujuan/{id}/tolak                  -> reject request
+    CRUD  /transfer-dana                           -> fund transfer management
+    GET   /laporan-penerimaan                      -> revenue report
+    GET   /laporan-pengeluaran                     -> expenditure report
+    GET   /rekap-permintaan-dana                   -> fund request recap
+    GET   /laporan-posisi-kas                      -> cash position report
+    CRUD  /user-management                         -> admin-only user CRUD
+    GET   /pengaturan                              -> settings page
+    GET   /profile                                 -> profile edit
+    PATCH /profile                                 -> profile update
+    DELETE /profile                                -> profile delete
+
+================================================================================
+                           ARCHITECTURE PATTERNS
+================================================================================
+
+  1. OPD-Scoped Multi-Tenancy
+     The base Controller class provides three helper methods:
+       - applyOpdScope()     — filters queries to user's OPD (admins see all)
+       - userOpds()          — returns user's OPD (or all for admins)
+       - authorizeOpdRecord()— prevents cross-OPD access (returns 403)
+     Every controller uses these consistently.
+
+  2. Two-Role Authorization
+     - Admin:  sees all data, manages users, approves/rejects fund requests
+     - OPD:    sees only own OPD data, creates/edits own records, submits requests
+
+  3. Computed Fields
+     - persentase auto-computed on every store/update (realisasi / target or pagu)
+     - saldo_akhir auto-computed (saldo_awal + penerimaan - pengeluaran)
+     - nomor_permintaan / nomor_transfer auto-generated with sequential numbering
+
+  4. Form Request with Shared Traits
+     ValidatesPermintaanDana trait shared between store and update requests,
+     ensuring consistent business rules including cross-OPD validation.
+
+  5. Reusable Blade Component Library (23 components)
+     stat-card, chart-card, status-badge, filter-bar, page-header,
+     progress-card, alert, modal, timeline, priority-badge, text-input,
+     input-label, input-error, dropdown, buttons, etc.
+
+  6. Custom Tailwind CSS 4 Theme
+     Semantic color tokens: primary blue (#0F4C81), surface gray (#F5F7FB),
+     success/warning/danger/info palettes, Instrument Sans font.
+
+  7. Server-Rendered SPA-Like Experience
+     Traditional Laravel Blade + Alpine.js — no separate frontend framework,
+     keeps things simple while feeling responsive.
+
+  8. Separate CRUD and Report Controllers
+     Each data module has both a CRUD controller and a read-only report
+     controller, keeping read paths clean.
+
+  9. CSV Import for Initial Data
+     ImportSumberDana command handles bulk import of government budget data,
+     creating OPDs, rekenings, sumber danas, and programs in one transaction.
+
+================================================================================
+                              TESTS
+================================================================================
+
+  Test File                          Focus
+  ---------------------------------  -------------------------------------------
+  ModuleWorkflowTest.php             Full CRUD workflows for every module
+  OpdScopingTest.php                 Data isolation between OPDs
+  PermintaanDanaCommitTest.php       Fund request fund-locking workflow
+  PageSmokeTest.php                  Every page renders without errors
+  UserManagementTest.php             User CRUD
+  ProfileTest.php                    Profile management
+  Auth/                              Standard Breeze auth tests
+
+================================================================================
