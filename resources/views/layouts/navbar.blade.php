@@ -50,15 +50,6 @@
         {{-- Right: Actions --}}
         <div class="flex items-center gap-1 shrink-0">
 
-            {{-- Search shortcut (placeholder) --}}
-            <button
-                class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-lg transition"
-                title="Cari (Ctrl+K)">
-                <x-heroicon-o-magnifying-glass class="w-3.5 h-3.5"/>
-                <span>Cari</span>
-                <kbd class="ml-1 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded">⌘K</kbd>
-            </button>
-
             {{-- Notifications --}}
             <a
                 href="{{ route('notifications.index') }}"

@@ -3,7 +3,7 @@
         <x-page-header title="Permintaan Dana OPD" :breadcrumbs="['Keuangan', 'Permintaan Dana OPD']">
             <x-slot name="actions">
                 <a href="{{ route('permintaan-dana.create') }}"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm">
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Buat Permintaan
                 </a>
@@ -25,8 +25,7 @@
         </x-alert>
     @endif
 
-    {{-- Summary Statistics --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         <x-stat-card title="Total Permintaan" value="Rp {{ number_format($totalPermintaan / 1000000000, 1, ',', '.') }} M" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
@@ -49,65 +48,59 @@
         </x-stat-card>
     </div>
 
-    {{-- Data Table --}}
-    <x-card>
-        <x-slot name="header">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-800 tracking-tight">Daftar Permintaan Dana</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Semua permintaan dana dari OPD</p>
-                </div>
-                <div x-data="{ search: '' }" class="relative w-full sm:w-72">
-                    <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
-                    <input type="text" x-model="search" placeholder="Cari nomor, OPD, keperluan..."
-                        class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"/>
-                </div>
+    <x-card :padding="false">
+        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+            <h3 class="text-sm font-semibold text-slate-800">Daftar Permintaan Dana</h3>
+            <div class="ml-auto relative w-full sm:w-72">
+                <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
+                <input type="text" placeholder="Cari nomor, OPD, keperluan..."
+                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"/>
             </div>
-        </x-slot>
+        </div>
 
-        <div class="overflow-x-auto -mx-5 lg:-mx-6 px-5 lg:px-6">
-            <table class="w-full text-sm min-w-[1050px]">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">No</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nomor</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">OPD</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sumber Dana</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Keperluan</th>
-                        <th class="text-right px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Jumlah</th>
-                        <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12">No</th>
+                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Nomor</th>
+                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
+                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Sumber Dana</th>
+                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Keperluan</th>
+                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Jumlah</th>
+                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
+                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50/60 transition-colors group">
-                            <td class="px-4 py-4 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-4 py-4">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3">
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-sm font-mono font-semibold text-primary">{{ $item->nomor_permintaan }}</span>
                                     <span class="text-xs text-slate-400">{{ $item->tanggal ? $item->tanggal->format('d M Y') : '-' }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="text-sm text-slate-700 max-w-[180px] truncate block" title="{{ $item->opd->nama ?? '-' }}">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">{{ $item->keperluan }}</span>
                             </td>
-                            <td class="px-4 py-4 text-right">
-                                <span class="text-sm font-semibold text-slate-800 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
+                            <td class="px-5 py-3 text-right">
+                                <span class="text-sm font-medium tabular-nums text-slate-700 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
-                            <td class="px-4 py-4 text-center">
+                            <td class="px-5 py-3 text-center">
                                 <x-status-badge :status="$item->status"/>
                             </td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center justify-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <td class="px-5 py-3">
+                                <div class="flex items-center justify-center gap-1">
                                     <button
                                         x-data
                                         @click="
@@ -125,13 +118,13 @@
                                             $dispatch('open-modal', 'view-permintaan-dana');
                                         "
                                         title="Lihat Detail"
-                                        class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
+                                        class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </button>
 
                                     @if(in_array($item->status, ['draft', 'ditolak']))
                                         <a href="{{ route('permintaan-dana.edit', $item) }}" title="Edit"
-                                           class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all">
+                                           class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                     @endif
@@ -142,7 +135,7 @@
                                               @submit.prevent="if(confirm('Ajukan permintaan ini? Dana akan di-commit dari pagu sumber dana.')) $el.submit()">
                                             @csrf
                                             <button type="submit" title="Ajukan"
-                                                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition">
                                                 <x-heroicon-o-paper-airplane class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -155,7 +148,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" title="Hapus"
-                                                    class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                                    class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -165,21 +158,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-16 text-center">
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="p-4 bg-slate-100 rounded-2xl">
-                                        <x-heroicon-o-document-text class="w-10 h-10 text-slate-300"/>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-slate-500">Belum ada permintaan dana</p>
-                                        <p class="text-xs text-slate-400 mt-1">Mulai dengan membuat permintaan baru</p>
-                                    </div>
-                                    <a href="{{ route('permintaan-dana.create') }}"
-                                       class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-semibold rounded-xl hover:bg-primary/20 transition-all mt-1">
-                                        <x-heroicon-o-plus class="w-4 h-4"/>
-                                        Buat Permintaan Pertama
-                                    </a>
-                                </div>
+                            <td colspan="8" class="px-5 py-16 text-center">
+                                <p class="text-sm text-slate-400">Belum ada permintaan dana</p>
                             </td>
                         </tr>
                     @endforelse
@@ -187,12 +167,11 @@
             </table>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $permintaanDanas->count() }}</span> permintaan dana</p>
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->count() }}</span> permintaan dana</p>
         </div>
     </x-card>
 
-    {{-- View Detail Modal --}}
     <x-modal name="view-permintaan-dana" maxWidth="2xl">
         <div class="px-6 py-5 border-b border-slate-100">
             <div class="flex items-center justify-between">
@@ -200,7 +179,7 @@
                     <h3 class="text-lg font-semibold text-slate-800">Detail Permintaan Dana</h3>
                     <p class="text-sm text-slate-400 mt-0.5" x-data x-text="'Nomor: ' + ($event?.detail?.nomor || '')" x-init="$el.textContent = ''"></p>
                 </div>
-                <button @click="$dispatch('close-modal', 'view-permintaan-dana')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                <button @click="$dispatch('close-modal', 'view-permintaan-dana')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
                     <x-heroicon-o-x-mark class="w-5 h-5"/>
                 </button>
             </div>
@@ -208,7 +187,6 @@
 
         <div class="px-6 py-5" x-data="{ viewData: {} }" x-on:open-view-permintaan.window="viewData = $event.detail">
             <div class="space-y-5">
-                {{-- Status Banner --}}
                 <div class="flex items-center gap-3 p-4 rounded-xl"
                      :class="{
                          'bg-slate-50 border border-slate-200': viewData.status === 'draft',
@@ -241,7 +219,6 @@
                     </div>
                 </div>
 
-                {{-- Key Info --}}
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Nomor Permintaan</p>
@@ -273,7 +250,6 @@
                 </div>
                 @endif
 
-                {{-- Amount --}}
                 <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Jumlah Permintaan</p>
                     <p class="text-2xl font-bold text-slate-800" x-text="'Rp ' + viewData.jumlah"></p>

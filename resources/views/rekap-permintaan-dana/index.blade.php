@@ -2,8 +2,8 @@
     <x-slot name="header">
         <x-page-header title="Rekap Permintaan Dana" :breadcrumbs="['Rekap Permintaan Dana']">
             <x-slot name="actions">
-                <a href="{{ route('rekap-permintaan-dana.export') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-                    <x-heroicon-o-arrow-down-tray class="w-4 h-4"/>
+                <a href="{{ route('rekap-permintaan-dana.export') }}" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                    <x-heroicon-o-arrow-down-tray class="w-4 h-4 inline mr-1"/>
                     Export CSV
                 </a>
             </x-slot>
@@ -11,7 +11,7 @@
     </x-slot>
 
     {{-- Report Header --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 p-6 print:shadow-none print:border-none">
+    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-6">
         <div class="text-center mb-4">
             <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Rekapitulasi Permintaan Dana</h2>
             <p class="text-sm text-slate-500 mt-1">Ringkasan seluruh permintaan dana berdasarkan status</p>
@@ -33,7 +33,7 @@
     </div>
 
     {{-- Stat Cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <x-stat-card title="Total Permintaan" value="{{ $permintaanDanas->count() }}" change="Semua permintaan" changeType="up" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
@@ -78,7 +78,7 @@
             'draft' => 'Draft',
         ];
     @endphp
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 p-5 print:shadow-none print:border print:border-slate-300">
+    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-5">
         <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Distribusi Status Permintaan</h3>
         <div class="w-full bg-slate-100 rounded-full h-3 flex overflow-hidden mb-4">
             @foreach($statusCounts as $status => $count)
@@ -102,41 +102,41 @@
     </div>
 
     {{-- Data Table --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print:shadow-none print:border print:border-slate-300">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Daftar Permintaan Dana</h3>
+    <x-card :padding="false">
+        <div class="px-5 py-4 border-b border-slate-100">
+            <h3 class="text-sm font-semibold text-slate-800">Daftar Permintaan Dana</h3>
             <p class="text-xs text-slate-400 mt-0.5">Detail seluruh permintaan dana yang tercatat</p>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="border-b-2 border-slate-200 bg-slate-50/80">
-                        <th class="px-4 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider w-10">No</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">No. Permintaan</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-28">Tanggal</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">OPD</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-36">Sumber Dana</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider w-40">Nilai (Rp)</th>
-                        <th class="px-4 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider w-32">Status</th>
+                    <tr>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-10">No</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">No. Permintaan</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-28">Tanggal</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-36">Sumber Dana</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-40">Nilai (Rp)</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-32">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            <td class="px-4 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-4 py-3.5 font-semibold text-slate-800">{{ $item->nomor_permintaan }}</td>
-                            <td class="px-4 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-4 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-4 py-3.5">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3 font-semibold text-slate-800">{{ $item->nomor_permintaan }}</td>
+                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3 text-right font-semibold text-slate-800 font-mono text-xs">
                                 Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
-                            <td class="px-4 py-3.5 text-center">
+                            <td class="px-5 py-3 text-center">
                                 <x-status-badge :status="$item->status"/>
                             </td>
                         </tr>
@@ -154,9 +154,9 @@
             </table>
         </div>
 
-        <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
             <p class="text-xs text-slate-500">Menampilkan {{ $permintaanDanas->count() }} data permintaan dana</p>
             <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
-    </div>
+    </x-card>
 </x-app-layout>

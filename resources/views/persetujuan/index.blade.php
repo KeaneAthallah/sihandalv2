@@ -30,38 +30,31 @@
     </div>
 
     {{-- Antrian Persetujuan --}}
-    <x-card>
-        <x-slot name="header">
-            <div class="flex items-center gap-3">
-                <div class="p-2 rounded-xl bg-amber-50 text-amber-600">
-                    <x-heroicon-o-queue-list class="w-5 h-5"/>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-800 tracking-tight">Antrian Permintaan Dana</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
-                </div>
-            </div>
-        </x-slot>
+    <x-card :padding="false">
+        <div class="px-5 py-4 border-b border-slate-100">
+            <h3 class="text-sm font-semibold text-slate-800">Antrian Permintaan Dana</h3>
+            <p class="text-xs text-slate-400 mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
+        </div>
 
-        <div class="overflow-x-auto -mx-5 lg:-mx-6 px-5 lg:px-6">
+        <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[1100px]">
                 <thead>
-                    <tr class="bg-slate-50/70">
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">No</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pengaju</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">OPD</th>
-                        <th class="text-right px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nilai</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sumber Dana</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Keperluan</th>
-                        <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                    <tr>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">No</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Pengaju</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right">Nilai</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Sumber Dana</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Keperluan</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Tanggal</th>
+                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50/60 transition-colors group">
-                            <td class="px-4 py-4 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-4 py-4">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
                                         {{ strtoupper(substr($item->opd->nama ?? 'O', 0, 2)) }}
@@ -72,28 +65,28 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="text-sm text-slate-700 max-w-[180px] truncate block">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
-                            <td class="px-4 py-4 text-right">
+                            <td class="px-5 py-3 text-right">
                                 <span class="text-sm font-bold text-slate-900 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">
                                     {{ Str::limit($item->keperluan, 40) ?: '-' }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
+                            <td class="px-5 py-3 whitespace-nowrap">
                                 <span class="text-xs text-slate-500">{{ $item->tanggal?->format('d M Y') ?? '-' }}</span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-5 py-3">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all" title="Lihat Detail">
+                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition" title="Lihat Detail">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
                                     <button
@@ -109,7 +102,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'approve-confirm'); window.selectedItem = $data.item"
-                                        class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                        class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
                                         title="Setujui"
                                     >
                                         <x-heroicon-o-check class="w-4 h-4"/>
@@ -127,7 +120,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'reject-confirm'); window.selectedItem = $data.item"
-                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                                         title="Tolak"
                                     >
                                         <x-heroicon-o-x-mark class="w-4 h-4"/>
@@ -154,7 +147,7 @@
             </table>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-slate-100">
+        <div class="px-5 py-3 border-t border-slate-100">
             <p class="text-sm text-slate-500">Menampilkan {{ $permintaanDanas->count() }} permintaan menunggu persetujuan</p>
         </div>
     </x-card>
@@ -203,12 +196,12 @@
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <button type="button" @click="$dispatch('close-modal', 'approve-confirm')" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 transition">
+                <button type="button" @click="$dispatch('close-modal', 'approve-confirm')" class="px-4 py-2 bg-white border border-slate-300 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-50 transition">
                     Batal
                 </button>
                 <form method="POST" :action="'/persetujuan/' + item.id + '/setujui'" class="inline">
                     @csrf
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:ring-offset-2 transition">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
                         <x-heroicon-s-check class="w-4 h-4"/>
                         Ya, Setujui
                     </button>
@@ -261,12 +254,12 @@
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <button type="button" @click="$dispatch('close-modal', 'reject-confirm')" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-sm text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 transition">
+                <button type="button" @click="$dispatch('close-modal', 'reject-confirm')" class="px-4 py-2 bg-white border border-slate-300 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-50 transition">
                     Batal
                 </button>
                 <form method="POST" :action="'/persetujuan/' + item.id + '/tolak'" class="inline">
                     @csrf
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 transition">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">
                         <x-heroicon-s-x-mark class="w-4 h-4"/>
                         Ya, Tolak
                     </button>

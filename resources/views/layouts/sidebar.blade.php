@@ -28,7 +28,7 @@
         'lg:w-[76px]': sidebarCollapsed,
         'lg:w-[260px]': !sidebarCollapsed
     }"
-    class="fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-primary-800 via-primary to-primary-700 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-xl shadow-primary-900/20"
+    class="fixed inset-y-0 left-0 z-50 w-[260px] bg-primary text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
 >
     {{-- Logo --}}
     <div
@@ -39,9 +39,8 @@
             <img
                 src="{{ asset('logo.png') }}"
                 alt="Sihandal"
-                class="w-10 h-10 rounded-lg object-contain bg-white/15 p-1 ring-2 ring-white/10"
+                class="w-10 h-10 rounded-lg object-contain bg-white/15 p-1"
             />
-            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-primary-800"></div>
         </div>
         <div
             :class="sidebarCollapsed ? 'lg:hidden opacity-0 w-0' : 'opacity-100'"
@@ -269,10 +268,9 @@
     >
         <div :class="sidebarCollapsed ? 'justify-center' : ''" class="flex items-center gap-3">
             <div class="relative shrink-0">
-                <div class="w-9 h-9 bg-white/15 rounded-full flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 backdrop-blur-sm">
+                <div class="w-9 h-9 bg-white/15 rounded-full flex items-center justify-center text-[11px] font-bold">
                     {{ $initials }}
                 </div>
-                <div class="absolute -bottom-px -right-px w-2.5 h-2.5 bg-emerald-400 rounded-full border-[1.5px] border-primary-800"></div>
             </div>
             <div
                 :class="sidebarCollapsed ? 'lg:hidden opacity-0 w-0' : 'opacity-100'"
@@ -285,18 +283,4 @@
     </div>
 </aside>
 
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 9999px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-</style>
+

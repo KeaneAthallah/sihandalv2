@@ -13,12 +13,12 @@
         </x-alert>
     @endif
 
-    <div class="max-w-2xl mx-auto">
-        <x-card>
+    <div class="max-w-2xl">
+        <x-card title="Form Edit User">
             <form action="{{ route('user-management.update', $user) }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="space-y-5">
+                <div class="space-y-4">
                     <div>
                         <x-input-label value="Nama Lengkap" />
                         <x-text-input type="text" name="name" value="{{ old('name', $user->name) }}" placeholder="Masukkan nama lengkap" class="mt-1.5" required autofocus />
@@ -35,10 +35,10 @@
                         @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label value="Role" />
-                            <select name="role" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all" required>
+                            <select name="role" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="opd" {{ old('role', $user->role) == 'opd' ? 'selected' : '' }}>OPD</option>
                                 <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
@@ -49,7 +49,7 @@
 
                         <div>
                             <x-input-label value="OPD" />
-                            <select name="opd_id" class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                            <select name="opd_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih OPD</option>
                                 @foreach($opds as $opd)
                                     <option value="{{ $opd->id }}" {{ old('opd_id', $user->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="pt-2 border-t border-slate-100">
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-4">Ubah Password</p>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Ubah Password</p>
                     </div>
 
                     <div>
@@ -79,11 +79,11 @@
                     </div>
                 </div>
 
-                <div class="mt-6 flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
+                <div class="mt-5 flex items-center justify-end gap-3">
                     <a href="{{ route('user-management.index') }}">
                         <x-secondary-button type="button">Batal</x-secondary-button>
                     </a>
-                    <x-primary-button>Simpan Perubahan</x-primary-button>
+                    <x-primary-button>Simpan</x-primary-button>
                 </div>
             </form>
         </x-card>

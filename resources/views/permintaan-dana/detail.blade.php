@@ -42,20 +42,8 @@
 
 <div class="space-y-6">
 
-    {{-- Status Hero --}}
-    <div class="p-5 rounded-2xl border {{ $statusConfig['bg'] }} {{ $statusConfig['border'] }}">
+    <div class="p-5 rounded-xl border {{ $statusConfig['bg'] }} {{ $statusConfig['border'] }}">
         <div class="flex items-start gap-4">
-            <div class="p-3 rounded-xl {{ $statusConfig['bg'] }} border {{ $statusConfig['border'] }}">
-                @if($status === 'disetujui')
-                    <x-heroicon-o-check-circle class="w-6 h-6 text-emerald-600"/>
-                @elseif($status === 'ditolak')
-                    <x-heroicon-o-x-circle class="w-6 h-6 text-red-600"/>
-                @elseif($status === 'menunggu')
-                    <x-heroicon-o-clock class="w-6 h-6 text-amber-600"/>
-                @else
-                    <x-heroicon-o-document-text class="w-6 h-6 text-slate-500"/>
-                @endif
-            </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                     <h3 class="text-lg font-bold {{ $statusConfig['text'] }}">{{ $nomor }}</h3>
@@ -67,50 +55,41 @@
         </div>
     </div>
 
-    {{-- Main Content Grid --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- Column 1: Request Information --}}
         <div class="lg:col-span-2 space-y-6">
-
-            {{-- Request Details Card --}}
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="px-5 py-4 border-b border-slate-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="p-1.5 bg-primary/10 rounded-lg">
-                            <x-heroicon-o-document-text class="w-4 h-4 text-primary"/>
-                        </div>
-                        <h4 class="text-sm font-semibold text-slate-800">Informasi Permintaan</h4>
-                    </div>
+                    <h4 class="text-sm font-semibold text-slate-800">Informasi Permintaan</h4>
                 </div>
                 <div class="px-5 py-4">
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">OPD</p>
+                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">OPD</p>
                                 <p class="text-sm font-medium text-slate-800">{{ $opd }}</p>
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Tanggal</p>
+                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Tanggal</p>
                                 <p class="text-sm text-slate-700">{{ $tanggal }}</p>
                             </div>
                         </div>
 
                         <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Sumber Dana</p>
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Sumber Dana</p>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                                 {{ $sumberDana }}
                             </span>
                         </div>
 
                         <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Keperluan</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Keperluan</p>
                             <p class="text-sm text-slate-700 leading-relaxed">{{ $keperluan }}</p>
                         </div>
 
                         @if($catatan && $catatan !== '-')
                         <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Catatan</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Catatan</p>
                             <p class="text-sm text-slate-600 italic leading-relaxed">{{ $catatan }}</p>
                         </div>
                         @endif
@@ -118,28 +97,22 @@
                 </div>
             </div>
 
-            {{-- Financial Summary Card --}}
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="px-5 py-4 border-b border-slate-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="p-1.5 bg-emerald-50 rounded-lg">
-                            <x-heroicon-o-currency-dollar class="w-4 h-4 text-emerald-600"/>
-                        </div>
-                        <h4 class="text-sm font-semibold text-slate-800">Ringkasan Keuangan</h4>
-                    </div>
+                    <h4 class="text-sm font-semibold text-slate-800">Ringkasan Keuangan</h4>
                 </div>
                 <div class="px-5 py-4">
-                    <div class="p-4 bg-gradient-to-r from-primary/5 to-emerald-50 rounded-xl border border-primary/10 mb-4">
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Nilai Permintaan</p>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 mb-4">
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Nilai Permintaan</p>
                         <p class="text-2xl font-bold text-slate-800 tracking-tight">Rp {{ number_format($jumlah, 0, ',', '.') }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="p-3 bg-slate-50 rounded-xl">
+                        <div class="p-3 bg-slate-50 rounded-lg">
                             <p class="text-xs font-medium text-slate-500 mb-1">Status</p>
                             <x-status-badge :status="$status"/>
                         </div>
-                        <div class="p-3 bg-slate-50 rounded-xl">
+                        <div class="p-3 bg-slate-50 rounded-lg">
                             <p class="text-xs font-medium text-slate-500 mb-1">Sumber</p>
                             <span class="text-sm font-semibold text-slate-800">{{ $sumberDana }}</span>
                         </div>
@@ -148,16 +121,10 @@
             </div>
         </div>
 
-        {{-- Column 2: Workflow Timeline --}}
         <div class="space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="px-5 py-4 border-b border-slate-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="p-1.5 bg-primary/10 rounded-lg">
-                            <x-heroicon-o-arrows-path class="w-4 h-4 text-primary"/>
-                        </div>
-                        <h4 class="text-sm font-semibold text-slate-800">Alur Proses</h4>
-                    </div>
+                    <h4 class="text-sm font-semibold text-slate-800">Alur Proses</h4>
                 </div>
                 <div class="px-5 py-5">
                     @if($status === 'ditolak')
@@ -209,15 +176,9 @@
                 </div>
             </div>
 
-            {{-- Quick Info --}}
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="px-5 py-4 border-b border-slate-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="p-1.5 bg-slate-100 rounded-lg">
-                            <x-heroicon-o-information-circle class="w-4 h-4 text-slate-500"/>
-                        </div>
-                        <h4 class="text-sm font-semibold text-slate-800">Informasi Proses</h4>
-                    </div>
+                    <h4 class="text-sm font-semibold text-slate-800">Informasi Proses</h4>
                 </div>
                 <div class="px-5 py-4">
                     <div class="space-y-3">

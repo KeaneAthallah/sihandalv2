@@ -4,11 +4,11 @@
     </x-slot>
 
     <div class="max-w-2xl mx-auto">
-        <x-card>
+        <x-card title="Form Tambah Rekening">
             <form action="{{ route('rekening-kas.store') }}" method="POST">
                 @csrf
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="kode" value="Kode Rekening" />
                             <x-text-input type="text" name="kode" id="kode" placeholder="Contoh: 1101" required class="mt-1.5" />
@@ -16,7 +16,7 @@
                         </div>
                         <div>
                             <x-input-label for="tipe" value="Tipe Rekening" />
-                            <select name="tipe" id="tipe" required class="mt-1.5 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all">
+                            <select name="tipe" id="tipe" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih tipe...</option>
                                 <option value="kas">Kas</option>
                                 <option value="non-kas">Non-Kas</option>
@@ -41,13 +41,13 @@
                     </div>
                 </div>
 
-                <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
-                    <x-secondary-button type="button" onclick="window.location='{{ route('rekening-kas.index') }}'">
+                <div class="mt-5 flex items-center justify-end gap-3">
+                    <a href="{{ route('rekening-kas.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">
                         Batal
-                    </x-secondary-button>
-                    <x-primary-button>
-                        Simpan Rekening
-                    </x-primary-button>
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                        Simpan
+                    </button>
                 </div>
             </form>
         </x-card>

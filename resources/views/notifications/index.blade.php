@@ -5,10 +5,9 @@
                 @if($unreadCount > 0)
                     <form method="POST" action="{{ route('notifications.markAllAsRead') }}">
                         @csrf
-                        <x-secondary-button type="submit" class="gap-2">
-                            <x-heroicon-o-check-circle class="w-4 h-4"/>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg">
                             Tandai Semua Sudah Dibaca
-                        </x-secondary-button>
+                        </button>
                     </form>
                 @endif
             </x-slot>
@@ -22,14 +21,14 @@
     @endif
 
     <div class="max-w-4xl">
-        <x-card padding="false">
+        <x-card :padding="false">
             <div class="divide-y divide-slate-100">
                 @forelse($notifications as $notification)
                     @php
                         $data = $notification->data;
                         $isUnread = is_null($notification->read_at);
                     @endphp
-                    <div class="px-5 lg:px-6 py-4 transition-colors {{ $isUnread ? 'bg-primary/[0.03]' : 'hover:bg-slate-50/50' }}">
+                    <div class="px-5 py-4 transition-colors {{ $isUnread ? 'bg-primary/[0.03]' : 'hover:bg-slate-50/50' }}">
                         <div class="flex items-start gap-4">
                             <div class="mt-0.5 shrink-0">
                                 @if($isUnread)
@@ -48,7 +47,7 @@
                                         {{ $data['title'] ?? '-' }}
                                     </h4>
                                     @if($isUnread)
-                                        <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">Baru</span>
+                                        <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wide">Baru</span>
                                     @endif
                                 </div>
                                 <p class="text-sm {{ $isUnread ? 'text-slate-600' : 'text-slate-400' }} mt-1 leading-relaxed">{{ $data['message'] ?? '-' }}</p>
@@ -56,7 +55,6 @@
                                     @if(isset($data['link']))
                                         <a href="{{ $data['link'] }}" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
                                             Lihat Detail
-                                            <x-heroicon-o-arrow-right class="w-3 h-3" />
                                         </a>
                                     @endif
                                     <span class="text-xs text-slate-400">{{ $notification->created_at->diffForHumans() }}</span>
@@ -88,7 +86,7 @@
             </div>
 
             @if($notifications->hasPages())
-                <div class="px-5 lg:px-6 py-4 border-t border-slate-100">
+                <div class="px-5 py-4 border-t border-slate-100">
                     {{ $notifications->links() }}
                 </div>
             @endif

@@ -73,7 +73,7 @@
 
         <div class="flex flex-col min-h-screen transition-[margin] duration-300 ease-in-out lg:ml-[260px]" :class="sidebarCollapsed ? 'lg:ml-[76px]' : 'lg:ml-[260px]'">
             @include('layouts.navbar')
-            <main class="flex-1 w-full max-w-[1600px] mx-auto p-4 lg:p-6 print:p-0 print:max-w-none print:bg-white">
+            <main class="flex-1 w-full mx-auto p-4 lg:p-6 print:p-0 print:bg-white">
                 @if(isset($header))
                     {{ $header }}
                 @endif

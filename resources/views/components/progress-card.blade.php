@@ -1,7 +1,7 @@
 @props([
     'title' => 'Sisa Kas Tersedia',
-    'amount' => 'Rp 12.000.000.000',
-    'percentage' => 80,
+    'amount' => 'Rp 0',
+    'percentage' => 0,
     'color' => 'success',
 ])
 
@@ -22,13 +22,13 @@
     };
 @endphp
 
-<div {{ $attributes->merge(['class' => 'rounded-2xl p-5 border border-transparent', $bgColor]) }}>
-    <div class="flex items-center justify-between mb-2.5 gap-2">
-        <span class="text-sm font-medium text-slate-600 truncate">{{ $title }}</span>
-        <span class="text-xs font-bold text-slate-500 shrink-0 tabular-nums">{{ $percentage }}%</span>
+<div {{ $attributes->merge(['class' => 'rounded-lg p-4 border border-slate-200 bg-white']) }}>
+    <div class="flex items-center justify-between mb-2 gap-2">
+        <span class="text-sm font-medium text-slate-600">{{ $title }}</span>
+        <span class="text-xs font-medium text-slate-500 tabular-nums">{{ $percentage }}%</span>
     </div>
-    <p class="text-lg lg:text-xl font-bold text-slate-800 mb-3 truncate tracking-tight">{{ $amount }}</p>
-    <div class="w-full bg-white/70 rounded-full h-2 overflow-hidden">
-        <div class="{{ $barColor }} h-2 rounded-full transition-all duration-700 ease-out" style="width: {{ max(0, min($percentage, 100)) }}%"></div>
+    <p class="text-lg font-bold text-slate-800 mb-3 tabular-nums">{{ $amount }}</p>
+    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        <div class="{{ $barColor }} h-1.5 rounded-full transition-all duration-500" style="width: {{ max(0, min($percentage, 100)) }}%"></div>
     </div>
 </div>
