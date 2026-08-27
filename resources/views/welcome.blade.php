@@ -37,10 +37,9 @@
     <section class="bg-primary pt-16">
         <div class="max-w-6xl mx-auto px-6 py-20 w-full">
             <div class="max-w-2xl">
-                <div class="flex items-center gap-3 mb-8">
+                <div class="mb-8 flex justify-center sm:justify-start">
                     <img src="{{ asset('logo.png') }}" alt="Sihandal"
-                        class="w-14 h-14 rounded-xl object-contain bg-white/10 p-2" />
-                    <span class="text-sm font-semibold text-white/80 tracking-wide uppercase">Sihandal</span>
+                        class="w-[216px] h-auto rounded-xl object-contain bg-white p-3 shadow-md" />
                 </div>
                 <h1 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
                     Sistem Informasi Keuangan Daerah
