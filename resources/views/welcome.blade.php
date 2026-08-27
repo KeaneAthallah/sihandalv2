@@ -39,7 +39,7 @@
             <div class="max-w-2xl">
                 <div class="mb-8 flex justify-center sm:justify-start">
                     <img src="{{ asset('logo.png') }}" alt="Sihandal"
-                        class="w-[216px] h-auto rounded-xl object-contain bg-white p-3 shadow-md" />
+                        class="w-[196px] h-auto rounded-xl object-contain bg-white/80 p-2" />
                 </div>
                 <h1 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
                     Sistem Informasi Keuangan Daerah
