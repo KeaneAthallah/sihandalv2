@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('program-kegiatan', ProgramKegiatanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'program-kegiatan' => 'program',
     ]);
+    Route::post('/program-kegiatan/{program}/kegiatan', [ProgramKegiatanController::class, 'storeKegiatan'])->name('program-kegiatan.kegiatan.store')->middleware('throttle:30');
+    Route::put('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'updateKegiatan'])->name('program-kegiatan.kegiatan.update')->middleware('throttle:30');
+    Route::delete('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'destroyKegiatan'])->name('program-kegiatan.kegiatan.destroy');
     Route::resource('penerimaan', PenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('pengeluaran', PengeluaranController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('posisi-kas', PosisiKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([

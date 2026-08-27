@@ -1,9 +1,9 @@
 @php
     $breadcrumbs = $breadcrumbs ?? [];
     $navOpdName = Auth::user()?->isAdmin() ? 'Administrator' : (Auth::user()?->opd?->nama ?? 'OPD');
-    $navUserName = Auth::user()->name ?? 'User';
+    $navUserName = Auth::user()?->name ?? 'User';
     $navInitials = strtoupper(implode('', array_map(fn($w) => $w[0], array_slice(explode(' ', trim($navUserName)), 0, 2))));
-    $navRoleLabel = Auth::user()->isAdmin() ? 'Administrator' : (Auth::user()?->opd?->nama ?? 'OPD');
+    $navRoleLabel = Auth::user()?->isAdmin() ? 'Administrator' : (Auth::user()?->opd?->nama ?? 'OPD');
     $unreadNotificationCount = Auth::user()?->unreadNotifications()->count() ?? 0;
 @endphp
 
@@ -81,7 +81,7 @@
                     <div class="hidden lg:flex flex-col text-left min-w-0">
                         <span class="text-sm font-semibold text-slate-800 leading-tight truncate max-w-[140px]">{{ $navUserName }}</span>
                         <span class="text-[11px] font-medium text-slate-400 leading-tight">
-                            @if(Auth::user()->isAdmin())
+                            @if(Auth::user()?->isAdmin())
                                 <span class="inline-flex items-center px-1.5 py-0 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wide">Admin</span>
                             @else
                                 <span class="truncate inline-block max-w-[130px]">{{ $navRoleLabel }}</span>
@@ -109,7 +109,7 @@
                     <div class="px-4 py-3 border-b border-slate-100">
                         <p class="text-sm font-semibold text-slate-800 truncate">{{ $navUserName }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">
-                            @if(Auth::user()->isAdmin())
+                            @if(Auth::user()?->isAdmin())
                                 <span class="inline-flex items-center px-1.5 py-0 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wide">Admin</span>
                             @else
                                 {{ $navOpdName }}

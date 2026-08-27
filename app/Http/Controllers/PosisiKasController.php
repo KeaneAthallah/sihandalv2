@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePosisiKasRequest;
 use App\Http\Requests\UpdatePosisiKasRequest;
-use App\Models\Opd;
 use App\Models\PosisiKas;
 use App\Models\Rekening;
 use Illuminate\Http\Request;

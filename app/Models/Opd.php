@@ -13,14 +13,9 @@ class Opd extends Model
         'total_pagu' => 'decimal:2',
     ];
 
-    public function sumberDanas(): HasMany
+    public function kegiatans(): HasMany
     {
-        return $this->hasMany(SumberDana::class);
-    }
-
-    public function programs(): HasMany
-    {
-        return $this->hasMany(Program::class);
+        return $this->hasMany(Kegiatan::class);
     }
 
     public function penerimaans(): HasMany

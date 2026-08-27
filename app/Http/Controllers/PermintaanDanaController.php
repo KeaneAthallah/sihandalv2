@@ -36,9 +36,7 @@ class PermintaanDanaController extends Controller
     {
         $user = request()->user();
         $opds = $this->userOpds($user);
-        $sumberDanas = $this->applyOpdScope(SumberDana::query(), $user)
-            ->orderBy('nama_sumber_dana')
-            ->get();
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
         return view('permintaan-dana.create', compact('opds', 'sumberDanas'));
     }
@@ -66,9 +64,7 @@ class PermintaanDanaController extends Controller
         $this->authorizeOpdRecord($permintaanDana, request()->user());
         $user = request()->user();
         $opds = $this->userOpds($user);
-        $sumberDanas = $this->applyOpdScope(SumberDana::query(), $user)
-            ->orderBy('nama_sumber_dana')
-            ->get();
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
         return view('permintaan-dana.edit', compact('permintaanDana', 'opds', 'sumberDanas'));
     }
@@ -113,22 +109,10 @@ class PermintaanDanaController extends Controller
                 throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
             }
 
-            $sumberDana = $permintaanDana->sumberDana;
-
-            if ($sumberDana === null) {
-                throw new \RuntimeException('Sumber dana tidak ditemukan.');
-            }
-
-            if ((float) $permintaanDana->jumlah > $sumberDana->availablePagu()) {
-                throw new \RuntimeException('Dana tidak mencukupi. Sisa pagu sumber dana: Rp '.number_format($sumberDana->availablePagu(), 0, ',', '.').'.');
-            }
-
             $permintaanDana->update([
                 'status' => 'menunggu',
                 'tanggal' => $permintaanDana->tanggal ?? now(),
             ]);
-
-            $sumberDana->commit((float) $permintaanDana->jumlah);
         });
 
         $admins = User::where('role', 'admin')->get();
@@ -144,7 +128,7 @@ class PermintaanDanaController extends Controller
             ));
         }
 
-        return back()->with('success', 'Permintaan dana berhasil diajukan. Dana telah di-commit.');
+        return back()->with('success', 'Permintaan dana berhasil diajukan dan menunggu persetujuan.');
     }
 
     protected function generateNomorPermintaan(): string

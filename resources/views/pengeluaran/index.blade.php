@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Pengeluaran" :breadcrumbs="['Keuangan', 'Pengeluaran']">
             <x-slot name="actions">
-                <a href="{{ route('pengeluaran.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                <a href="{{ route('pengeluaran.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah Pengeluaran
                 </a>
@@ -54,8 +54,7 @@
             <div class="ml-auto flex items-center gap-2">
                 <div class="relative">
                     <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
-                    <input type="text" placeholder="Cari SP2D, OPD..."
-                        class="pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 w-48 lg:w-56 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"/>
+                    <input type="text" placeholder="Cari SP2D, OPD..." class="input pl-9 w-48 lg:w-56"/>
                 </div>
             </div>
         </div>
@@ -64,45 +63,45 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[50px]">No</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[120px]">Tanggal</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Kegiatan</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[120px]">Sumber Dana</th>
-                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Anggaran</th>
-                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Realisasi</th>
-                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[100px]">Aksi</th>
+                        <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
+                        <th class="text-left px-5 py-3 table-head w-[120px]">Tanggal</th>
+                        <th class="text-left px-5 py-3 table-head">Kegiatan</th>
+                        <th class="text-left px-5 py-3 table-head">OPD</th>
+                        <th class="text-left px-5 py-3 table-head w-[120px]">Sumber Dana</th>
+                        <th class="text-right px-5 py-3 table-head w-[130px]">Anggaran</th>
+                        <th class="text-right px-5 py-3 table-head w-[130px]">Realisasi</th>
+                        <th class="text-center px-5 py-3 table-head w-[100px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($pengeluarans as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm font-medium text-slate-800">{{ $item->nama_kegiatan ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-3 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 font-medium text-slate-700 text-right whitespace-nowrap tabular-nums">
+                            <td class="px-5 py-3.5 font-medium text-slate-700 text-right whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($item->anggaran / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3 font-medium text-red-500 text-right whitespace-nowrap tabular-nums">
+                            <td class="px-5 py-3.5 font-medium text-red-500 text-right whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($item->realisasi / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('pengeluaran.edit', $item) }}" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition" title="Edit">
+                                    <a href="{{ route('pengeluaran.edit', $item) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form method="POST" action="{{ route('pengeluaran.destroy', $item) }}" x-data @submit.prevent="if(confirm('Yakin ingin menghapus pengeluaran ini?')) $el.submit()">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" title="Hapus" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
+                                        <button type="submit" title="Hapus" class="icon-btn hover:text-red-600 hover:bg-red-50">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -111,8 +110,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-16 text-center">
-                                <p class="text-sm text-slate-400">Belum ada data pengeluaran</p>
+                            <td colspan="8" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon">
+                                        <x-heroicon-o-arrow-up-right class="w-7 h-7"/>
+                                    </div>
+                                    <p class="empty-title">Belum ada data pengeluaran</p>
+                                    <p class="empty-desc">Data pengeluaran dana akan tampil di sini.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse

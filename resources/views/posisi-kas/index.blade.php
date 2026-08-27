@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Posisi Kas" :breadcrumbs="['Keuangan', 'Posisi Kas']">
             <x-slot name="actions">
-                <a href="{{ route('posisi-kas.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                <a href="{{ route('posisi-kas.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah Posisi Kas
                 </a>
@@ -39,7 +39,7 @@
 
     <x-card :padding="false">
         <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
-            <h3 class="text-sm font-semibold text-slate-800">Detail Posisi Kas</h3>
+            <h3 class="card-title">Detail Posisi Kas</h3>
         </div>
 
         @if($posisiKas->count() > 0)
@@ -47,43 +47,43 @@
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
                         <tr class="border-b border-slate-100">
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12">No</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[110px]">Tanggal</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Rekening</th>
-                            <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Saldo Awal</th>
-                            <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Penerimaan</th>
-                            <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Pengeluaran</th>
-                            <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Saldo Akhir</th>
-                            <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[80px]">Aksi</th>
+                            <th class="text-left px-5 py-3 table-head w-12">No</th>
+                            <th class="text-left px-5 py-3 table-head w-[110px]">Tanggal</th>
+                            <th class="text-left px-5 py-3 table-head">OPD</th>
+                            <th class="text-left px-5 py-3 table-head">Rekening</th>
+                            <th class="text-right px-5 py-3 table-head w-[130px]">Saldo Awal</th>
+                            <th class="text-right px-5 py-3 table-head w-[130px]">Penerimaan</th>
+                            <th class="text-right px-5 py-3 table-head w-[130px]">Pengeluaran</th>
+                            <th class="text-right px-5 py-3 table-head w-[130px]">Saldo Akhir</th>
+                            <th class="text-center px-5 py-3 table-head w-[80px]">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($posisiKas as $idx => $item)
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                                <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                                <td class="px-5 py-3 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
-                                <td class="px-5 py-3 text-slate-600 max-w-[220px] truncate">{{ $item->rekening->nama ?? '-' }}</td>
-                                <td class="px-5 py-3 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">Rp {{ number_format($item->saldo_awal / 1000000000, 1, ',', '.') }} M</td>
-                                <td class="px-5 py-3 text-right whitespace-nowrap">
+                            <tr class="table-row">
+                                <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                                <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-slate-600 max-w-[220px] truncate">{{ $item->rekening->nama ?? '-' }}</td>
+                                <td class="px-5 py-3.5 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">Rp {{ number_format($item->saldo_awal / 1000000000, 1, ',', '.') }} M</td>
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                     <span class="font-medium tabular-nums text-emerald-600">+ Rp {{ number_format($item->penerimaan / 1000000000, 1, ',', '.') }} M</span>
                                 </td>
-                                <td class="px-5 py-3 text-right whitespace-nowrap">
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                     <span class="font-medium tabular-nums text-red-500">- Rp {{ number_format($item->pengeluaran / 1000000000, 1, ',', '.') }} M</span>
                                 </td>
-                                <td class="px-5 py-3 text-right whitespace-nowrap">
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                     <span class="font-bold tabular-nums text-slate-800">Rp {{ number_format($item->saldo_akhir / 1000000000, 1, ',', '.') }} M</span>
                                 </td>
-                                <td class="px-5 py-3">
+                                <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('posisi-kas.edit', $item) }}" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition" title="Edit">
+                                        <a href="{{ route('posisi-kas.edit', $item) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                         <form method="POST" action="{{ route('posisi-kas.destroy', $item) }}" x-data @submit.prevent="if(confirm('Yakin ingin menghapus data posisi kas ini?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" title="Hapus" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
+                                            <button type="submit" title="Hapus" class="icon-btn hover:text-red-600 hover:bg-red-50">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -99,8 +99,14 @@
                 <p class="text-sm text-slate-500">Menampilkan {{ $posisiKas->count() }} data posisi kas</p>
             </div>
         @else
-            <div class="py-16 text-center">
-                <p class="text-sm text-slate-400">Belum ada data posisi kas</p>
+            <div class="px-5 py-14 text-center">
+                <div class="inline-flex flex-col items-center">
+                    <div class="empty-icon">
+                        <x-heroicon-o-currency-dollar class="w-7 h-7"/>
+                    </div>
+                    <p class="empty-title">Belum ada data posisi kas</p>
+                    <p class="empty-desc">Data posisi kas akan tampil di sini.</p>
+                </div>
             </div>
         @endif
     </x-card>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Pengeluaran;
@@ -65,17 +66,24 @@ function seedFullDataset(): array
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A', 'total_pagu' => 2000000000]);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B', 'total_pagu' => 1000000000]);
 
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)', 'pagu' => 1000000000, 'realisasi' => 400000000, 'persentase' => 40]);
-    SumberDana::create(['opd_id' => $opdB->id, 'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)', 'pagu' => 800000000, 'realisasi' => 200000000, 'persentase' => 25]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
 
     $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Kas Daerah', 'tipe' => 'kas', 'saldo' => 150000000]);
     Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan', 'saldo' => 0]);
 
-    Program::create([
+    $program = Program::create([
+        'kode_program' => '1.2',
+        'nama_program' => 'Program Penunjang Urusan',
+    ]);
+
+    Kegiatan::create([
+        'program_id' => $program->id,
         'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id,
         'kode_kegiatan' => '1.2.3',
         'nama_kegiatan' => 'Penyelenggaraan Kegiatan',
-        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'kode_rekening' => '5.2.1',
+        'nama_rekening' => 'Belanja Operasional',
         'pagu' => 500000000,
         'realisasi' => 100000000,
         'persentase' => 20,
@@ -164,5 +172,5 @@ function seedFullDataset(): array
         'tanggal' => now(),
     ]);
 
-    return compact('opd', 'opdB', 'admin', 'user', 'sumberDana', 'rekening', 'permintaanDraft', 'permintaanMenunggu');
+    return compact('opd', 'opdB', 'admin', 'user', 'sumberDana', 'program', 'rekening', 'permintaanDraft', 'permintaanMenunggu');
 }

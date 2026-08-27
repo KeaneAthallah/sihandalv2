@@ -5,10 +5,10 @@ use App\Models\PermintaanDana;
 use App\Models\SumberDana;
 use App\Models\User;
 
-test('opd user can create permintaan from their opd sumber dana', function () {
+test('opd user can create permintaan from a global sumber dana', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $this->actingAs($user)
         ->from('/permintaan-dana/create')
@@ -28,47 +28,29 @@ test('opd user can create permintaan from their opd sumber dana', function () {
     ]);
 });
 
-test('permintaan exceeding available pagu is rejected', function () {
+test('opd user cannot create permintaan for another opd', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
-
-    $this->actingAs($user)
-        ->from('/permintaan-dana/create')
-        ->post('/permintaan-dana', [
-            'opd_id' => $opd->id,
-            'sumber_dana_id' => $sumberDana->id,
-            'jumlah' => 1500000,
-            'keperluan' => 'Kebutuhan operasional',
-        ])
-        ->assertSessionHasErrors('jumlah');
-
-    $this->assertDatabaseCount('permintaan_danas', 0);
-});
-
-test('opd user cannot use sumber dana from another opd', function () {
-    $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
-    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
-    $sumberDanaB = SumberDana::create(['opd_id' => $opdB->id, 'nama_sumber_dana' => 'DAK', 'pagu' => 1000000, 'realisasi' => 0]);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $this->actingAs($user)
         ->from('/permintaan-dana/create')
         ->post('/permintaan-dana', [
-            'opd_id' => $opdA->id,
-            'sumber_dana_id' => $sumberDanaB->id,
+            'opd_id' => $opdB->id,
+            'sumber_dana_id' => $sumberDana->id,
             'jumlah' => 500000,
             'keperluan' => 'Kebutuhan operasional',
         ])
-        ->assertSessionHasErrors('sumber_dana_id');
+        ->assertSessionHasErrors('opd_id');
 
     $this->assertDatabaseCount('permintaan_danas', 0);
 });
 
-test('submitting permintaan commits dana temporarily', function () {
+test('submitting a draft permintaan sets it to menunggu', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-0001/2026',
@@ -84,15 +66,12 @@ test('submitting permintaan commits dana temporarily', function () {
         ->post("/permintaan-dana/{$permintaan->id}/submit");
 
     $this->assertDatabaseHas('permintaan_danas', ['id' => $permintaan->id, 'status' => 'menunggu']);
-    $this->assertSame(400000.0, (float) $sumberDana->fresh()->dana_di_commit);
-    $this->assertSame(0.0, (float) $sumberDana->fresh()->realisasi);
 });
 
-test('approving permintaan realizes the funds', function () {
+test('approving permintaan records persetujuan and status disetujui', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $user = User::factory()->admin()->create();
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
-    $sumberDana->commit(400000);
+    $admin = User::factory()->admin()->create();
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-0001/2026',
@@ -104,19 +83,45 @@ test('approving permintaan realizes the funds', function () {
         'status' => 'menunggu',
     ]);
 
-    $this->actingAs($user)
+    $this->actingAs($admin)
         ->post("/persetujuan/{$permintaan->id}/setujui");
 
-    $sumberDana->refresh();
-    $this->assertSame(400000.0, (float) $sumberDana->realisasi);
-    $this->assertSame(0.0, (float) $sumberDana->dana_di_commit);
+    $this->assertDatabaseHas('permintaan_danas', ['id' => $permintaan->id, 'status' => 'disetujui']);
+    $this->assertDatabaseHas('persetujuans', [
+        'permintaan_dana_id' => $permintaan->id,
+        'keputusan' => 'disetujui',
+    ]);
 });
 
-test('rejecting permintaan releases the commit', function () {
+test('rejecting permintaan records persetujuan and status ditolak', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $user = User::factory()->admin()->create();
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
-    $sumberDana->commit(400000);
+    $admin = User::factory()->admin()->create();
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+
+    $permintaan = PermintaanDana::create([
+        'nomor_permintaan' => 'PD-0001/2026',
+        'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'sumber_dana' => 'DAU',
+        'jumlah' => 400000,
+        'keperluan' => 'Operasional',
+        'status' => 'menunggu',
+    ]);
+
+    $this->actingAs($admin)
+        ->post("/persetujuan/{$permintaan->id}/tolak");
+
+    $this->assertDatabaseHas('permintaan_danas', ['id' => $permintaan->id, 'status' => 'ditolak']);
+    $this->assertDatabaseHas('persetujuans', [
+        'permintaan_dana_id' => $permintaan->id,
+        'keputusan' => 'ditolak',
+    ]);
+});
+
+test('permintaan cannot be edited after it is submitted', function () {
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-0001/2026',
@@ -129,40 +134,14 @@ test('rejecting permintaan releases the commit', function () {
     ]);
 
     $this->actingAs($user)
-        ->post("/persetujuan/{$permintaan->id}/tolak");
-
-    $sumberDana->refresh();
-    $this->assertSame(0.0, (float) $sumberDana->dana_di_commit);
-    $this->assertSame(0.0, (float) $sumberDana->realisasi);
-    $this->assertDatabaseHas('permintaan_danas', ['id' => $permintaan->id, 'status' => 'ditolak']);
-});
-
-test('committed dana reduces availability for a second request', function () {
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create(['opd_id' => $opd->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
-
-    $first = PermintaanDana::create([
-        'nomor_permintaan' => 'PD-0001/2026',
-        'opd_id' => $opd->id,
-        'sumber_dana_id' => $sumberDana->id,
-        'sumber_dana' => 'DAU',
-        'jumlah' => 700000,
-        'keperluan' => 'Operasional',
-        'status' => 'draft',
-    ]);
-
-    $this->actingAs($user)->post("/permintaan-dana/{$first->id}/submit");
-
-    $this->actingAs($user)
-        ->from('/permintaan-dana/create')
-        ->post('/permintaan-dana', [
+        ->from("/permintaan-dana/{$permintaan->id}/edit")
+        ->put("/permintaan-dana/{$permintaan->id}", [
             'opd_id' => $opd->id,
             'sumber_dana_id' => $sumberDana->id,
-            'jumlah' => 400000,
-            'keperluan' => 'Operasional 2',
+            'jumlah' => 500000,
+            'keperluan' => 'Operasional diubah',
         ])
-        ->assertSessionHasErrors('jumlah');
+        ->assertSessionHasErrors('status');
 
-    $this->assertDatabaseCount('permintaan_danas', 1);
+    $this->assertDatabaseHas('permintaan_danas', ['id' => $permintaan->id, 'jumlah' => 400000]);
 });

@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Opd;
-use App\Models\Pengeluaran;
 use App\Models\Penerimaan;
+use App\Models\Pengeluaran;
 use App\Models\PosisiKas;
 use App\Models\Program;
 use App\Models\Rekening;
@@ -10,72 +10,103 @@ use App\Models\SumberDana;
 use App\Models\TransferDana;
 use App\Models\User;
 
-test('admin can create and update a sumber dana with recomputed persentase', function () {
+test('admin can create and update a sumber dana', function () {
     $admin = User::factory()->admin()->create();
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
 
     $this->actingAs($admin)
         ->from('/sumber-dana/create')
         ->post('/sumber-dana', [
-            'opd_id' => $opd->id,
-            'nama_sumber_dana' => 'DAU',
-            'pagu' => 2000000,
-            'realisasi' => 500000,
+            'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)',
         ]);
 
-    $sumberDana = SumberDana::where('nama_sumber_dana', 'DAU')->first();
-    expect($sumberDana)->not->toBeNull()
-        ->and((float) $sumberDana->persentase)->toBe(25.0);
+    $sumberDana = SumberDana::where('nama_sumber_dana', 'Dana Alokasi Umum (DAU)')->first();
+    expect($sumberDana)->not->toBeNull();
 
     $this->actingAs($admin)
         ->from("/sumber-dana/{$sumberDana->id}/edit")
         ->put("/sumber-dana/{$sumberDana->id}", [
-            'opd_id' => $opd->id,
-            'nama_sumber_dana' => 'DAU',
-            'pagu' => 4000000,
-            'realisasi' => 1000000,
+            'nama_sumber_dana' => 'Dana Alokasi Umum (DAU) - Baru',
         ]);
 
-    expect((float) $sumberDana->fresh()->persentase)->toBe(25.0);
+    expect($sumberDana->fresh()->nama_sumber_dana)->toBe('Dana Alokasi Umum (DAU) - Baru');
 });
 
-test('opd user store forces their own opd for program', function () {
+test('admin can create a program standalone', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/program-kegiatan', [
+            'kode_program' => '1.2',
+            'nama_program' => 'Program A',
+        ]);
+
+    $this->assertDatabaseHas('programs', ['kode_program' => '1.2', 'nama_program' => 'Program A']);
+});
+
+test('opd user store forces their own opd for kegiatan', function () {
     $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A']);
 
     $this->actingAs($userA)
-        ->from('/program-kegiatan/create')
-        ->post('/program-kegiatan', [
+        ->post("/program-kegiatan/{$program->id}/kegiatan", [
             'opd_id' => $opdB->id,
+            'sumber_dana_id' => $sumberDana->id,
             'kode_kegiatan' => '1.2.3',
             'nama_kegiatan' => 'Pelatihan',
-            'sumber_dana' => 'DAU',
             'pagu' => 1000000,
             'realisasi' => 250000,
         ]);
 
-    $this->assertDatabaseHas('programs', [
+    $this->assertDatabaseHas('kegiatan', [
         'nama_kegiatan' => 'Pelatihan',
+        'program_id' => $program->id,
         'opd_id' => $opdA->id,
     ]);
 });
 
-test('program store recomputes persentase', function () {
+test('multiple kegiatan can be added to the same program', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A']);
+
+    $this->actingAs($admin)->post("/program-kegiatan/{$program->id}/kegiatan", [
+        'opd_id' => $opd->id,
+        'kode_kegiatan' => '1.2.1',
+        'nama_kegiatan' => 'Pelatihan',
+        'pagu' => 1000000,
+        'realisasi' => 0,
+    ]);
+    $this->actingAs($admin)->post("/program-kegiatan/{$program->id}/kegiatan", [
+        'opd_id' => $opd->id,
+        'kode_kegiatan' => '1.2.2',
+        'nama_kegiatan' => 'Sosialisasi',
+        'pagu' => 500000,
+        'realisasi' => 0,
+    ]);
+
+    $this->assertEquals(2, $program->kegiatans()->count());
+});
+
+test('kegiatan store recomputes persentase', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A']);
 
     $this->actingAs($admin)
-        ->post('/program-kegiatan', [
+        ->post("/program-kegiatan/{$program->id}/kegiatan", [
             'opd_id' => $opd->id,
+            'sumber_dana_id' => $sumberDana->id,
             'kode_kegiatan' => '1.2.3',
             'nama_kegiatan' => 'Pelatihan',
-            'sumber_dana' => 'DAU',
             'pagu' => 1000000,
             'realisasi' => 250000,
         ]);
 
-    $this->assertDatabaseHas('programs', ['nama_kegiatan' => 'Pelatihan', 'persentase' => 25.00]);
+    $this->assertDatabaseHas('kegiatan', ['nama_kegiatan' => 'Pelatihan', 'persentase' => 25.00]);
 });
 
 test('admin can create and update a rekening kas', function () {
@@ -237,16 +268,10 @@ test('transfer dana sets tanggal_selesai when marked selesai', function () {
     expect($transfer->fresh()->tanggal_selesai)->not->toBeNull();
 });
 
-test('opd user can destroy only their own sumber dana', function () {
-    $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
-    $sumberB = SumberDana::create(['opd_id' => $opdB->id, 'nama_sumber_dana' => 'DAK', 'pagu' => 1000000, 'realisasi' => 0]);
-    $sumberA = SumberDana::create(['opd_id' => $opdA->id, 'nama_sumber_dana' => 'DAU', 'pagu' => 1000000, 'realisasi' => 0]);
-    $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
+test('admin can destroy a sumber dana', function () {
+    $admin = User::factory()->admin()->create();
+    $sumber = SumberDana::create(['nama_sumber_dana' => 'DAK']);
 
-    $this->actingAs($userA)->delete("/sumber-dana/{$sumberB->id}");
-    $this->assertDatabaseHas('sumber_danas', ['id' => $sumberB->id]);
-
-    $this->actingAs($userA)->delete("/sumber-dana/{$sumberA->id}");
-    $this->assertDatabaseMissing('sumber_danas', ['id' => $sumberA->id]);
+    $this->actingAs($admin)->delete("/sumber-dana/{$sumber->id}");
+    $this->assertDatabaseMissing('sumber_danas', ['id' => $sumber->id]);
 });

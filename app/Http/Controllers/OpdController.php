@@ -11,13 +11,13 @@ class OpdController extends Controller
     {
         $user = $request->user();
         $opds = $this->applyOpdScope(Opd::query(), $user, 'id')
-            ->withCount(['programs', 'penerimaans', 'pengeluarans'])
-            ->withSum('sumberDanas as total_pagu_sumber_dana', 'pagu')
+            ->withCount(['kegiatans', 'penerimaans', 'pengeluarans'])
+            ->withSum('kegiatans as total_pagu_kegiatan', 'pagu')
             ->orderBy('nama')
             ->get();
 
         $totalOpd = $opds->count();
-        $totalPagu = $opds->sum('total_pagu');
+        $totalPagu = $opds->sum('total_pagu_kegiatan');
 
         return view('opd.index', compact('opds', 'totalOpd', 'totalPagu'));
     }
@@ -25,10 +25,10 @@ class OpdController extends Controller
     public function show(Request $request, Opd $opd)
     {
         $this->authorizeOpdRecord($opd, $request->user(), 'id');
-        $opd->load(['sumberDanas', 'programs']);
+        $opd->load(['kegiatans.program', 'kegiatans.sumberDana']);
 
-        $totalPagu = $opd->sumberDanas->sum('pagu');
-        $totalRealisasi = $opd->sumberDanas->sum('realisasi');
+        $totalPagu = $opd->kegiatans->sum('pagu');
+        $totalRealisasi = $opd->kegiatans->sum('realisasi');
 
         return view('opd.show', compact('opd', 'totalPagu', 'totalRealisasi'));
     }

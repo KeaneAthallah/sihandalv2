@@ -3,21 +3,19 @@
     'subtitle' => null,
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden']) }}>
-    <div class="px-5 py-4 border-b border-slate-100">
-        <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <h3 class="text-sm font-semibold text-slate-800">{{ $title }}</h3>
-                @if($subtitle)
-                    <p class="text-xs text-slate-400 mt-0.5">{{ $subtitle }}</p>
-                @endif
-            </div>
-            @if(isset($actions))
-                <div class="flex items-center gap-2 shrink-0">
-                    {{ $actions }}
-                </div>
+<div {{ $attributes->merge(['class' => 'card overflow-hidden']) }}>
+    <div class="card-header">
+        <div class="min-w-0">
+            <h3 class="card-title">{{ $title }}</h3>
+            @if($subtitle)
+                <p class="card-subtitle">{{ $subtitle }}</p>
             @endif
         </div>
+        @if(isset($actions))
+            <div class="flex items-center gap-2 shrink-0">
+                {{ $actions }}
+            </div>
+        @endif
     </div>
     <div class="p-5">
         {{ $slot }}

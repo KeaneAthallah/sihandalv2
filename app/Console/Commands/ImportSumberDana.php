@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Program;
 use App\Models\Rekening;
@@ -92,25 +93,28 @@ class ImportSumberDana extends Command
                     $rekeningCache[$kodeRek] = $rekening;
                 }
 
-                // Create SumberDana record
-                SumberDana::create([
-                    'opd_id' => $opd->id,
-                    'nama_sumber_dana' => $sumberDana,
-                    'pagu' => $pagu,
-                    'realisasi' => 0,
-                    'persentase' => 0,
-                ]);
+                // Create global SumberDana record by name
+                $sumber = SumberDana::firstOrCreate(['nama_sumber_dana' => $sumberDana]);
 
-                // Create Program/Kegiatan record
-                Program::create([
+                // Derive Program from the kegiatan code (first two segments) and get/create it
+                $segments = explode('.', $kodeKegiatan);
+                $kodeProgram = count($segments) >= 2 ? implode('.', array_slice($segments, 0, 2)) : $kodeKegiatan;
+                $program = Program::firstOrCreate(
+                    ['kode_program' => $kodeProgram],
+                    ['nama_program' => 'Program '.$kodeProgram]
+                );
+
+                // Create Kegiatan record
+                Kegiatan::create([
+                    'program_id' => $program->id,
                     'opd_id' => $opd->id,
+                    'sumber_dana_id' => $sumber->id,
                     'kode_kegiatan' => $kodeKegiatan,
                     'nama_kegiatan' => $namaKegiatan,
                     'kode_sub_kegiatan' => $kodeSubKegiatan,
                     'nama_sub_kegiatan' => $namaSubKegiatan,
                     'kode_rekening' => $kodeRek,
                     'nama_rekening' => $namaRek,
-                    'sumber_dana' => $sumberDana,
                     'pagu' => $pagu,
                     'realisasi' => 0,
                     'persentase' => 0,

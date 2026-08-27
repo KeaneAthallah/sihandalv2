@@ -13,7 +13,7 @@ return new class extends Migration
         });
 
         Schema::table('sumber_danas', function (Blueprint $table) {
-            $table->index(['opd_id', 'nama_sumber_dana']);
+            $table->index('nama_sumber_dana');
         });
 
         Schema::table('penerimaans', function (Blueprint $table) {
@@ -44,7 +44,7 @@ return new class extends Migration
         });
 
         Schema::table('sumber_danas', function (Blueprint $table) {
-            $table->dropIndex(['opd_id', 'nama_sumber_dana']);
+            $table->dropIndex(['nama_sumber_dana']);
         });
 
         Schema::table('penerimaans', function (Blueprint $table) {

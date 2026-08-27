@@ -18,36 +18,9 @@
             <x-card title="Data Sumber Dana">
                 <div class="space-y-4">
                     <div>
-                        <x-input-label for="opd_id" value="OPD" required/>
-                        <select name="opd_id" id="opd_id" required
-                            class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
-                            <option value="" disabled>Pilih OPD</option>
-                            @foreach($opds as $opd)
-                                <option value="{{ $opd->id }}" {{ old('opd_id', $sumberDana->opd_id) == $opd->id ? 'selected' : '' }}>
-                                    {{ $opd->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <x-input-error :messages="$errors->get('opd_id')"/>
-                    </div>
-
-                    <div>
                         <x-input-label for="nama_sumber_dana" value="Nama Sumber Dana" required/>
                         <x-text-input type="text" name="nama_sumber_dana" id="nama_sumber_dana" class="mt-1" value="{{ old('nama_sumber_dana', $sumberDana->nama_sumber_dana) }}" placeholder="Masukkan nama sumber dana" required/>
                         <x-input-error :messages="$errors->get('nama_sumber_dana')"/>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <x-input-label for="pagu" value="Pagu" required/>
-                            <x-text-input type="number" name="pagu" id="pagu" class="mt-1" value="{{ old('pagu', $sumberDana->pagu) }}" placeholder="0" step="0.01" min="0" required/>
-                            <x-input-error :messages="$errors->get('pagu')"/>
-                        </div>
-                        <div>
-                            <x-input-label for="realisasi" value="Realisasi"/>
-                            <x-text-input type="number" name="realisasi" id="realisasi" class="mt-1" value="{{ old('realisasi', $sumberDana->realisasi) }}" placeholder="0" step="0.01" min="0"/>
-                            <x-input-error :messages="$errors->get('realisasi')"/>
-                        </div>
                     </div>
                 </div>
             </x-card>

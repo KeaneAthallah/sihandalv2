@@ -11,75 +11,37 @@ class SumberDanaController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $opds = $this->userOpds($user);
-        $sumberDanaTypes = $this->applyOpdScope(SumberDana::query(), $user)
-            ->select('nama_sumber_dana')
-            ->distinct()
-            ->pluck('nama_sumber_dana');
+        $sumberDanas = SumberDana::latest()->paginate(20);
 
-        $totalPagu = $this->applyOpdScope(SumberDana::query(), $user)->sum('pagu');
-        $totalRealisasi = $this->applyOpdScope(SumberDana::query(), $user)->sum('realisasi');
-        $persentase = $totalPagu > 0 ? round(($totalRealisasi / $totalPagu) * 100, 1) : 0;
-
-        $sumberDanaData = $this->applyOpdScope(SumberDana::query(), $user)
-            ->select('nama_sumber_dana')
-            ->selectRaw('SUM(pagu) as total_pagu')
-            ->selectRaw('SUM(realisasi) as total_realisasi')
-            ->groupBy('nama_sumber_dana')
-            ->get();
-
-        $sumberDanaRecords = $this->applyOpdScope(SumberDana::with('opd')->latest(), $user)->paginate(20);
-
-        return view('sumber-dana.index', compact(
-            'opds', 'sumberDanaTypes', 'totalPagu', 'totalRealisasi',
-            'persentase', 'sumberDanaData', 'sumberDanaRecords'
-        ));
+        return view('sumber-dana.index', ['sumberDanas' => $sumberDanas]);
     }
 
     public function create()
     {
-        $opds = $this->userOpds(request()->user());
-
-        return view('sumber-dana.create', compact('opds'));
+        return view('sumber-dana.create');
     }
 
     public function edit(SumberDana $sumberDana)
     {
-        $this->authorizeOpdRecord($sumberDana, request()->user());
-        $opds = $this->userOpds(request()->user());
-
-        return view('sumber-dana.edit', compact('sumberDana', 'opds'));
+        return view('sumber-dana.edit', compact('sumberDana'));
     }
 
     public function store(StoreSumberDanaRequest $request)
     {
-        $data = $request->validated();
-        $data['persentase'] = $data['pagu'] > 0 ? round(($data['realisasi'] ?? 0) / $data['pagu'] * 100, 2) : 0;
-
-        if (! $request->user()->isAdmin()) {
-            $data['opd_id'] = $request->user()->opd_id;
-        }
-
-        SumberDana::create($data);
+        SumberDana::create($request->validated());
 
         return back()->with('success', 'Sumber dana berhasil ditambahkan.');
     }
 
     public function update(UpdateSumberDanaRequest $request, SumberDana $sumberDana)
     {
-        $this->authorizeOpdRecord($sumberDana, $request->user());
-        $data = $request->validated();
-        $data['persentase'] = $data['pagu'] > 0 ? round(($data['realisasi'] ?? 0) / $data['pagu'] * 100, 2) : 0;
-
-        $sumberDana->update($data);
+        $sumberDana->update($request->validated());
 
         return back()->with('success', 'Sumber dana berhasil diperbarui.');
     }
 
     public function destroy(SumberDana $sumberDana)
     {
-        $this->authorizeOpdRecord($sumberDana, request()->user());
         $sumberDana->delete();
 
         return back()->with('success', 'Sumber dana berhasil dihapus.');

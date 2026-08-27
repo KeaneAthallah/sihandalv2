@@ -104,7 +104,7 @@
     {{-- Data Table --}}
     <x-card :padding="false">
         <div class="px-5 py-4 border-b border-slate-100">
-            <h3 class="text-sm font-semibold text-slate-800">Daftar Permintaan Dana</h3>
+            <h3 class="card-title">Daftar Permintaan Dana</h3>
             <p class="text-xs text-slate-400 mt-0.5">Detail seluruh permintaan dana yang tercatat</p>
         </div>
 
@@ -112,40 +112,41 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-10">No</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">No. Permintaan</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-28">Tanggal</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-36">Sumber Dana</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-40">Nilai (Rp)</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-32">Status</th>
+                        <th class="px-5 py-3 table-head text-center w-10">No</th>
+                        <th class="px-5 py-3 table-head text-left">No. Permintaan</th>
+                        <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
+                        <th class="px-5 py-3 table-head text-left">OPD</th>
+                        <th class="px-5 py-3 table-head text-left w-36">Sumber Dana</th>
+                        <th class="px-5 py-3 table-head text-right w-40">Nilai (Rp)</th>
+                        <th class="px-5 py-3 table-head text-center w-32">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3 font-semibold text-slate-800">{{ $item->nomor_permintaan }}</td>
-                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 font-semibold text-slate-800">{{ $item->nomor_permintaan }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
                                 Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3 text-center">
+                            <td class="px-5 py-3.5 text-center">
                                 <x-status-badge :status="$item->status"/>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <x-heroicon-o-inbox class="w-10 h-10 text-slate-300"/>
-                                    <p class="text-sm text-slate-400">Belum ada data permintaan dana</p>
+                            <td colspan="7" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon"><x-heroicon-o-inbox class="w-7 h-7"/></div>
+                                    <p class="empty-title">Belum ada data permintaan dana</p>
+                                    <p class="empty-desc">Ringkasan seluruh permintaan dana akan tampil di sini setelah data tercatat.</p>
                                 </div>
                             </td>
                         </tr>

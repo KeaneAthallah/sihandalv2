@@ -61,7 +61,7 @@
         <div class="px-5 py-4 border-b border-slate-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-800">Detail Laporan Posisi Kas</h3>
+                    <h3 class="card-title">Detail Laporan Posisi Kas</h3>
                     <p class="text-xs text-slate-400 mt-0.5">Rekapan posisi kas per OPD dan rekening</p>
                 </div>
                 <div class="text-xs text-slate-400 hidden sm:block">
@@ -73,42 +73,43 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-10">No</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-28">Tanggal</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-40">Rekening</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-32">Saldo Awal</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-32">Penerimaan</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-32">Pengeluaran</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-36">Saldo Akhir</th>
+                        <th class="px-5 py-3 table-head text-center w-10">No</th>
+                        <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
+                        <th class="px-5 py-3 table-head text-left">OPD</th>
+                        <th class="px-5 py-3 table-head text-left w-40">Rekening</th>
+                        <th class="px-5 py-3 table-head text-right w-32">Saldo Awal</th>
+                        <th class="px-5 py-3 table-head text-right w-32">Penerimaan</th>
+                        <th class="px-5 py-3 table-head text-right w-32">Pengeluaran</th>
+                        <th class="px-5 py-3 table-head text-right w-36">Saldo Akhir</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($posisiKas as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3 text-slate-600">{{ $item->rekening->nama ?? '-' }}</td>
-                            <td class="px-5 py-3 text-right text-slate-600 font-mono text-xs">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600">{{ $item->rekening->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">
                                 Rp {{ number_format($item->saldo_awal / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3 text-right text-emerald-600 font-semibold font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right text-emerald-600 font-semibold font-mono text-xs">
                                 + Rp {{ number_format($item->penerimaan / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3 text-right text-red-500 font-semibold font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right text-red-500 font-semibold font-mono text-xs">
                                 - Rp {{ number_format($item->pengeluaran / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3 text-right font-bold text-slate-800 font-mono text-xs border-l-2 border-slate-200">
+                            <td class="px-5 py-3.5 text-right font-bold text-slate-800 font-mono text-xs border-l-2 border-slate-200">
                                 Rp {{ number_format($item->saldo_akhir / 1000000000, 1, ',', '.') }} M
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <x-heroicon-o-inbox class="w-10 h-10 text-slate-300"/>
-                                    <p class="text-sm text-slate-400">Belum ada data posisi kas</p>
+                            <td colspan="8" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon"><x-heroicon-o-inbox class="w-7 h-7"/></div>
+                                    <p class="empty-title">Belum ada data posisi kas</p>
+                                    <p class="empty-desc">Rekapan posisi kas per OPD dan rekening akan tampil di sini setelah data tercatat.</p>
                                 </div>
                             </td>
                         </tr>

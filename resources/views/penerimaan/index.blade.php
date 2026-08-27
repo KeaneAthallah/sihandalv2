@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Penerimaan" :breadcrumbs="['Keuangan', 'Penerimaan']">
             <x-slot name="actions">
-                <a href="{{ route('penerimaan.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                <a href="{{ route('penerimaan.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Penerimaan Baru
                 </a>
@@ -50,15 +50,13 @@
         <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
             <div class="flex items-center gap-2">
                 <label class="text-sm text-slate-500 font-medium">Dari</label>
-                <input type="date" value="{{ request('from', '2026-01-01') }}"
-                    class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" />
+                <input type="date" value="{{ request('from', '2026-01-01') }}" class="input" />
             </div>
             <div class="flex items-center gap-2">
                 <label class="text-sm text-slate-500 font-medium">Sampai</label>
-                <input type="date" value="{{ request('to', '2026-12-31') }}"
-                    class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" />
+                <input type="date" value="{{ request('to', '2026-12-31') }}" class="input" />
             </div>
-            <select class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <select class="input">
                 <option>Semua Sumber Dana</option>
                 @foreach($penerimaans->pluck('nama_sumber_dana')->unique()->filter() as $sd)
                     <option>{{ $sd }}</option>
@@ -74,34 +72,34 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[50px]">No</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[120px]">Tanggal</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[150px]">Sumber Dana</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[160px]">Target</th>
-                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[160px]">Realisasi</th>
-                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[160px]">Persentase</th>
-                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[100px]">Aksi</th>
+                        <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
+                        <th class="text-left px-5 py-3 table-head w-[120px]">Tanggal</th>
+                        <th class="text-left px-5 py-3 table-head w-[150px]">Sumber Dana</th>
+                        <th class="text-left px-5 py-3 table-head">OPD</th>
+                        <th class="text-right px-5 py-3 table-head w-[160px]">Target</th>
+                        <th class="text-right px-5 py-3 table-head w-[160px]">Realisasi</th>
+                        <th class="text-center px-5 py-3 table-head w-[160px]">Persentase</th>
+                        <th class="text-center px-5 py-3 table-head w-[100px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($penerimaans as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
                                     {{ $item->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">
+                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">
                                 Rp {{ number_format($item->target, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3 font-medium text-emerald-600 text-right whitespace-nowrap tabular-nums">
+                            <td class="px-5 py-3.5 font-medium text-emerald-600 text-right whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($item->realisasi, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-2.5 justify-center">
                                     <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
                                         <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($item->persentase, 100) }}%"></div>
@@ -109,10 +107,10 @@
                                     <span class="text-xs font-medium text-slate-500 w-10 text-right tabular-nums">{{ $item->persentase }}%</span>
                                 </div>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
                                     <a href="{{ route('penerimaan.edit', $item) }}" title="Edit"
-                                        class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition">
+                                        class="icon-btn hover:text-amber-600 hover:bg-amber-50">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form method="POST" action="{{ route('penerimaan.destroy', $item) }}"
@@ -120,7 +118,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus"
-                                            class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
+                                            class="icon-btn hover:text-red-600 hover:bg-red-50">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -129,8 +127,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-16 text-center">
-                                <p class="text-sm text-slate-400">Belum ada data penerimaan</p>
+                            <td colspan="8" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon">
+                                        <x-heroicon-o-arrow-down-left class="w-7 h-7"/>
+                                    </div>
+                                    <p class="empty-title">Belum ada data penerimaan</p>
+                                    <p class="empty-desc">Data penerimaan dana akan tampil di sini.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse

@@ -17,11 +17,11 @@
     };
 @endphp
 
-<div {{ $attributes->merge(['class' => 'bg-white rounded-lg border border-slate-200 p-4 shadow-sm']) }}>
+<div {{ $attributes->merge(['class' => 'card p-4']) }}>
     <div class="flex items-start justify-between gap-3">
         <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">{{ $title }}</p>
-            <p class="mt-1 text-xl font-bold text-slate-800 truncate">{{ $value }}</p>
+            <p class="stat-label">{{ $title }}</p>
+            <p class="stat-value truncate">{{ $value }}</p>
             @if($change)
                 <div class="mt-1.5 flex items-center gap-1">
                     @if($changeType === 'up')
@@ -34,7 +34,7 @@
             @endif
         </div>
         @if(isset($icon))
-            <div class="p-2 rounded-lg {{ $iconBg }} shrink-0">
+            <div class="p-2.5 rounded-xl {{ $iconBg }} shrink-0 ring-1 ring-inset ring-black/[0.03]">
                 {{ $icon }}
             </div>
         @endif

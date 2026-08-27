@@ -2,7 +2,8 @@
     <x-slot name="header">
         <x-page-header title="Tahun Anggaran" :breadcrumbs="['Tahun Anggaran']">
             <x-slot name="actions">
-                <button @click="$dispatch('open-modal', { name: 'add-tahun-anggaran' })" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg">
+                <button @click="$dispatch('open-modal', { name: 'add-tahun-anggaran' })" class="btn-primary">
+                    <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah Tahun Anggaran
                 </button>
             </x-slot>
@@ -28,16 +29,16 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Tahun</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Periode</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Status</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Aktif</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Aksi</th>
+                        <th class="px-5 py-3 table-head">Tahun</th>
+                        <th class="px-5 py-3 table-head">Periode</th>
+                        <th class="px-5 py-3 table-head text-center">Status</th>
+                        <th class="px-5 py-3 table-head text-center">Aktif</th>
+                        <th class="px-5 py-3 table-head text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($tahunAnggarans as $item)
-                        <tr class="hover:bg-slate-50/50 transition-colors {{ $item->is_active ? 'bg-primary/[0.03]' : '' }}">
+                        <tr class="table-row {{ $item->is_active ? 'bg-primary/[0.03]' : '' }}">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $item->is_active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400' }}">

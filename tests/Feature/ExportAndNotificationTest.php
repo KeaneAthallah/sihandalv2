@@ -66,13 +66,7 @@ test('submit permintaan dana sends notification to admins', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A', 'total_pagu' => 2000000000]);
     $admin = User::factory()->admin()->create();
     $user = User::factory()->opd()->create(['opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create([
-        'opd_id' => $opd->id,
-        'nama_sumber_dana' => 'DAU',
-        'pagu' => 1000000000,
-        'realisasi' => 0,
-        'persentase' => 0,
-    ]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-TEST/'.now()->year,
@@ -98,13 +92,7 @@ test('approve permintaan dana sends notification to opd users', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $admin = User::factory()->admin()->create();
     $user = User::factory()->opd()->create(['opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create([
-        'opd_id' => $opd->id,
-        'nama_sumber_dana' => 'DAU',
-        'pagu' => 1000000000,
-        'realisasi' => 50000000,
-        'persentase' => 5,
-    ]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-APPROVE/'.now()->year,
@@ -130,13 +118,7 @@ test('reject permintaan dana sends notification to opd users', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $admin = User::factory()->admin()->create();
     $user = User::factory()->opd()->create(['opd_id' => $opd->id]);
-    $sumberDana = SumberDana::create([
-        'opd_id' => $opd->id,
-        'nama_sumber_dana' => 'DAU',
-        'pagu' => 1000000000,
-        'realisasi' => 50000000,
-        'persentase' => 5,
-    ]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-REJECT/'.now()->year,

@@ -61,7 +61,7 @@
         <div class="px-5 py-4 border-b border-slate-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-800">Detail Laporan Pengeluaran</h3>
+                    <h3 class="card-title">Detail Laporan Pengeluaran</h3>
                     <p class="text-xs text-slate-400 mt-0.5">Realisasi pengeluaran per OPD dan kegiatan</p>
                 </div>
                 <div class="flex items-center gap-3 text-xs text-slate-500">
@@ -84,13 +84,13 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-10">No</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-28">Tanggal</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Kegiatan</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-40">Anggaran (Rp)</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right w-40">Realisasi (Rp)</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-40">Persentase</th>
+                        <th class="px-5 py-3 table-head text-center w-10">No</th>
+                        <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
+                        <th class="px-5 py-3 table-head text-left">OPD</th>
+                        <th class="px-5 py-3 table-head text-left">Kegiatan</th>
+                        <th class="px-5 py-3 table-head text-right w-40">Anggaran (Rp)</th>
+                        <th class="px-5 py-3 table-head text-right w-40">Realisasi (Rp)</th>
+                        <th class="px-5 py-3 table-head text-center w-40">Persentase</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -109,18 +109,18 @@
                                 default => 'bg-red-100',
                             };
                         @endphp
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3 text-slate-600">{{ $item->nama_kegiatan ?? '-' }}</td>
-                            <td class="px-5 py-3 text-right text-slate-600 font-mono text-xs">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600">{{ $item->nama_kegiatan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">
                                 Rp {{ number_format($item->anggaran, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
                                 Rp {{ number_format($item->realisasi, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 {{ $barTrackColor }} rounded-full h-2 min-w-[60px] max-w-[100px]">
                                         <div class="{{ $barColor }} h-2 rounded-full transition-all duration-300" style="width: {{ min($item->persentase, 100) }}%"></div>
@@ -131,10 +131,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <x-heroicon-o-inbox class="w-10 h-10 text-slate-300"/>
-                                    <p class="text-sm text-slate-400">Belum ada data pengeluaran</p>
+                            <td colspan="7" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon"><x-heroicon-o-inbox class="w-7 h-7"/></div>
+                                    <p class="empty-title">Belum ada data pengeluaran</p>
+                                    <p class="empty-desc">Rekapitulasi pengeluaran dan realisasi anggaran akan tampil di sini setelah data tercatat.</p>
                                 </div>
                             </td>
                         </tr>

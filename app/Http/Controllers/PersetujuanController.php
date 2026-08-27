@@ -41,10 +41,6 @@ class PersetujuanController extends Controller
                 throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
             }
 
-            if ($permintaanDana->sumberDana) {
-                $permintaanDana->sumberDana->realize((float) $permintaanDana->jumlah);
-            }
-
             $permintaanDana->update([
                 'status' => 'disetujui',
                 'tanggal_disetujui' => now(),
@@ -76,10 +72,6 @@ class PersetujuanController extends Controller
 
             if ($permintaanDana->status !== 'menunggu') {
                 throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
-            }
-
-            if ($permintaanDana->sumberDana) {
-                $permintaanDana->sumberDana->releaseCommit((float) $permintaanDana->jumlah);
             }
 
             $permintaanDana->update([

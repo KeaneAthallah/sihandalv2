@@ -71,13 +71,13 @@
 
                     <div>
                         <x-input-label value="Keterangan" />
-                        <textarea name="keterangan" rows="3" placeholder="Tambahkan keterangan jika diperlukan..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">{{ old('keterangan') }}</textarea>
+                        <textarea name="keterangan" rows="3" placeholder="Tambahkan keterangan jika diperlukan..." class="input">{{ old('keterangan') }}</textarea>
                         <x-input-error :messages="$errors->get('keterangan')" />
                     </div>
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">
-                    <a href="{{ route('penerimaan.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition">
+                    <a href="{{ route('penerimaan.index') }}" class="btn-secondary">
                         Batal
                     </a>
                     <x-primary-button>Simpan</x-primary-button>

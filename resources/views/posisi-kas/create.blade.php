@@ -66,7 +66,7 @@
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">
-                    <a href="{{ route('posisi-kas.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition">
+                    <a href="{{ route('posisi-kas.index') }}" class="btn-secondary">
                         Batal
                     </a>
                     <x-primary-button>Simpan</x-primary-button>

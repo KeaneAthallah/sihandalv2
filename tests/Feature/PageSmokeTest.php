@@ -16,7 +16,7 @@ test('all pages render for admin', function () {
     $this->get("/rekening-kas/{$d['rekening']->id}/edit")->assertSuccessful();
     $this->get('/program-kegiatan')->assertSuccessful();
     $this->get('/program-kegiatan/create')->assertSuccessful();
-    $this->get("/program-kegiatan/{$d['rekening']->id}/edit")->assertSuccessful();
+    $this->get("/program-kegiatan/{$d['program']->id}/edit")->assertSuccessful();
     $this->get('/penerimaan')->assertSuccessful();
     $this->get('/penerimaan/create')->assertSuccessful();
     $this->get('/pengeluaran')->assertSuccessful();

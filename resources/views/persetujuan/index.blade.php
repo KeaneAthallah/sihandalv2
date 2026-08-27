@@ -32,7 +32,7 @@
     {{-- Antrian Persetujuan --}}
     <x-card :padding="false">
         <div class="px-5 py-4 border-b border-slate-100">
-            <h3 class="text-sm font-semibold text-slate-800">Antrian Permintaan Dana</h3>
+            <h3 class="card-title">Antrian Permintaan Dana</h3>
             <p class="text-xs text-slate-400 mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
         </div>
 
@@ -40,21 +40,21 @@
             <table class="w-full text-sm min-w-[1100px]">
                 <thead>
                     <tr>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">No</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Pengaju</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-right">Nilai</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Sumber Dana</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Keperluan</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Tanggal</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Aksi</th>
+                        <th class="px-5 py-3 table-head text-left">No</th>
+                        <th class="px-5 py-3 table-head text-left">Pengaju</th>
+                        <th class="px-5 py-3 table-head text-left">OPD</th>
+                        <th class="px-5 py-3 table-head text-right">Nilai</th>
+                        <th class="px-5 py-3 table-head text-left">Sumber Dana</th>
+                        <th class="px-5 py-3 table-head text-left">Keperluan</th>
+                        <th class="px-5 py-3 table-head text-left">Tanggal</th>
+                        <th class="px-5 py-3 table-head text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
                                         {{ strtoupper(substr($item->opd->nama ?? 'O', 0, 2)) }}
@@ -65,28 +65,28 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm text-slate-700 max-w-[180px] truncate block">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-3 text-right">
+                            <td class="px-5 py-3.5 text-right">
                                 <span class="text-sm font-bold text-slate-900 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">
                                     {{ Str::limit($item->keperluan, 40) ?: '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 whitespace-nowrap">
+                            <td class="px-5 py-3.5 whitespace-nowrap">
                                 <span class="text-xs text-slate-500">{{ $item->tanggal?->format('d M Y') ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition" title="Lihat Detail">
+                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="icon-btn hover:text-primary hover:bg-blue-50" title="Lihat Detail">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
                                     <button
@@ -102,7 +102,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'approve-confirm'); window.selectedItem = $data.item"
-                                        class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                        class="icon-btn hover:text-emerald-600 hover:bg-emerald-50"
                                         title="Setujui"
                                     >
                                         <x-heroicon-o-check class="w-4 h-4"/>
@@ -120,7 +120,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'reject-confirm'); window.selectedItem = $data.item"
-                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        class="icon-btn hover:text-red-600 hover:bg-red-50"
                                         title="Tolak"
                                     >
                                         <x-heroicon-o-x-mark class="w-4 h-4"/>
@@ -190,13 +190,13 @@
                 <div class="flex items-start gap-2.5">
                     <x-heroicon-o-information-circle class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"/>
                     <p class="text-sm text-emerald-700 leading-relaxed">
-                        Dengan menyetujui, dana sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> akan direalisasikan dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span>.
+                        Dengan menyetujui, permintaan sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan berstatus disetujui.
                     </p>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <button type="button" @click="$dispatch('close-modal', 'approve-confirm')" class="px-4 py-2 bg-white border border-slate-300 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-50 transition">
+                <button type="button" @click="$dispatch('close-modal', 'approve-confirm')" class="btn-secondary">
                     Batal
                 </button>
                 <form method="POST" :action="'/persetujuan/' + item.id + '/setujui'" class="inline">
@@ -248,13 +248,13 @@
                 <div class="flex items-start gap-2.5">
                     <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 shrink-0 mt-0.5"/>
                     <p class="text-sm text-red-700 leading-relaxed">
-                        Dengan menolak, komitmen dana sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan dilepaskan kembali.
+                        Dengan menolak, permintaan sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan berstatus ditolak.
                     </p>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <button type="button" @click="$dispatch('close-modal', 'reject-confirm')" class="px-4 py-2 bg-white border border-slate-300 rounded-lg font-medium text-sm text-slate-700 hover:bg-slate-50 transition">
+                <button type="button" @click="$dispatch('close-modal', 'reject-confirm')" class="btn-secondary">
                     Batal
                 </button>
                 <form method="POST" :action="'/persetujuan/' + item.id + '/tolak'" class="inline">

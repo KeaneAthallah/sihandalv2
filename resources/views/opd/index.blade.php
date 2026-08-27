@@ -10,7 +10,7 @@
                 <x-heroicon-o-building-office-2 class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Total Program" value="{{ $opds->sum('programs_count') }}" color="success">
+        <x-stat-card title="Total Kegiatan" value="{{ $opds->sum('kegiatans_count') }}" color="success">
             <x-slot name="icon">
                 <x-heroicon-o-clipboard-document-list class="w-6 h-6"/>
             </x-slot>
@@ -56,7 +56,7 @@
                 <div class="lg:ml-auto flex items-center gap-2">
                     <div class="relative flex-1 lg:flex-none">
                         <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
-                        <input type="text" placeholder="Cari nama / kode OPD..." class="w-full lg:w-72 pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"/>
+                        <input type="text" placeholder="Cari nama / kode OPD..." class="input pl-9 lg:!w-72"/>
                     </div>
                 </div>
             </div>
@@ -66,35 +66,35 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="divide-y divide-slate-100">
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12 text-left">No</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Nama OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-32 text-left">Kode</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-24 text-center">Program</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-40 text-right">Total Pagu</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-20 text-center">Aksi</th>
+                        <th class="px-5 py-3 table-head w-12 text-left">No</th>
+                        <th class="px-5 py-3 table-head text-left">Nama OPD</th>
+                        <th class="px-5 py-3 table-head w-32 text-left">Kode</th>
+                        <th class="px-5 py-3 table-head w-24 text-center">Kegiatan</th>
+                        <th class="px-5 py-3 table-head w-40 text-right">Total Pagu</th>
+                        <th class="px-5 py-3 table-head w-20 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($opds as $idx => $opd)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-slate-400">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-slate-400">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm font-medium text-slate-800">{{ $opd->nama }}</span>
                             </td>
-                            <td class="px-5 py-3 text-slate-500 font-mono text-sm">{{ $opd->kode }}</td>
-                            <td class="px-5 py-3 text-center">
+                            <td class="px-5 py-3.5 text-slate-500 font-mono text-sm">{{ $opd->kode }}</td>
+                            <td class="px-5 py-3.5 text-center">
                                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
-                                    {{ $opd->programs_count }}
+                                    {{ $opd->kegiatans_count }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-right whitespace-nowrap">
+                            <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                 <span class="text-sm font-semibold text-primary">
                                     Rp {{ number_format($opd->total_pagu / 1000000000, 1, ',', '.') }} M
                                 </span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center">
-                                    <a href="{{ route('opd.show', $opd) }}" title="Lihat Detail" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition">
+                                    <a href="{{ route('opd.show', $opd) }}" title="Lihat Detail" class="icon-btn hover:text-amber-600 hover:bg-amber-50">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
                                 </div>
@@ -102,8 +102,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center">
-                                <p class="text-sm text-slate-500">Belum ada data OPD</p>
+                            <td colspan="6" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon">
+                                        <x-heroicon-o-building-office-2 class="w-7 h-7"/>
+                                    </div>
+                                    <p class="empty-title">Belum ada data OPD</p>
+                                    <p class="empty-desc">Data organisasi perangkat daerah akan tampil di sini.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse

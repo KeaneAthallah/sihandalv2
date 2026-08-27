@@ -2,7 +2,8 @@
     <x-slot name="header">
         <x-page-header title="User Management" :breadcrumbs="['Pengaturan', 'User Management']">
             <x-slot name="actions">
-                <a href="{{ route('user-management.create') }}" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg">
+                <a href="{{ route('user-management.create') }}" class="btn-primary">
+                    <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah User
                 </a>
             </x-slot>
@@ -55,17 +56,17 @@
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
                         <tr class="border-b border-slate-100">
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">No</th>
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Nama</th>
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Email</th>
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Role</th>
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                            <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-center">Aksi</th>
+                            <th class="px-5 py-3 table-head">No</th>
+                            <th class="px-5 py-3 table-head">Nama</th>
+                            <th class="px-5 py-3 table-head">Email</th>
+                            <th class="px-5 py-3 table-head">Role</th>
+                            <th class="px-5 py-3 table-head">OPD</th>
+                            <th class="px-5 py-3 table-head text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @forelse($users as $idx => $user)
-                            <tr class="hover:bg-slate-50/50 transition-colors">
+                            <tr class="table-row">
                                 <td class="px-5 py-3 text-slate-400 font-medium">{{ $users->firstItem() + $idx }}</td>
                                 <td class="px-5 py-3">
                                     <div class="flex items-center gap-3">

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Transfer Dana" :breadcrumbs="['Transfer Dana']">
             <x-slot name="actions">
-                <a href="{{ route('transfer-dana.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                <a href="{{ route('transfer-dana.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Transfer Baru
                 </a>
@@ -39,7 +39,7 @@
 
     <x-card :padding="false">
         <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
-            <h3 class="text-sm font-semibold text-slate-800">Daftar Transfer Dana</h3>
+            <h3 class="card-title">Daftar Transfer Dana</h3>
         </div>
 
         @if($transferDanas->count() > 0)
@@ -47,45 +47,45 @@
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
                         <tr class="border-b border-slate-100">
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12">No</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[110px]">Tanggal</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[140px]">No Transfer</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                            <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[140px]">Sumber Dana</th>
-                            <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[130px]">Nilai</th>
-                            <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[110px]">Status</th>
-                            <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-[80px]">Aksi</th>
+                            <th class="text-left px-5 py-3 table-head w-12">No</th>
+                            <th class="text-left px-5 py-3 table-head w-[110px]">Tanggal</th>
+                            <th class="text-left px-5 py-3 table-head w-[140px]">No Transfer</th>
+                            <th class="text-left px-5 py-3 table-head">OPD</th>
+                            <th class="text-left px-5 py-3 table-head w-[140px]">Sumber Dana</th>
+                            <th class="text-right px-5 py-3 table-head w-[130px]">Nilai</th>
+                            <th class="text-center px-5 py-3 table-head w-[110px]">Status</th>
+                            <th class="text-center px-5 py-3 table-head w-[80px]">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($transferDanas as $idx => $item)
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                                <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                                <td class="px-5 py-3">
+                            <tr class="table-row">
+                                <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                                <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                                <td class="px-5 py-3.5">
                                     <span class="font-mono text-sm font-semibold text-primary">{{ $item->nomor_transfer }}</span>
                                 </td>
-                                <td class="px-5 py-3 text-slate-700 max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
-                                <td class="px-5 py-3">
+                                <td class="px-5 py-3.5 text-slate-700 max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                                <td class="px-5 py-3.5">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60 whitespace-nowrap">
                                         {{ $item->sumber_dana }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-right whitespace-nowrap">
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                     <span class="font-medium tabular-nums text-slate-700">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
+                                <td class="px-5 py-3.5 text-center">
                                     <x-status-badge :status="$item->status"/>
                                 </td>
-                                <td class="px-5 py-3">
+                                <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('transfer-dana.edit', $item) }}" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition" title="Edit">
+                                        <a href="{{ route('transfer-dana.edit', $item) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                         <form method="POST" action="{{ route('transfer-dana.destroy', $item) }}" x-data @submit.prevent="if(confirm('Yakin ingin menghapus transfer ini?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" title="Hapus" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
+                                            <button type="submit" title="Hapus" class="icon-btn hover:text-red-600 hover:bg-red-50">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -101,8 +101,14 @@
                 <p class="text-sm text-slate-500">Menampilkan {{ $transferDanas->count() }} transfer dana</p>
             </div>
         @else
-            <div class="py-16 text-center">
-                <p class="text-sm text-slate-400">Belum ada data transfer</p>
+            <div class="px-5 py-14 text-center">
+                <div class="inline-flex flex-col items-center">
+                    <div class="empty-icon">
+                        <x-heroicon-o-arrows-right-left class="w-7 h-7"/>
+                    </div>
+                    <p class="empty-title">Belum ada data transfer</p>
+                    <p class="empty-desc">Data transfer dana akan tampil di sini.</p>
+                </div>
             </div>
         @endif
     </x-card>

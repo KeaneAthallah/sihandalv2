@@ -2,8 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Permintaan Dana OPD" :breadcrumbs="['Keuangan', 'Permintaan Dana OPD']">
             <x-slot name="actions">
-                <a href="{{ route('permintaan-dana.create') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">
+                <a href="{{ route('permintaan-dana.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Buat Permintaan
                 </a>
@@ -50,11 +49,11 @@
 
     <x-card :padding="false">
         <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
-            <h3 class="text-sm font-semibold text-slate-800">Daftar Permintaan Dana</h3>
+            <h3 class="card-title">Daftar Permintaan Dana</h3>
             <div class="ml-auto relative w-full sm:w-72">
                 <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
                 <input type="text" placeholder="Cari nomor, OPD, keperluan..."
-                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"/>
+                    class="input pl-9"/>
             </div>
         </div>
 
@@ -62,44 +61,44 @@
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12">No</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Nomor</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Sumber Dana</th>
-                        <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Keperluan</th>
-                        <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Jumlah</th>
-                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
-                        <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Aksi</th>
+                        <th class="text-left px-5 py-3 table-head w-12">No</th>
+                        <th class="text-left px-5 py-3 table-head">Nomor</th>
+                        <th class="text-left px-5 py-3 table-head">OPD</th>
+                        <th class="text-left px-5 py-3 table-head">Sumber Dana</th>
+                        <th class="text-left px-5 py-3 table-head">Keperluan</th>
+                        <th class="text-right px-5 py-3 table-head">Jumlah</th>
+                        <th class="text-center px-5 py-3 table-head">Status</th>
+                        <th class="text-center px-5 py-3 table-head">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($permintaanDanas as $idx => $item)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3">
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5">
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-sm font-mono font-semibold text-primary">{{ $item->nomor_permintaan }}</span>
                                     <span class="text-xs text-slate-400">{{ $item->tanggal ? $item->tanggal->format('d M Y') : '-' }}</span>
                                 </div>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm text-slate-700 max-w-[180px] truncate block" title="{{ $item->opd->nama ?? '-' }}">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">{{ $item->keperluan }}</span>
                             </td>
-                            <td class="px-5 py-3 text-right">
+                            <td class="px-5 py-3.5 text-right">
                                 <span class="text-sm font-medium tabular-nums text-slate-700 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
-                            <td class="px-5 py-3 text-center">
+                            <td class="px-5 py-3.5 text-center">
                                 <x-status-badge :status="$item->status"/>
                             </td>
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
                                     <button
                                         x-data
@@ -118,13 +117,13 @@
                                             $dispatch('open-modal', 'view-permintaan-dana');
                                         "
                                         title="Lihat Detail"
-                                        class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition">
+                                        class="icon-btn hover:text-primary hover:bg-primary/10">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </button>
 
                                     @if(in_array($item->status, ['draft', 'ditolak']))
                                         <a href="{{ route('permintaan-dana.edit', $item) }}" title="Edit"
-                                           class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition">
+                                           class="icon-btn hover:text-amber-600 hover:bg-amber-50">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                     @endif
@@ -135,7 +134,7 @@
                                               @submit.prevent="if(confirm('Ajukan permintaan ini? Dana akan di-commit dari pagu sumber dana.')) $el.submit()">
                                             @csrf
                                             <button type="submit" title="Ajukan"
-                                                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition">
+                                                    class="icon-btn hover:text-blue-600 hover:bg-blue-50">
                                                 <x-heroicon-o-paper-airplane class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -148,7 +147,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" title="Hapus"
-                                                    class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition">
+                                                    class="icon-btn hover:text-red-600 hover:bg-red-50">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -158,8 +157,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-16 text-center">
-                                <p class="text-sm text-slate-400">Belum ada permintaan dana</p>
+                            <td colspan="8" class="px-5 py-12 text-center">
+                                <div class="inline-flex flex-col items-center">
+                                    <div class="empty-icon">
+                                        <x-heroicon-o-document-text class="w-7 h-7"/>
+                                    </div>
+                                    <p class="empty-title">Belum ada permintaan dana</p>
+                                    <p class="empty-desc">Buat permintaan dana pertama untuk mulai mengelola keuangan OPD Anda.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse

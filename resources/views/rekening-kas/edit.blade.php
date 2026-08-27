@@ -43,7 +43,7 @@
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">
-                    <a href="{{ route('rekening-kas.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">
+                    <a href="{{ route('rekening-kas.index') }}" class="btn-secondary">
                         Batal
                     </a>
                     <button type="submit" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition">

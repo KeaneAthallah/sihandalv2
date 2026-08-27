@@ -8,7 +8,7 @@
     <title>{{ $title ?? 'Sihandal' }} - Sistem Informasi Keuangan Daerah</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-cloak class="font-sans antialiased bg-surface text-slate-800">
+<body class="font-sans antialiased bg-surface text-slate-800">
     {{-- Global toast notifications --}}
     <div
         x-data
@@ -71,15 +71,17 @@
 
         @include('layouts.sidebar')
 
-        <div class="flex flex-col min-h-screen transition-[margin] duration-300 ease-in-out lg:ml-[260px]" :class="sidebarCollapsed ? 'lg:ml-[76px]' : 'lg:ml-[260px]'">
+        <div class="flex flex-col min-h-screen transition-[margin] duration-300 ease-in-out lg:ml-[248px]" :class="sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[248px]'">
             @include('layouts.navbar')
             <main class="flex-1 w-full mx-auto p-4 lg:p-6 print:p-0 print:bg-white">
-                @if(isset($header))
-                    {{ $header }}
-                @endif
-                {{ $slot }}
+                <div class="mx-auto w-full max-w-[1600px]">
+                    @if(isset($header))
+                        {{ $header }}
+                    @endif
+                    {{ $slot }}
+                </div>
             </main>
-            <footer class="border-t border-slate-200 px-4 lg:px-6 py-4 text-center text-xs text-slate-400">
+            <footer class="border-t border-slate-200/80 px-4 lg:px-6 py-4 text-center text-xs text-slate-400 print:hidden">
                 © {{ date('Y') }} Sihandal — Sistem Informasi Keuangan Daerah
             </footer>
         </div>

@@ -3,7 +3,7 @@
         <x-page-header title="Buat Permintaan Dana" :breadcrumbs="['Transaksi', 'Permintaan Dana', 'Buat Baru']">
             <x-slot name="actions">
                 <a href="{{ route('permintaan-dana.index') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition">
+                    class="btn-secondary">
                     Kembali
                 </a>
             </x-slot>
@@ -15,78 +15,36 @@
         <x-card title="Formulir Permintaan Dana">
             <form action="{{ route('permintaan-dana.store') }}" method="POST">
                 @csrf
-                <div class="space-y-4" x-data="{
-                    sumberDanas: {{ Js::from($sumberDanas->map(fn ($sd) => [
-                        'id' => $sd->id,
-                        'opd_id' => $sd->opd_id,
-                        'label' => $sd->nama_sumber_dana,
-                        'available' => $sd->availablePagu(),
-                        'availableLabel' => 'Rp '.number_format($sd->availablePagu(), 0, ',', '.'),
-                    ])) }},
-                    opdId: {{ Js::from(old('opd_id')) }},
-                    sumberDanaId: {{ Js::from(old('sumber_dana_id')) }},
-                    jumlah: {{ Js::from(old('jumlah', '')) }},
-                    filteredSumberDanas() {
-                        return this.sumberDanas.filter(sd => sd.opd_id == this.opdId);
-                    },
-                    selectedAvailable: null,
-                    onSumberChanged(e) {
-                        const sd = this.sumberDanas.find(s => s.id == e.target.value);
-                        this.selectedAvailable = sd ? sd : null;
-                    },
-                    get isAmountExceeds() {
-                        if (!this.selectedAvailable || !this.jumlah) return false;
-                        return Number(this.jumlah) > this.selectedAvailable.available;
-                    },
-                    get isAmountValid() {
-                        if (!this.selectedAvailable || !this.jumlah) return false;
-                        return Number(this.jumlah) > 0 && Number(this.jumlah) <= this.selectedAvailable.available;
-                    }
-                }">
+                <div class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label>OPD <span class="text-red-500">*</span></x-input-label>
-                            <select name="opd_id" x-model.number="opdId"
+                            <select name="opd_id"
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih OPD</option>
                                 @foreach($opds as $opd)
-                                    <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
+                                    <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('opd_id')" class="mt-1"/>
                         </div>
                         <div>
                             <x-input-label>Sumber Dana <span class="text-red-500">*</span></x-input-label>
-                            <select name="sumber_dana_id" x-model.number="sumberDanaId" @change="onSumberChanged($event)"
+                            <select name="sumber_dana_id"
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih Sumber Dana</option>
-                                <template x-for="sd in filteredSumberDanas()" :key="sd.id">
-                                    <option :value="sd.id" :disabled="sd.available <= 0" x-text="sd.label + ' (Sisa: ' + sd.availableLabel + ')'"></option>
-                                </template>
+                                @foreach($sumberDanas as $sd)
+                                    <option value="{{ $sd->id }}" {{ old('sumber_dana_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+                                @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('sumber_dana_id')" class="mt-1"/>
                         </div>
                     </div>
 
-                    <template x-if="selectedAvailable">
-                        <div class="p-3 rounded-lg border"
-                             x-bind:class="isAmountExceeds ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
-                            <p class="text-xs font-medium"
-                               x-bind:class="isAmountExceeds ? 'text-red-700' : 'text-emerald-700'"
-                               x-text="'Sisa pagu tersedia: ' + selectedAvailable.availableLabel"></p>
-                        </div>
-                    </template>
-
                     <div>
                         <x-input-label>Jumlah (Rp) <span class="text-red-500">*</span></x-input-label>
-                        <x-text-input type="number" name="jumlah" x-model.number="jumlah" :value="old('jumlah')" min="1" step="1" placeholder="0" required/>
+                        <x-text-input type="number" name="jumlah" :value="old('jumlah')" min="1" step="1" placeholder="0" required/>
                         <x-input-error :messages="$errors->get('jumlah')" class="mt-1"/>
-                        <template x-if="isAmountExceeds">
-                            <p class="mt-1.5 text-xs text-red-600">Jumlah melebihi sisa pagu yang tersedia</p>
-                        </template>
-                        <template x-if="isAmountValid">
-                            <p class="mt-1.5 text-xs text-emerald-600">Dana mencukupi untuk permintaan ini</p>
-                        </template>
                     </div>
 
                     <div>
@@ -110,7 +68,7 @@
 
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                         <a href="{{ route('permintaan-dana.index') }}"
-                           class="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                           class="btn-secondary">
                             Batal
                         </a>
                         <button type="submit"

@@ -16,53 +16,53 @@
     @endphp
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-        <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500">Total Anggaran</p>
-                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight">Rp {{ $anggaranFormatted }}</p>
+                    <p class="stat-label">Total Anggaran</p>
+                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight stat-value">Rp {{ $anggaranFormatted }}</p>
                     <p class="text-xs text-slate-400 mt-1">Miliar Rupiah</p>
                 </div>
-                <div class="p-2.5 rounded-lg bg-slate-100 shrink-0">
+                <div class="p-2.5 rounded-xl bg-slate-100 shrink-0 ring-1 ring-inset ring-black/[0.03]">
                     <x-heroicon-o-banknotes class="w-6 h-6 text-slate-600"/>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500">Realisasi Penerimaan</p>
-                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-emerald-600 tracking-tight">Rp {{ $penerimaanFormatted }}</p>
+                    <p class="stat-label">Realisasi Penerimaan</p>
+                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-emerald-600 tracking-tight stat-value">Rp {{ $penerimaanFormatted }}</p>
                     <p class="text-xs text-slate-400 mt-1">Miliar &middot; {{ $penerimaanPersen }}% dari anggaran</p>
                 </div>
-                <div class="p-2.5 rounded-lg bg-emerald-50 shrink-0">
+                <div class="p-2.5 rounded-xl bg-emerald-50 shrink-0 ring-1 ring-inset ring-emerald-500/10">
                     <x-heroicon-o-arrow-down-left class="w-6 h-6 text-emerald-500"/>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500">Realisasi Pengeluaran</p>
-                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-red-500 tracking-tight">Rp {{ $pengeluaranFormatted }}</p>
+                    <p class="stat-label">Realisasi Pengeluaran</p>
+                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-red-500 tracking-tight stat-value">Rp {{ $pengeluaranFormatted }}</p>
                     <p class="text-xs text-slate-400 mt-1">Miliar &middot; {{ $pengeluaranPersen }}% dari anggaran</p>
                 </div>
-                <div class="p-2.5 rounded-lg bg-red-50 shrink-0">
+                <div class="p-2.5 rounded-xl bg-red-50 shrink-0 ring-1 ring-inset ring-red-500/10">
                     <x-heroicon-o-arrow-up-right class="w-6 h-6 text-red-500"/>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500">Permintaan Pending</p>
-                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-amber-500 tracking-tight">{{ number_format($permintaanPending) }}</p>
+                    <p class="stat-label">Permintaan Pending</p>
+                    <p class="mt-2 text-2xl lg:text-3xl font-extrabold text-amber-500 tracking-tight stat-value">{{ number_format($permintaanPending) }}</p>
                     <p class="text-xs text-slate-400 mt-1">permintaan menunggu verifikasi</p>
                 </div>
-                <div class="p-2.5 rounded-lg bg-amber-50 shrink-0">
+                <div class="p-2.5 rounded-xl bg-amber-50 shrink-0 ring-1 ring-inset ring-amber-500/10">
                     <x-heroicon-o-clock class="w-6 h-6 text-amber-500"/>
                 </div>
             </div>
@@ -109,10 +109,10 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-100">
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Nomor</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">OPD</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Status</th>
-                        <th class="px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Waktu</th>
+                        <th class="px-5 py-3 table-head">Nomor</th>
+                        <th class="px-5 py-3 table-head">OPD</th>
+                        <th class="px-5 py-3 table-head">Status</th>
+                        <th class="px-5 py-3 table-head">Waktu</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -133,13 +133,13 @@
                                 default => $item->status,
                             };
                         @endphp
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 font-medium text-slate-700">{{ $item->nomor_permintaan }}</td>
-                            <td class="px-5 py-3 text-slate-500">{{ $item->opd->nama ?? 'OPD' }}</td>
-                            <td class="px-5 py-3">
-                                <span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium {{ $statusBadge }}">{{ $statusLabel }}</span>
+                        <tr class="table-row">
+                            <td class="px-5 py-3.5 font-medium text-slate-700">{{ $item->nomor_permintaan }}</td>
+                            <td class="px-5 py-3.5 text-slate-500">{{ $item->opd->nama ?? 'OPD' }}</td>
+                            <td class="px-5 py-3.5">
+                                <span class="badge {{ $statusBadge }}"><span class="badge-dot"></span>{{ $statusLabel }}</span>
                             </td>
-                            <td class="px-5 py-3 text-slate-400 text-xs">{{ $item->created_at->diffForHumans() }}</td>
+                            <td class="px-5 py-3.5 text-slate-400 text-xs">{{ $item->created_at->diffForHumans() }}</td>
                         </tr>
                     @empty
                         <tr>

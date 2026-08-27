@@ -16,7 +16,7 @@
 
 <div x-data="{ show: true }" x-show="show"
      x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-     {{ $attributes->merge(['class' => 'mb-5 flex items-start gap-3 px-4 py-3 border rounded-lg text-sm ' . $config['wrapper']]) }}>
+     {{ $attributes->merge(['class' => 'mb-5 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm shadow-sm ' . $config['wrapper']]) }}>
     <div class="shrink-0 mt-0.5">
         <x-dynamic-component :component="'heroicon-o-' . $config['name']" class="w-4 h-4 {{ $config['icon'] }}"/>
     </div>

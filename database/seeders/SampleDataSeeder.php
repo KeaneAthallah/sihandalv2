@@ -2,10 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
+use App\Models\Program;
+use App\Models\SumberDana;
 use App\Models\TransferDana;
 use Illuminate\Database\Seeder;
 
@@ -17,6 +20,46 @@ class SampleDataSeeder extends Seeder
 
         if ($opds->isEmpty()) {
             return;
+        }
+
+        // Sample Sumber Dana (global)
+        foreach (['Dana Alokasi Umum (DAU)', 'Dana Alokasi Khusus (DAK)', 'Pendapatan Asli Daerah (PAD)'] as $nama) {
+            SumberDana::firstOrCreate(['nama_sumber_dana' => $nama]);
+        }
+        $sumberDana = SumberDana::first();
+
+        // Sample Program & Kegiatan
+        $samplePrograms = [
+            ['kode_program' => '1.1', 'nama_program' => 'Program Penunjang Urusan Pemerintahan Daerah'],
+            ['kode_program' => '2.1', 'nama_program' => 'Program Peningkatan Sarana dan Prasarana'],
+            ['kode_program' => '3.1', 'nama_program' => 'Program Pemberdayaan Masyarakat'],
+        ];
+
+        foreach ($opds->take(5) as $idx => $opd) {
+            $program = $samplePrograms[$idx % count($samplePrograms)];
+            $program = Program::firstOrCreate([
+                'kode_program' => $program['kode_program'],
+            ], [
+                'nama_program' => $program['nama_program'],
+            ]);
+
+            $pagu = rand(100000000, 1000000000);
+            $realisasi = rand(50000000, 500000000);
+
+            Kegiatan::create([
+                'program_id' => $program->id,
+                'opd_id' => $opd->id,
+                'sumber_dana_id' => $sumberDana?->id,
+                'kode_kegiatan' => $program->kode_program.'.'.rand(1, 9),
+                'nama_kegiatan' => 'Penyelenggaraan Kegiatan '.($idx + 1),
+                'kode_sub_kegiatan' => $program->kode_program.'.1',
+                'nama_sub_kegiatan' => 'Pelaksanaan Kegiatan '.($idx + 1),
+                'kode_rekening' => '5.2.'.rand(1, 9),
+                'nama_rekening' => 'Belanja Operasional',
+                'pagu' => $pagu,
+                'realisasi' => $realisasi,
+                'persentase' => $pagu > 0 ? round($realisasi / $pagu * 100, 2) : 0,
+            ]);
         }
 
         // Sample Penerimaan data

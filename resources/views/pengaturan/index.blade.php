@@ -20,7 +20,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <x-input-label value="Tahun Anggaran" />
-                        <select x-model="tahunAnggaran" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select x-model="tahunAnggaran" class="input">
                             <option value="2024">2024</option>
                             <option value="2025">2025</option>
                             <option value="2026">2026</option>
@@ -29,7 +29,7 @@
                     </div>
                     <div>
                         <x-input-label value="Mata Uang" />
-                        <select x-model="mataUang" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select x-model="mataUang" class="input">
                             <option value="IDR">Rupiah Indonesia (IDR)</option>
                             <option value="USD">US Dollar (USD)</option>
                         </select>
@@ -59,12 +59,10 @@
                             <p class="text-xs text-slate-400 mt-0.5">{{ $n['desc'] }}</p>
                         </div>
                         <button
+                            type="button"
                             @click="{{ $n['key'] }} = !{{ $n['key'] }}"
-                            :class="{{ $n['key'] }} ? 'bg-primary' : 'bg-slate-200'"
-                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2">
-                            <span
-                                :class="{{ $n['key'] }} ? 'translate-x-5' : 'translate-x-0'"
-                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                            :class="{{ $n['key'] }} ? 'chip chip-active' : 'chip chip-inactive'">
+                            <span x-text="{{ $n['key'] }} ? 'Aktif' : 'Nonaktif'"></span>
                         </button>
                     </div>
                 @endforeach
@@ -84,18 +82,16 @@
                         <p class="text-xs text-slate-400 mt-0.5">Tambahkan lapisan keamanan ekstra pada akun Anda</p>
                     </div>
                     <button
+                        type="button"
                         @click="twoFactor = !twoFactor"
-                        :class="twoFactor ? 'bg-primary' : 'bg-slate-200'"
-                        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2">
-                        <span
-                            :class="twoFactor ? 'translate-x-5' : 'translate-x-0'"
-                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                        :class="twoFactor ? 'chip chip-active' : 'chip chip-inactive'">
+                        <span x-text="twoFactor ? 'Aktif' : 'Nonaktif'"></span>
                     </button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <x-input-label value="Batas Waktu Sesi" />
-                        <select x-model="sessionTimeout" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select x-model="sessionTimeout" class="input">
                             <option value="15">15 menit</option>
                             <option value="30">30 menit</option>
                             <option value="60">60 menit</option>
@@ -104,7 +100,7 @@
                     </div>
                     <div>
                         <x-input-label value="Kebijakan Kata Sandi" />
-                        <select x-model="passwordPolicy" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select x-model="passwordPolicy" class="input">
                             <option value="low">Rendah (min. 6 karakter)</option>
                             <option value="medium">Sedang (min. 8 karakter + angka)</option>
                             <option value="high">Tinggi (min. 12 karakter + huruf besar + angka + simbol)</option>

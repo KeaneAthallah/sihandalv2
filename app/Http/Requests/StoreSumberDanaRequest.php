@@ -14,10 +14,7 @@ class StoreSumberDanaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'opd_id' => ['required', 'exists:opds,id'],
-            'nama_sumber_dana' => ['required', 'string', 'max:255'],
-            'pagu' => ['required', 'numeric', 'min:0'],
-            'realisasi' => ['nullable', 'numeric', 'min:0'],
+            'nama_sumber_dana' => ['required', 'string', 'max:255', 'unique:sumber_danas,nama_sumber_dana'],
         ];
     }
 }

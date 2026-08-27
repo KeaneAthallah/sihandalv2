@@ -11,10 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sumber_danas', function (Blueprint $table) {
-            $table->decimal('dana_di_commit', 18, 2)->default(0)->after('realisasi');
-        });
-
         Schema::table('permintaan_danas', function (Blueprint $table) {
             $table->foreignId('sumber_dana_id')->nullable()->after('opd_id')->constrained()->nullOnDelete();
         });
@@ -27,10 +23,6 @@ return new class extends Migration
     {
         Schema::table('permintaan_danas', function (Blueprint $table) {
             $table->dropConstrainedForeignId('sumber_dana_id');
-        });
-
-        Schema::table('sumber_danas', function (Blueprint $table) {
-            $table->dropColumn('dana_di_commit');
         });
     }
 };
