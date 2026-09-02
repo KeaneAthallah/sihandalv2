@@ -119,6 +119,16 @@
             @endif
         </a>
 
+        <a href="{{ route('master-data.penerimaan.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('master-data.penerimaan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-arrow-down-left class="shrink-0" :class="$isActive('master-data.penerimaan.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Penerimaan</span>
+            @if($isActive('master-data.penerimaan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
         {{-- TRANSAKSI --}}
         <div :class="sidebarCollapsed ? 'lg:hidden' : ''" class="pt-4 pb-1 px-3 transition-opacity duration-200">
             <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">Transaksi</span>
@@ -130,16 +140,6 @@
             <x-heroicon-o-currency-dollar class="shrink-0" :class="$isActive('posisi-kas.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
             <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Posisi Kas</span>
             @if($isActive('posisi-kas.*'))
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
-            @endif
-        </a>
-
-        <a href="{{ route('master-data.penerimaan.index') }}"
-           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
-           class="{{ $linkClass }} {{ $isActive('master-data.penerimaan.*') ? $activeBg : $inactiveBg }}">
-            <x-heroicon-o-arrow-down-left class="shrink-0" :class="$isActive('master-data.penerimaan.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Master Data Penerimaan</span>
-            @if($isActive('master-data.penerimaan.*'))
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
             @endif
         </a>
