@@ -28,7 +28,7 @@ test('opd hierarchy creates dinas, unit, and upt', function () {
 test('belanja aggregates into sub kegiatan, kegiatan, and program hierarchy', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
-    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja', 'saldo' => 0]);
+    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
 
     $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A', 'opd_id' => $opd->id]);
     $kegiatan = Kegiatan::create([
@@ -60,7 +60,7 @@ test('belanja aggregates into sub kegiatan, kegiatan, and program hierarchy', fu
 test('belanja has unavailable fund protection on commit', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
-    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja', 'saldo' => 0]);
+    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
     $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A', 'opd_id' => $opd->id]);
     $kegiatan = Kegiatan::create(['program_id' => $program->id, 'opd_id' => $opd->id, 'kode_kegiatan' => '1.2.3', 'nama_kegiatan' => 'Kegiatan A', 'pagu' => 0, 'realisasi' => 0]);
     $sub = SubKegiatan::create(['kegiatan_id' => $kegiatan->id, 'kode_sub_kegiatan' => '1.2.3.1', 'nama_sub_kegiatan' => 'Sub 1', 'pagu' => 0, 'realisasi' => 0]);

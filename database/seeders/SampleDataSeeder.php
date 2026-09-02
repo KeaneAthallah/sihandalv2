@@ -46,7 +46,7 @@ class SampleDataSeeder extends Seeder
         $rekeningJasa = Rekening::firstOrCreate([
             'kode' => '5.2.1',
         ], [
-            'nama' => 'Belanja Jasa', 'tipe' => 'belanja', 'saldo' => 0,
+            'nama' => 'Belanja Jasa', 'tipe' => 'belanja',
         ]);
 
         // Reference to a valid active Tahun Anggaran (existing one or first)

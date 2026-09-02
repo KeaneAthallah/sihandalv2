@@ -17,7 +17,6 @@ class StoreRekeningRequest extends FormRequest
             'kode' => ['required', 'string', 'max:50', 'unique:rekenings,kode'],
             'nama' => ['required', 'string', 'max:255'],
             'tipe' => ['required', 'string', 'in:kas,non-kas,pendapatan,belanja'],
-            'saldo' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

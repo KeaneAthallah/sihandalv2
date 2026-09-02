@@ -230,7 +230,7 @@ class ImportSumberDana extends Command
         foreach ($aggregates['rekenings'] as $kode => $data) {
             $rekening = Rekening::updateOrCreate(
                 ['kode' => $kode],
-                ['nama' => $data['nama'], 'tipe' => $data['tipe'], 'saldo' => 0]
+                ['nama' => $data['nama'], 'tipe' => $data['tipe']]
             );
 
             $rekening->wasRecentlyCreated ? $stats['rekenings_created']++ : $stats['rekenings_updated']++;

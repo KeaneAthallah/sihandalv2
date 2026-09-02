@@ -119,7 +119,6 @@ test('opd user cannot manage rekening kas', function () {
         'kode' => '1.1.1',
         'nama' => 'Kas',
         'tipe' => 'kas',
-        'saldo' => 0,
     ])->assertForbidden();
 });
 

@@ -33,13 +33,6 @@
                         <x-text-input type="text" name="nama" id="nama" value="{{ old('nama', $rekening->nama) }}" placeholder="Contoh: Kas Besar" required class="mt-1.5" />
                         <x-input-error :messages="$errors->get('nama')" class="mt-1" />
                     </div>
-
-                    <div>
-                        <x-input-label for="saldo" value="Saldo Awal" />
-                        <x-text-input type="number" name="saldo" id="saldo" step="0.01" value="{{ old('saldo', $rekening->saldo) }}" placeholder="0" class="mt-1.5" />
-                        <p class="text-xs text-slate-400 mt-1.5">Masukkan saldo awal rekening. Dapat dikosongkan atau diubah nanti.</p>
-                        <x-input-error :messages="$errors->get('saldo')" class="mt-1" />
-                    </div>
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">

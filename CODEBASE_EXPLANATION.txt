@@ -232,9 +232,14 @@ nama_sumber_dana) are kept for backward compatibility and display only.
     manually at parent levels.
 
   rekenings
-    kode (unique), nama, tipe ('kas'|'pendapatan'|'belanja'), saldo
+    kode (unique), nama, tipe ('kas'|'pendapatan'|'belanja')
     source_file, source_identifier
     Referenced by FK from Belanja, Penerimaan, Pengeluaran, PermintaanDana.
+    MASTER/REFERENCE data only — no persisted `saldo`. Balances are DERIVED from
+    financial transactions via Rekening->totalPenerimaan($opdId),
+    totalPengeluaran($opdId) and saldo($opdId) (sum of transaksi_penerimaans.
+    realisasi minus sum of pengeluarans.realisasi), all DB-aggregated. The
+    rekening-kas list computes these per OPD in grouped queries.
 
   penerimaans                      # MASTER DATA Penerimaan (the "definition")
     opd_id (NULLABLE — province-wide revenue masters are stored with opd_id = NULL),
@@ -321,7 +326,8 @@ nama_sumber_dana) are kept for backward compatibility and display only.
                         Program -> Kegiatan -> SubKegiatan -> Belanja
   UPT                   Technical implementation units (OPD -> UPT(s)) CRUD
   Sumber Dana           Master fund sources used across the hierarchy
-  Rekening Kas          Master cash/rekening accounts (kas / pendapatan / belanja)
+  Rekening Kas          Master cash/rekening accounts (kas / pendapatan / belanja);
+                        balance is derived from transactions, never stored
   Program & Kegiatan    Program + nested Kegiatan budget tracking with codes
   Sub Kegiatan          Nested under Kegiatan (Program -> Kegiatan -> SubKegiatan)
   Belanja               Budget leaf (rekening + sumber dana + pagu) nested under
@@ -441,10 +447,12 @@ nama_sumber_dana) are kept for backward compatibility and display only.
 
   5. Computed fields persisted on write: persentase is recomputed wherever
      realisasi/target/pagu change; saldo_akhir = saldo_awal + penerimaan -
-     pengeluaran. Exception: penerimaan realization is COMPUTED on read via
-     accessors (realisasi = SUM of transaksi_penerimaans, persentase target-safe,
-     tanggal = latest transaction) so the master definition and its transaction
-     rows stay the single source of truth.
+     pengeluaran. Exceptions computed on read (never stored): penerimaan
+     realization (realisasi = SUM of transaksi_penerimaans, persentase target-safe,
+     tanggal = latest transaction) and Rekening cash balance (saldo = total
+     penerimaan - total pengeluaran, DB-aggregated, OPD-scoped) so master/reference
+     data stays the single source of truth while financial state lives in
+     transactions.
 
   6. Shared validation via a trait: ValidatesPermintaanDana is used by both
      StorePermintaanDanaRequest and UpdatePermintaanDanaRequest to guarantee

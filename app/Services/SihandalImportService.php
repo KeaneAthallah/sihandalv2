@@ -351,7 +351,6 @@ class SihandalImportService
                 'kode' => $kode,
                 'nama' => $record['NMREK'],
                 'tipe' => $this->rekeningTipe($kode),
-                'saldo' => 0,
                 'source_file' => $this->budgetFile,
                 'source_identifier' => (string) $kode,
             ]

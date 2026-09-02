@@ -17,19 +17,19 @@
                 <x-heroicon-o-wallet class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Rekening Aktif" value="{{ $rekenings->where('tipe', 'kas')->count() }}" color="success">
+        <x-stat-card title="Total Penerimaan" value="Rp {{ number_format($totalPenerimaan / 1000000000, 1, ',', '.') }} M" color="success">
             <x-slot name="icon">
-                <x-heroicon-o-check-circle class="w-6 h-6"/>
+                <x-heroicon-o-arrow-down-left class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Saldo Total" value="Rp {{ number_format($totalKas / 1000000000, 1, ',', '.') }} M" color="info">
+        <x-stat-card title="Total Pengeluaran" value="Rp {{ number_format($totalPengeluaran / 1000000000, 1, ',', '.') }} M" color="danger">
+            <x-slot name="icon">
+                <x-heroicon-o-arrow-up-right class="w-6 h-6"/>
+            </x-slot>
+        </x-stat-card>
+        <x-stat-card title="Saldo Kas (Kas)" value="Rp {{ number_format($totalKas / 1000000000, 1, ',', '.') }} M" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-banknotes class="w-6 h-6"/>
-            </x-slot>
-        </x-stat-card>
-        <x-stat-card title="Total Semua Rekening" value="Rp {{ number_format($totalSaldo / 1000000000, 1, ',', '.') }} M" color="warning">
-            <x-slot name="icon">
-                <x-heroicon-o-arrow-path class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
     </div>
@@ -44,6 +44,8 @@
                         <th class="px-5 py-3 table-head w-[120px] text-left">Kode</th>
                         <th class="px-5 py-3 table-head text-left">Nama Rekening</th>
                         <th class="px-5 py-3 table-head w-[120px] text-left">Tipe</th>
+                        <th class="px-5 py-3 table-head w-[160px] text-right">Total Penerimaan</th>
+                        <th class="px-5 py-3 table-head w-[160px] text-right">Total Pengeluaran</th>
                         <th class="px-5 py-3 table-head w-[160px] text-right">Saldo</th>
                         <th class="px-5 py-3 table-head w-[100px] text-center">Aksi</th>
                     </tr>
@@ -66,8 +68,18 @@
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">
-                                    Rp {{ number_format($rek->saldo, 0, ',', '.') }}
+                                <span class="text-sm font-medium text-emerald-600 tabular-nums whitespace-nowrap">
+                                    Rp {{ number_format($rek->penerimaan_total, 0, ',', '.') }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 text-right">
+                                <span class="text-sm font-medium text-red-500 tabular-nums whitespace-nowrap">
+                                    Rp {{ number_format($rek->pengeluaran_total, 0, ',', '.') }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 text-right">
+                                <span class="text-sm font-semibold {{ $rek->saldo_total < 0 ? 'text-red-600' : 'text-slate-700' }} tabular-nums whitespace-nowrap">
+                                    Rp {{ number_format($rek->saldo_total, 0, ',', '.') }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5">
@@ -87,7 +99,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-12 text-center">
+                            <td colspan="8" class="px-5 py-12 text-center">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-wallet class="w-7 h-7"/>

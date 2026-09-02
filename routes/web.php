@@ -26,7 +26,6 @@ use App\Models\Belanja;
 use App\Models\Opd;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
-use App\Models\Rekening;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -51,7 +50,18 @@ Route::get('/dashboard', function () {
     $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('realisasi');
     $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
     $totalPagu = $totalAnggaran > 0 ? $totalAnggaran : 1;
-    $sisaKas = Rekening::where('tipe', 'kas')->sum('saldo');
+    $kasPenerimaan = (float) DB::table('transaksi_penerimaans as t')
+        ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
+        ->join('rekenings as r', 'r.id', '=', 'p.rekening_id')
+        ->when(! $isAdmin, fn ($q) => $q->where('p.opd_id', $user->opd_id))
+        ->where('r.tipe', 'kas')
+        ->sum('t.realisasi');
+    $kasPengeluaran = (float) DB::table('pengeluarans')
+        ->join('rekenings as r', 'r.id', '=', 'pengeluarans.rekening_id')
+        ->when(! $isAdmin, fn ($q) => $q->where('pengeluarans.opd_id', $user->opd_id))
+        ->where('r.tipe', 'kas')
+        ->sum('pengeluarans.realisasi');
+    $sisaKas = $kasPenerimaan - $kasPengeluaran;
     $sisaKasMax = $totalPagu > 0 ? $totalPagu : 1;
 
     $topOpd = $opdScope(Opd::query(), 'id')

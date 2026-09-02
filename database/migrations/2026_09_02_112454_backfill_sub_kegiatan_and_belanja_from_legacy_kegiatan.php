@@ -57,7 +57,6 @@ return new class extends Migration
                         'kode' => $kegiatan->kode_rekening,
                         'nama' => $kegiatan->nama_rekening ?: $kegiatan->kode_rekening,
                         'tipe' => 'belanja',
-                        'saldo' => 0,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
