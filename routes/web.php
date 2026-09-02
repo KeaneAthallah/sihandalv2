@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\LaporanPenerimaanController;
 use App\Http\Controllers\LaporanPengeluaranController;
 use App\Http\Controllers\LaporanPosisiKasController;
@@ -14,10 +15,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgramKegiatanController;
 use App\Http\Controllers\RekapPermintaanDanaController;
 use App\Http\Controllers\RekeningKasController;
+use App\Http\Controllers\SubKegiatanController;
 use App\Http\Controllers\SumberDanaController;
 use App\Http\Controllers\TahunAnggaranController;
 use App\Http\Controllers\TransferDanaController;
+use App\Http\Controllers\UptController;
 use App\Http\Controllers\UserManagementController;
+use App\Models\Belanja;
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Pengeluaran;
@@ -35,6 +39,10 @@ Route::get('/dashboard', function () {
     $opdScope = fn ($query, $column = 'opd_id') => $isAdmin ? $query : $query->where($column, $user->opd_id);
 
     $totalAnggaran = $opdScope(Opd::query(), 'id')->sum('total_pagu');
+    $totalBelanja = $opdScope(Belanja::query())->sum('pagu');
+    if ($totalBelanja > 0) {
+        $totalAnggaran = $totalBelanja;
+    }
     $totalPenerimaan = $opdScope(Penerimaan::query())->sum('realisasi');
     $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('realisasi');
     $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
@@ -59,10 +67,10 @@ Route::get('/dashboard', function () {
         ->pluck('count', 'status');
 
     $sumberDanaPenerimaan = $opdScope(Penerimaan::query())
-        ->selectRaw('nama_sumber_dana, sum(realisasi) as total')
-        ->whereNotNull('nama_sumber_dana')
-        ->groupBy('nama_sumber_dana')
-        ->pluck('total', 'nama_sumber_dana');
+        ->selectRaw('COALESCE(sd.nama_sumber_dana, penerimaans.nama_sumber_dana) as sumber_dana, sum(penerimaans.realisasi) as total')
+        ->leftJoin('sumber_danas as sd', 'sd.id', '=', 'penerimaans.sumber_dana_id')
+        ->groupBy('sumber_dana')
+        ->pluck('total', 'sumber_dana');
 
     return view('dashboard.index', compact(
         'totalAnggaran', 'totalPenerimaan', 'totalPengeluaran',
@@ -75,6 +83,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/opd', [OpdController::class, 'index'])->name('opd.index');
     Route::get('/opd/{opd}', [OpdController::class, 'show'])->name('opd.show');
 
+    Route::resource('upt', UptController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
     Route::resource('sumber-dana', SumberDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('rekening-kas', RekeningKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'rekening-kas' => 'rekening',
@@ -85,6 +95,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/program-kegiatan/{program}/kegiatan', [ProgramKegiatanController::class, 'storeKegiatan'])->name('program-kegiatan.kegiatan.store')->middleware('throttle:30');
     Route::put('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'updateKegiatan'])->name('program-kegiatan.kegiatan.update')->middleware('throttle:30');
     Route::delete('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'destroyKegiatan'])->name('program-kegiatan.kegiatan.destroy');
+
+    Route::get('/kegiatan/{kegiatan}/sub-kegiatan', [SubKegiatanController::class, 'index'])->name('sub-kegiatan.index');
+    Route::get('/kegiatan/{kegiatan}/sub-kegiatan/create', [SubKegiatanController::class, 'create'])->name('sub-kegiatan.create');
+    Route::post('/kegiatan/{kegiatan}/sub-kegiatan', [SubKegiatanController::class, 'store'])->name('sub-kegiatan.store')->middleware('throttle:30');
+    Route::get('/kegiatan/{kegiatan}/sub-kegiatan/{subKegiatan}/edit', [SubKegiatanController::class, 'edit'])->name('sub-kegiatan.edit');
+    Route::put('/kegiatan/{kegiatan}/sub-kegiatan/{subKegiatan}', [SubKegiatanController::class, 'update'])->name('sub-kegiatan.update')->middleware('throttle:30');
+    Route::delete('/kegiatan/{kegiatan}/sub-kegiatan/{subKegiatan}', [SubKegiatanController::class, 'destroy'])->name('sub-kegiatan.destroy');
+
+    Route::get('/sub-kegiatan/{subKegiatan}/belanja', [BelanjaController::class, 'index'])->name('belanja.index');
+    Route::get('/sub-kegiatan/{subKegiatan}/belanja/create', [BelanjaController::class, 'create'])->name('belanja.create');
+    Route::post('/sub-kegiatan/{subKegiatan}/belanja', [BelanjaController::class, 'store'])->name('belanja.store')->middleware('throttle:30');
+    Route::get('/sub-kegiatan/{subKegiatan}/belanja/{belanja}/edit', [BelanjaController::class, 'edit'])->name('belanja.edit');
+    Route::put('/sub-kegiatan/{subKegiatan}/belanja/{belanja}', [BelanjaController::class, 'update'])->name('belanja.update')->middleware('throttle:30');
+    Route::delete('/sub-kegiatan/{subKegiatan}/belanja/{belanja}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
+
     Route::resource('penerimaan', PenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('pengeluaran', PengeluaranController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('posisi-kas', PosisiKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([

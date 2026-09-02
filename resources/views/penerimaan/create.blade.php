@@ -31,17 +31,15 @@
                         <x-input-error :messages="$errors->get('rekening_id')" />
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <x-input-label value="Kode Sumber Dana" />
-                            <x-text-input name="kode_sumber_dana" :value="old('kode_sumber_dana')" placeholder="Masukkan kode sumber dana" />
-                            <x-input-error :messages="$errors->get('kode_sumber_dana')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Nama Sumber Dana" />
-                            <x-text-input name="nama_sumber_dana" :value="old('nama_sumber_dana')" placeholder="Masukkan nama sumber dana" />
-                            <x-input-error :messages="$errors->get('nama_sumber_dana')" />
-                        </div>
+                    <div>
+                        <x-input-label value="Sumber Dana" />
+                        <select name="sumber_dana_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Pilih Sumber Dana</option>
+                            @foreach($sumberDanas as $sd)
+                                <option value="{{ $sd->id }}" {{ old('sumber_dana_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('sumber_dana_id')" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

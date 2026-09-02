@@ -86,7 +86,7 @@
                             </td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
-                                    {{ $item->sumber_dana }}
+                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5">

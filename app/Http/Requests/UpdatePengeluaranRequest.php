@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Kegiatan;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePengeluaranRequest extends FormRequest
@@ -16,13 +17,37 @@ class UpdatePengeluaranRequest extends FormRequest
         return [
             'opd_id' => ['required', 'exists:opds,id'],
             'rekening_id' => ['nullable', 'exists:rekenings,id'],
+            'kegiatan_id' => ['nullable', 'exists:kegiatan,id'],
+            'sub_kegiatan_id' => ['nullable', 'exists:sub_kegiatans,id'],
+            'belanja_id' => ['nullable', 'exists:belanjas,id'],
+            'sumber_dana_id' => ['required', 'exists:sumber_danas,id'],
             'kode_kegiatan' => ['nullable', 'string', 'max:50'],
             'nama_kegiatan' => ['nullable', 'string', 'max:255'],
-            'sumber_dana' => ['required', 'string', 'max:255'],
+            'sumber_dana' => ['nullable', 'string', 'max:255'],
             'anggaran' => ['required', 'numeric', 'min:0'],
             'realisasi' => ['nullable', 'numeric', 'min:0'],
             'tanggal' => ['nullable', 'date'],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $user = $this->user();
+            $opdId = $this->input('opd_id');
+
+            if (! $user->isAdmin() && (int) $opdId !== (int) $user->opd_id) {
+                $validator->errors()->add('opd_id', 'Anda hanya dapat mengelola pengeluaran untuk OPD Anda sendiri.');
+            }
+
+            $kegiatanId = $this->input('kegiatan_id');
+            if ($kegiatanId) {
+                $kegiatan = Kegiatan::find($kegiatanId);
+                if ($kegiatan && (int) $kegiatan->opd_id !== (int) $opdId) {
+                    $validator->errors()->add('kegiatan_id', 'Kegiatan tidak sesuai dengan OPD yang dipilih.');
+                }
+            }
+        });
     }
 }

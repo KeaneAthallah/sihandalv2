@@ -25,3 +25,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Excel temp lock files
+~$*
+
+# Local database dumps / scratch
+*.sql

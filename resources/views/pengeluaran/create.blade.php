@@ -31,23 +31,26 @@
                         <x-input-error :messages="$errors->get('rekening_id')" />
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <x-input-label value="Kode Kegiatan" />
-                            <x-text-input name="kode_kegiatan" :value="old('kode_kegiatan')" placeholder="Masukkan kode kegiatan" />
-                            <x-input-error :messages="$errors->get('kode_kegiatan')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Nama Kegiatan" />
-                            <x-text-input name="nama_kegiatan" :value="old('nama_kegiatan')" placeholder="Masukkan nama kegiatan" />
-                            <x-input-error :messages="$errors->get('nama_kegiatan')" />
-                        </div>
+                    <div>
+                        <x-input-label value="Kegiatan" />
+                        <select name="kegiatan_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Pilih Kegiatan</option>
+                            @foreach($kegiatans as $kegiatan)
+                                <option value="{{ $kegiatan->id }}" {{ old('kegiatan_id') == $kegiatan->id ? 'selected' : '' }}>{{ $kegiatan->kode_kegiatan . ' - ' . $kegiatan->nama_kegiatan }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('kegiatan_id')" />
                     </div>
 
                     <div>
                         <x-input-label value="Sumber Dana" />
-                        <x-text-input name="sumber_dana" :value="old('sumber_dana')" placeholder="Masukkan sumber dana" required />
-                        <x-input-error :messages="$errors->get('sumber_dana')" />
+                        <select name="sumber_dana_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                            <option value="">Pilih Sumber Dana</option>
+                            @foreach($sumberDanas as $sd)
+                                <option value="{{ $sd->id }}" {{ old('sumber_dana_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('sumber_dana_id')" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

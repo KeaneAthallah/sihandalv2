@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Belanja;
 use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
 use App\Models\User;
@@ -13,7 +14,7 @@ class PersetujuanController extends Controller
 {
     public function index(Request $request)
     {
-        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with(['opd', 'persetujuans']), $request->user())
+        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with(['opd', 'persetujuans', 'sumberDana']), $request->user())
             ->where('status', 'menunggu')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -40,6 +41,8 @@ class PersetujuanController extends Controller
             if ($permintaanDana->status !== 'menunggu') {
                 throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
             }
+
+            $this->realizeFunds($permintaanDana);
 
             $permintaanDana->update([
                 'status' => 'disetujui',
@@ -74,6 +77,8 @@ class PersetujuanController extends Controller
                 throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
             }
 
+            $this->releaseFunds($permintaanDana);
+
             $permintaanDana->update([
                 'status' => 'ditolak',
             ]);
@@ -89,6 +94,26 @@ class PersetujuanController extends Controller
         });
 
         return back()->with('success', 'Permintaan dana ditolak.');
+    }
+
+    protected function realizeFunds(PermintaanDana $permintaanDana): void
+    {
+        if ($permintaanDana->belanja_id) {
+            $belanja = Belanja::find($permintaanDana->belanja_id);
+            if ($belanja) {
+                $belanja->realize((float) $permintaanDana->jumlah);
+            }
+        }
+    }
+
+    protected function releaseFunds(PermintaanDana $permintaanDana): void
+    {
+        if ($permintaanDana->belanja_id) {
+            $belanja = Belanja::find($permintaanDana->belanja_id);
+            if ($belanja) {
+                $belanja->releaseCommit((float) $permintaanDana->jumlah);
+            }
+        }
     }
 
     protected function notifyOpdUser(PermintaanDana $permintaanDana, string $status): void

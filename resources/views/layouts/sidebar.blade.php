@@ -89,6 +89,16 @@
             @endif
         </a>
 
+        <a href="{{ route('upt.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('upt.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-building-library class="shrink-0" :class="$isActive('upt.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">UPT</span>
+            @if($isActive('upt.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
         <a href="{{ route('rekening-kas.index') }}"
            :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
            class="{{ $linkClass }} {{ $isActive('rekening-kas.*') ? $activeBg : $inactiveBg }}">

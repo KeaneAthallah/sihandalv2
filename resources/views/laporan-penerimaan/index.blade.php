@@ -117,7 +117,7 @@
                             <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                                    {{ $item->nama_sumber_dana ?? '-' }}
+                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">

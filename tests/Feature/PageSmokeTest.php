@@ -8,6 +8,9 @@ test('all pages render for admin', function () {
     $this->get('/dashboard')->assertSuccessful();
     $this->get('/opd')->assertSuccessful();
     $this->get("/opd/{$d['opd']->id}")->assertSuccessful();
+    $this->get('/upt')->assertSuccessful();
+    $this->get('/upt/create')->assertSuccessful();
+    $this->get("/upt/{$d['upt']->id}/edit")->assertSuccessful();
     $this->get('/sumber-dana')->assertSuccessful();
     $this->get('/sumber-dana/create')->assertSuccessful();
     $this->get("/sumber-dana/{$d['sumberDana']->id}/edit")->assertSuccessful();
@@ -17,6 +20,12 @@ test('all pages render for admin', function () {
     $this->get('/program-kegiatan')->assertSuccessful();
     $this->get('/program-kegiatan/create')->assertSuccessful();
     $this->get("/program-kegiatan/{$d['program']->id}/edit")->assertSuccessful();
+    $this->get("/kegiatan/{$d['kegiatan']->id}/sub-kegiatan")->assertSuccessful();
+    $this->get("/kegiatan/{$d['kegiatan']->id}/sub-kegiatan/create")->assertSuccessful();
+    $this->get("/kegiatan/{$d['kegiatan']->id}/sub-kegiatan/{$d['subKegiatan']->id}/edit")->assertSuccessful();
+    $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja")->assertSuccessful();
+    $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja/create")->assertSuccessful();
+    $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja/{$d['belanja']->id}/edit")->assertSuccessful();
     $this->get('/penerimaan')->assertSuccessful();
     $this->get('/penerimaan/create')->assertSuccessful();
     $this->get('/pengeluaran')->assertSuccessful();
@@ -49,9 +58,16 @@ test('all pages render for opd user', function () {
 
     $pages = [
         '/dashboard', '/opd', "/opd/{$d['opd']->id}",
+        '/upt', '/upt/create', "/upt/{$d['upt']->id}/edit",
         '/sumber-dana', '/sumber-dana/create', "/sumber-dana/{$d['sumberDana']->id}/edit",
         '/rekening-kas',
         '/program-kegiatan', '/program-kegiatan/create',
+        "/kegiatan/{$d['kegiatan']->id}/sub-kegiatan",
+        "/kegiatan/{$d['kegiatan']->id}/sub-kegiatan/create",
+        "/kegiatan/{$d['kegiatan']->id}/sub-kegiatan/{$d['subKegiatan']->id}/edit",
+        "/sub-kegiatan/{$d['subKegiatan']->id}/belanja",
+        "/sub-kegiatan/{$d['subKegiatan']->id}/belanja/create",
+        "/sub-kegiatan/{$d['subKegiatan']->id}/belanja/{$d['belanja']->id}/edit",
         '/penerimaan', '/penerimaan/create',
         '/pengeluaran', '/pengeluaran/create',
         '/posisi-kas', '/posisi-kas/create',

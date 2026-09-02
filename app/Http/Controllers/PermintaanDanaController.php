@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePermintaanDanaRequest;
 use App\Http\Requests\UpdatePermintaanDanaRequest;
+use App\Models\Belanja;
+use App\Models\Kegiatan;
 use App\Models\PermintaanDana;
+use App\Models\Rekening;
 use App\Models\SumberDana;
 use App\Models\User;
 use App\Notifications\PermintaanDanaNotification;
@@ -16,7 +19,7 @@ class PermintaanDanaController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with('opd'), $user)
+        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with(['opd', 'kegiatan', 'subKegiatan', 'belanja', 'sumberDana']), $user)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -38,7 +41,15 @@ class PermintaanDanaController extends Controller
         $opds = $this->userOpds($user);
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('permintaan-dana.create', compact('opds', 'sumberDanas'));
+        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
+        if (! $user->isAdmin()) {
+            $kegiatanQuery->where('opd_id', $user->opd_id);
+        }
+        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
+
+        $rekenings = Rekening::orderBy('kode')->get();
+
+        return view('permintaan-dana.create', compact('opds', 'sumberDanas', 'kegiatans', 'rekenings'));
     }
 
     public function store(StorePermintaanDanaRequest $request)
@@ -66,7 +77,15 @@ class PermintaanDanaController extends Controller
         $opds = $this->userOpds($user);
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('permintaan-dana.edit', compact('permintaanDana', 'opds', 'sumberDanas'));
+        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
+        if (! $user->isAdmin()) {
+            $kegiatanQuery->where('opd_id', $user->opd_id);
+        }
+        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
+
+        $rekenings = Rekening::orderBy('kode')->get();
+
+        return view('permintaan-dana.edit', compact('permintaanDana', 'opds', 'sumberDanas', 'kegiatans', 'rekenings'));
     }
 
     public function update(UpdatePermintaanDanaRequest $request, PermintaanDana $permintaanDana)
@@ -109,6 +128,8 @@ class PermintaanDanaController extends Controller
                 throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
             }
 
+            $this->commitFunds($permintaanDana);
+
             $permintaanDana->update([
                 'status' => 'menunggu',
                 'tanggal' => $permintaanDana->tanggal ?? now(),
@@ -129,6 +150,26 @@ class PermintaanDanaController extends Controller
         }
 
         return back()->with('success', 'Permintaan dana berhasil diajukan dan menunggu persetujuan.');
+    }
+
+    protected function commitFunds(PermintaanDana $permintaanDana): void
+    {
+        if ($permintaanDana->belanja_id) {
+            $belanja = Belanja::find($permintaanDana->belanja_id);
+            if ($belanja) {
+                $belanja->commit((float) $permintaanDana->jumlah);
+            }
+        }
+    }
+
+    protected function releaseFunds(PermintaanDana $permintaanDana): void
+    {
+        if ($permintaanDana->belanja_id) {
+            $belanja = Belanja::find($permintaanDana->belanja_id);
+            if ($belanja) {
+                $belanja->releaseCommit((float) $permintaanDana->jumlah);
+            }
+        }
     }
 
     protected function generateNomorPermintaan(): string

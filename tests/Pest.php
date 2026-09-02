@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Belanja;
+use App\Models\Dinas;
 use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Penerimaan;
@@ -9,8 +11,11 @@ use App\Models\Persetujuan;
 use App\Models\PosisiKas;
 use App\Models\Program;
 use App\Models\Rekening;
+use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TransferDana;
+use App\Models\Unit;
+use App\Models\Upt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -74,9 +79,10 @@ function seedFullDataset(): array
     $program = Program::create([
         'kode_program' => '1.2',
         'nama_program' => 'Program Penunjang Urusan',
+        'opd_id' => $opd->id,
     ]);
 
-    Kegiatan::create([
+    $kegiatan = Kegiatan::create([
         'program_id' => $program->id,
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
@@ -87,6 +93,29 @@ function seedFullDataset(): array
         'pagu' => 500000000,
         'realisasi' => 100000000,
         'persentase' => 20,
+    ]);
+
+    $dinas = Dinas::create(['kode' => 'DIN-1', 'nama' => 'Dinas '.$opd->nama, 'opd_id' => $opd->id]);
+    $unit = Unit::create(['kode' => 'UNIT-1', 'nama' => 'Unit '.$opd->nama, 'opd_id' => $opd->id, 'dinas_id' => $dinas->id]);
+    $upt = Upt::create(['kode' => 'UPT-1', 'nama' => 'UPT '.$opd->nama, 'opd_id' => $opd->id]);
+
+    $subKegiatan = SubKegiatan::create([
+        'kegiatan_id' => $kegiatan->id,
+        'kode_sub_kegiatan' => '1.2.3.1',
+        'nama_sub_kegiatan' => 'Sub Kegiatan',
+        'pagu' => 200000000,
+        'realisasi' => 100000000,
+        'persentase' => 50,
+    ]);
+
+    $belanja = Belanja::create([
+        'sub_kegiatan_id' => $subKegiatan->id,
+        'rekening_id' => $rekening->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'opd_id' => $opd->id,
+        'pagu' => 200000000,
+        'realisasi' => 100000000,
+        'dana_di_commit' => 0,
     ]);
 
     Penerimaan::create([
@@ -172,5 +201,9 @@ function seedFullDataset(): array
         'tanggal' => now(),
     ]);
 
-    return compact('opd', 'opdB', 'admin', 'user', 'sumberDana', 'program', 'rekening', 'permintaanDraft', 'permintaanMenunggu');
+    return compact(
+        'opd', 'opdB', 'admin', 'user', 'sumberDana', 'program', 'rekening',
+        'permintaanDraft', 'permintaanMenunggu', 'kegiatan', 'subKegiatan',
+        'belanja', 'dinas', 'unit', 'upt'
+    );
 }

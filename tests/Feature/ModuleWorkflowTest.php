@@ -183,10 +183,13 @@ test('opd user cannot edit penerimaan from another opd', function () {
 test('admin can create pengeluaran with persentase', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $this->actingAs($admin)
         ->post('/pengeluaran', [
             'opd_id' => $opd->id,
+            'kegiatan_id' => null,
+            'sumber_dana_id' => $sumberDana->id,
             'nama_kegiatan' => 'Rapat',
             'sumber_dana' => 'DAU',
             'anggaran' => 1000000,

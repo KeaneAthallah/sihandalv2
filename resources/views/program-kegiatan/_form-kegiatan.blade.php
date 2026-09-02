@@ -47,17 +47,15 @@
         <x-input-error :messages="$errors->get('nama_sub_kegiatan')" class="mt-1" />
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-            <x-input-label for="{{ $idPrefix }}_kode_rekening" value="Kode Rekening" />
-            <x-text-input type="text" name="kode_rekening" id="{{ $idPrefix }}_kode_rekening" value="{{ old('kode_rekening', $kegiatan?->kode_rekening) }}" placeholder="Opsional" class="mt-1.5" />
-            <x-input-error :messages="$errors->get('kode_rekening')" class="mt-1" />
-        </div>
-        <div>
-            <x-input-label for="{{ $idPrefix }}_nama_rekening" value="Nama Rekening" />
-            <x-text-input type="text" name="nama_rekening" id="{{ $idPrefix }}_nama_rekening" value="{{ old('nama_rekening', $kegiatan?->nama_rekening) }}" placeholder="Opsional" class="mt-1.5" />
-            <x-input-error :messages="$errors->get('nama_rekening')" class="mt-1" />
-        </div>
+    <div>
+        <x-input-label for="{{ $idPrefix }}_rekening_id" value="Rekening" />
+        <select name="rekening_id" id="{{ $idPrefix }}_rekening_id" class="mt-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <option value="">Pilih Rekening (Opsional)</option>
+            @foreach($rekenings as $rekening)
+                <option value="{{ $rekening->id }}" {{ old('rekening_id', $kegiatan?->rekening_id) == $rekening->id ? 'selected' : '' }}>{{ $rekening->kode . ' - ' . $rekening->nama }}</option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('rekening_id')" class="mt-1" />
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -113,7 +113,7 @@
                             <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600">{{ $item->nama_kegiatan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">
                                 Rp {{ number_format($item->anggaran, 0, ',', '.') }}
                             </td>

@@ -79,12 +79,12 @@
                             <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm font-medium text-slate-800">{{ $item->nama_kegiatan ?? '-' }}</span>
+                                <span class="text-sm font-medium text-slate-800">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 whitespace-nowrap">
-                                    {{ $item->sumber_dana }}
+                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 font-medium text-slate-700 text-right whitespace-nowrap tabular-nums">

@@ -56,10 +56,10 @@
                 <label class="text-sm text-slate-500 font-medium">Sampai</label>
                 <input type="date" value="{{ request('to', '2026-12-31') }}" class="input" />
             </div>
-            <select class="input">
-                <option>Semua Sumber Dana</option>
-                @foreach($penerimaans->pluck('nama_sumber_dana')->unique()->filter() as $sd)
-                    <option>{{ $sd }}</option>
+            <select name="sumber_dana_id" class="input">
+                <option value="">Semua Sumber Dana</option>
+                @foreach($sumberDanas as $sd)
+                    <option value="{{ $sd->id }}" {{ $filters['sumber_dana_id'] ?? '' == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
                 @endforeach
             </select>
             <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition">
@@ -89,7 +89,7 @@
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
-                                    {{ $item->nama_sumber_dana ?? '-' }}
+                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd->nama ?? '-' }}</td>

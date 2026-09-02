@@ -41,6 +41,31 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label value="Kegiatan" />
+                            <select name="kegiatan_id"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                <option value="">Pilih Kegiatan</option>
+                                @foreach($kegiatans as $kegiatan)
+                                    <option value="{{ $kegiatan->id }}" {{ old('kegiatan_id') == $kegiatan->id ? 'selected' : '' }}>{{ $kegiatan->kode_kegiatan . ' - ' . $kegiatan->nama_kegiatan }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('kegiatan_id')" class="mt-1"/>
+                        </div>
+                        <div>
+                            <x-input-label value="Rekening" />
+                            <select name="rekening_id"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                <option value="">Pilih Rekening (Opsional)</option>
+                                @foreach($rekenings as $rekening)
+                                    <option value="{{ $rekening->id }}" {{ old('rekening_id') == $rekening->id ? 'selected' : '' }}>{{ $rekening->kode . ' - ' . $rekening->nama }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('rekening_id')" class="mt-1"/>
+                        </div>
+                    </div>
+
                     <div>
                         <x-input-label>Jumlah (Rp) <span class="text-red-500">*</span></x-input-label>
                         <x-text-input type="number" name="jumlah" :value="old('jumlah')" min="1" step="1" placeholder="0" required/>
