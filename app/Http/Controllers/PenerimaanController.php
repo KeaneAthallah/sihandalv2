@@ -17,7 +17,7 @@ class PenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening']);
+        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'tahunAnggaran', 'transaksiPenerimaans']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -27,13 +27,23 @@ class PenerimaanController extends Controller
             $query->where('opd_id', $request->input('opd_id'));
         }
 
-        $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
-            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
-            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
+        $query
+            ->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
+            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')));
 
-        $penerimaans = $query->orderBy('tanggal', 'desc')->get();
+        // Tanggal filters apply to the realization transactions, not the master.
+        $query->when(
+            $request->filled('tanggal_dari'),
+            fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
+        )->when(
+            $request->filled('tanggal_sampai'),
+            fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai')))
+        );
 
+        $penerimaans = $query->orderBy('target', 'desc')->get();
+
+        // Computed totals come from the transaction relationship (accessors),
+        // so the in-memory collection sum works on imported masters too.
         $totalTarget = $penerimaans->sum('target');
         $totalRealisasi = $penerimaans->sum('realisasi');
         $persentase = $totalTarget > 0 ? round(($totalRealisasi / $totalTarget) * 100, 1) : 0;
@@ -75,8 +85,6 @@ class PenerimaanController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($request, &$data) {
-            $data['persentase'] = $data['target'] > 0 ? round(($data['realisasi'] ?? 0) / $data['target'] * 100, 2) : 0;
-
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);
                 $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
@@ -98,11 +106,14 @@ class PenerimaanController extends Controller
 
         DB::transaction(function () use ($request, $penerimaan) {
             $data = $request->validated();
-            $data['persentase'] = $data['target'] > 0 ? round(($data['realisasi'] ?? 0) / $data['target'] * 100, 2) : 0;
 
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);
                 $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
+            }
+
+            if (! $request->user()->isAdmin()) {
+                $data['opd_id'] = $request->user()->opd_id;
             }
 
             $penerimaan->update($data);
@@ -114,6 +125,11 @@ class PenerimaanController extends Controller
     public function destroy(Penerimaan $penerimaan)
     {
         $this->authorizeOpdRecord($penerimaan, request()->user());
+
+        if ($penerimaan->transaksiPenerimaans()->exists()) {
+            return back()->withErrors(['penerimaan' => 'Penerimaan memiliki transaksi sehingga tidak dapat dihapus.']);
+        }
+
         $penerimaan->delete();
 
         return back()->with('success', 'Penerimaan berhasil dihapus.');

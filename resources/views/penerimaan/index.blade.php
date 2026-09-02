@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Penerimaan" :breadcrumbs="['Keuangan', 'Penerimaan']">
+        <x-page-header title="Master Data Penerimaan" :breadcrumbs="['Keuangan', 'Master Data Penerimaan']">
             <x-slot name="actions">
-                <a href="{{ route('penerimaan.create') }}" class="btn-primary">
+                <a href="{{ route('master-data.penerimaan.create') }}" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Penerimaan Baru
                 </a>
@@ -73,7 +73,6 @@
                 <thead>
                     <tr class="border-b border-slate-100">
                         <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
-                        <th class="text-left px-5 py-3 table-head w-[120px]">Tanggal</th>
                         <th class="text-left px-5 py-3 table-head w-[150px]">Sumber Dana</th>
                         <th class="text-left px-5 py-3 table-head">OPD</th>
                         <th class="text-right px-5 py-3 table-head w-[160px]">Target</th>
@@ -86,13 +85,12 @@
                     @forelse($penerimaans as $idx => $item)
                         <tr class="table-row">
                             <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
                                     {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
                             <td class="px-5 py-3.5 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">
                                 Rp {{ number_format($item->target, 0, ',', '.') }}
                             </td>
@@ -109,11 +107,11 @@
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('penerimaan.edit', $item) }}" title="Edit"
+                                    <a href="{{ route('master-data.penerimaan.edit', $item) }}" title="Edit"
                                         class="icon-btn hover:text-amber-600 hover:bg-amber-50">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
-                                    <form method="POST" action="{{ route('penerimaan.destroy', $item) }}"
+                                    <form method="POST" action="{{ route('master-data.penerimaan.destroy', $item) }}"
                                         @submit.prevent="if(confirm('Yakin ingin menghapus data penerimaan ini?')) $el.submit()">
                                         @csrf
                                         @method('DELETE')
@@ -127,7 +125,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-12 text-center">
+                            <td colspan="7" class="px-5 py-12 text-center">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-arrow-down-left class="w-7 h-7"/>

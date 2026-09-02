@@ -13,7 +13,7 @@ class LaporanPenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening']);
+        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'transaksiPenerimaans']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -24,10 +24,10 @@ class LaporanPenerimaanController extends Controller
         }
 
         $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
-            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
+            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
+            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
 
-        $penerimaans = $query->orderBy('tanggal', 'desc')->get();
+        $penerimaans = $query->orderByDesc('target')->get();
 
         $totalTarget = $penerimaans->sum('target');
         $totalRealisasi = $penerimaans->sum('realisasi');
@@ -47,7 +47,7 @@ class LaporanPenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening']);
+        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'transaksiPenerimaans']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -58,10 +58,10 @@ class LaporanPenerimaanController extends Controller
         }
 
         $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
-            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
+            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
+            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
 
-        $penerimaans = $query->orderBy('tanggal', 'desc')->get();
+        $penerimaans = $query->orderByDesc('target')->get();
 
         $filename = 'laporan-penerimaan-'.now()->format('Y-m-d').'.csv';
 
@@ -76,7 +76,7 @@ class LaporanPenerimaanController extends Controller
                 fputcsv($handle, [
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
-                    $item->opd->nama ?? '-',
+                    $item->opd?->nama ?? '-',
                     $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-',
                     $item->target,
                     $item->realisasi,

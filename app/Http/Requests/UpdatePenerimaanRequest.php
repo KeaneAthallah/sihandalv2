@@ -20,9 +20,6 @@ class UpdatePenerimaanRequest extends FormRequest
             'kode_sumber_dana' => ['nullable', 'string', 'max:50'],
             'nama_sumber_dana' => ['nullable', 'string', 'max:255'],
             'target' => ['required', 'numeric', 'min:0'],
-            'realisasi' => ['nullable', 'numeric', 'min:0'],
-            'tanggal' => ['nullable', 'date'],
-            'keterangan' => ['nullable', 'string', 'max:255'],
         ];
     }
 

@@ -26,8 +26,10 @@ test('all pages render for admin', function () {
     $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja")->assertSuccessful();
     $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja/create")->assertSuccessful();
     $this->get("/sub-kegiatan/{$d['subKegiatan']->id}/belanja/{$d['belanja']->id}/edit")->assertSuccessful();
-    $this->get('/penerimaan')->assertSuccessful();
-    $this->get('/penerimaan/create')->assertSuccessful();
+    $this->get('/master-data/penerimaan')->assertSuccessful();
+    $this->get('/master-data/penerimaan/create')->assertSuccessful();
+    $this->get('/transaksi-penerimaan')->assertSuccessful();
+    $this->get('/transaksi-penerimaan/create')->assertSuccessful();
     $this->get('/pengeluaran')->assertSuccessful();
     $this->get('/pengeluaran/create')->assertSuccessful();
     $this->get('/posisi-kas')->assertSuccessful();
@@ -68,7 +70,8 @@ test('all pages render for opd user', function () {
         "/sub-kegiatan/{$d['subKegiatan']->id}/belanja",
         "/sub-kegiatan/{$d['subKegiatan']->id}/belanja/create",
         "/sub-kegiatan/{$d['subKegiatan']->id}/belanja/{$d['belanja']->id}/edit",
-        '/penerimaan', '/penerimaan/create',
+        '/master-data/penerimaan', '/master-data/penerimaan/create',
+        '/transaksi-penerimaan', '/transaksi-penerimaan/create',
         '/pengeluaran', '/pengeluaran/create',
         '/posisi-kas', '/posisi-kas/create',
         '/permintaan-dana', '/permintaan-dana/create', "/permintaan-dana/{$d['permintaanDraft']->id}/edit",

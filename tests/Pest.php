@@ -13,6 +13,7 @@ use App\Models\Program;
 use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
+use App\Models\TransaksiPenerimaan;
 use App\Models\TransferDana;
 use App\Models\Unit;
 use App\Models\Upt;
@@ -118,15 +119,20 @@ function seedFullDataset(): array
         'dana_di_commit' => 0,
     ]);
 
-    Penerimaan::create([
+    $penerimaan = Penerimaan::create([
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
+        'sumber_dana_id' => $sumberDana->id,
         'kode_sumber_dana' => 'DAU',
         'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)',
         'target' => 1000000000,
+    ]);
+
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
         'realisasi' => 400000000,
-        'persentase' => 40,
         'tanggal' => now(),
+        'keterangan' => 'Penerimaan awal',
     ]);
 
     Pengeluaran::create([

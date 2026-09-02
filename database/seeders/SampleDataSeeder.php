@@ -14,6 +14,7 @@ use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransaksiPenerimaan;
 use App\Models\TransferDana;
 use App\Models\Unit;
 use App\Models\Upt;
@@ -122,14 +123,17 @@ class SampleDataSeeder extends Seeder
         // Sample Penerimaan data
         foreach ($opds->take(5) as $opd) {
             foreach (['DBH', 'PAD', 'DAU'] as $sumberDanaNama) {
-                Penerimaan::create([
+                $penerimaan = Penerimaan::create([
                     'opd_id' => $opd->id,
                     'sumber_dana_id' => $sumberDana?->id,
                     'kode_sumber_dana' => $sumberDanaNama,
                     'nama_sumber_dana' => $sumberDana?->nama_sumber_dana ?? $sumberDanaNama,
                     'target' => rand(50000000, 500000000),
+                ]);
+
+                TransaksiPenerimaan::create([
+                    'penerimaan_id' => $penerimaan->id,
                     'realisasi' => rand(10000000, 300000000),
-                    'persentase' => rand(20, 90),
                     'tanggal' => now()->subDays(rand(1, 30)),
                     'keterangan' => "Penerimaan {$sumberDanaNama} untuk {$opd->nama}",
                 ]);

@@ -11,6 +11,7 @@ use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransaksiPenerimaan;
 use App\Support\CsvReader;
 use App\Support\XlsxReader;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +21,13 @@ use Illuminate\Support\Facades\DB;
  *
  * Budget (sumberdana CSV) lands at the Belanja leaf of the hierarchy
  * Opd -> Program -> Kegiatan -> SubKegiatan -> Belanja (Rekening +
- * SumberDana). Revenue (PENERIMAAN XLSX, province-wide with no per-OPD
- * owner) lands on Penerimaan with opd_id = null.
+ * SumberDana).
+ *
+ * Revenue (PENERIMAAN XLSX, province-wide with no per-OPD owner) lands on
+ * TransaksiPenerimaan records, one per workbook row, grouped under a master
+ * Penerimaan per Sumber Dana (opd_id = null). A master's realization is the
+ * SUM of its transactions, so importing never writes realization onto the
+ * master directly.
  *
  * Parent aggregates (SubKegiatan.pagu, Kegiatan.pagu, Opd.total_pagu) are
  * always re-derived from their leaf children so no pagu is double counted,
@@ -66,6 +72,9 @@ class SihandalImportService
 
     /** @var array<string, bool> */
     private array $existingPenerimaanKeys = [];
+
+    /** @var array<string, Penerimaan> */
+    private array $revenueMasters = [];
 
     public function import(string $csvPath, string $xlsxPath, bool $fresh = false, bool $dryRun = false): array
     {
@@ -194,6 +203,7 @@ class SihandalImportService
         $skipped = 0;
         $processedRows = 0;
         $amountCredited = 0.0;
+        $mastersCreated = 0;
 
         foreach ($rows as $rowNumber => $cells) {
             if ($rowNumber < 8 || ! array_key_exists(7, $cells)) {
@@ -222,6 +232,7 @@ class SihandalImportService
             'file' => $this->revenueFile,
             'sourceRows' => $processedRows,
             'created' => $created,
+            'mastersCreated' => count($this->revenueMasters),
             'skipped' => $skipped,
             'expectedSum' => $this->sumXlsxH($rows),
             'creditedSum' => $amountCredited,
@@ -238,22 +249,49 @@ class SihandalImportService
 
         $amount = (float) ($cells[7] ?? 0);
 
-        Penerimaan::create([
-            'opd_id' => null,
-            'rekening_id' => null,
-            'sumber_dana_id' => $sumberDana?->id,
-            'tahun_anggaran_id' => $this->tahunAnggaran->id,
-            'kode_sumber_dana' => (string) ($cells[2] ?? null),
-            'nama_sumber_dana' => $sumberName,
-            'target' => 0,
+        $master = $this->resolveRevenueMaster($sumberName, $sumberDana?->id, (string) ($cells[2] ?? null));
+
+        TransaksiPenerimaan::create([
+            'penerimaan_id' => $master->id,
             'realisasi' => $amount,
-            'persentase' => 0,
             'tanggal' => $tanggal,
             'keterangan' => $keterangan,
             'source_file' => $this->revenueFile,
             'source_row' => $rowNumber,
             'source_identifier' => "row {$rowNumber}",
         ]);
+    }
+
+    /**
+     * Resolve (or create) the province-wide master Penerimaan that groups
+     * transactions under a given Sumber Dana. Imported revenue masters are
+     * keyed by (source_file, nama_sumber_dana) so re-runs are idempotent.
+     */
+    private function resolveRevenueMaster(string $sumberName, ?int $sumberDanaId, string $kodeSumberDana): Penerimaan
+    {
+        $key = $sumberName;
+        if (isset($this->revenueMasters[$key])) {
+            return $this->revenueMasters[$key];
+        }
+
+        $name = $sumberName !== '' ? $sumberName : ($kodeSumberDana !== '' ? $kodeSumberDana : 'Penerimaan');
+
+        $master = Penerimaan::firstOrCreate(
+            ['source_file' => $this->revenueFile, 'nama_sumber_dana' => $name],
+            [
+                'opd_id' => null,
+                'rekening_id' => null,
+                'sumber_dana_id' => $sumberDanaId,
+                'tahun_anggaran_id' => $this->tahunAnggaran->id,
+                'kode_sumber_dana' => $kodeSumberDana,
+                'nama_sumber_dana' => $name,
+                'target' => 0,
+                'source_file' => $this->revenueFile,
+                'source_identifier' => $name,
+            ]
+        );
+
+        return $this->revenueMasters[$key] = $master;
     }
 
     private function resolveOpd(array $record): Opd
@@ -453,14 +491,14 @@ class SihandalImportService
             $this->existingBelanjaKeys[$b->source_file.'|'.$b->source_row] = true;
         }
 
-        foreach (Penerimaan::select(['source_file', 'source_row'])->whereNotNull('source_row')->cursor() as $p) {
-            $this->existingPenerimaanKeys[$p->source_file.'|'.$p->source_row] = true;
+        foreach (TransaksiPenerimaan::select(['source_file', 'source_row'])->whereNotNull('source_row')->cursor() as $t) {
+            $this->existingPenerimaanKeys[$t->source_file.'|'.$t->source_row] = true;
         }
     }
 
     private function wipe(): void
     {
-        foreach (['belanjas', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
+        foreach (['belanjas', 'transaksi_penerimaans', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
             DB::table($table)->delete();
         }
 
@@ -473,6 +511,7 @@ class SihandalImportService
         $this->subKegiatans = [];
         $this->existingBelanjaKeys = [];
         $this->existingPenerimaanKeys = [];
+        $this->revenueMasters = [];
         $this->failures = [];
     }
 
@@ -566,7 +605,7 @@ class SihandalImportService
     private function buildFinalReport(array $inner): array
     {
         $belanjaActual = (float) Belanja::where('source_file', $this->budgetFile)->sum('pagu');
-        $penerimaanActual = (float) Penerimaan::where('source_file', $this->revenueFile)->sum('realisasi');
+        $penerimaanActual = (float) TransaksiPenerimaan::where('source_file', $this->revenueFile)->sum('realisasi');
 
         $csv = $inner['csv'];
         $xlsx = $inner['xlsx'];
@@ -582,6 +621,7 @@ class SihandalImportService
                 'subKegiatan' => SubKegiatan::count(),
                 'belanja' => Belanja::count(),
                 'penerimaan' => Penerimaan::count(),
+                'transaksiPenerimaan' => TransaksiPenerimaan::count(),
             ],
             'budget' => [
                 'processed' => $csv['processed'],

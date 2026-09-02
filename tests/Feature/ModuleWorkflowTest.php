@@ -7,6 +7,7 @@ use App\Models\PosisiKas;
 use App\Models\Program;
 use App\Models\Rekening;
 use App\Models\SumberDana;
+use App\Models\TransaksiPenerimaan;
 use App\Models\TransferDana;
 use App\Models\User;
 
@@ -134,34 +135,43 @@ test('admin can create and update a rekening kas', function () {
     expect($rekening->fresh()->nama)->toBe('Kas Umum Daerah');
 });
 
-test('admin can create penerimaan with persentase and opd scoping on edit', function () {
+test('admin can create penerimaan master and persentase reflects transactions', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan', 'saldo' => 0]);
 
     $this->actingAs($admin)
-        ->post('/penerimaan', [
+        ->post('/master-data/penerimaan', [
             'opd_id' => $opd->id,
             'rekening_id' => $rekening->id,
             'nama_sumber_dana' => 'PAD',
             'target' => 1000000,
-            'realisasi' => 300000,
         ]);
 
     $penerimaan = Penerimaan::where('nama_sumber_dana', 'PAD')->first();
     expect($penerimaan)->not->toBeNull()
-        ->and((float) $penerimaan->persentase)->toBe(30.0);
+        ->and((float) $penerimaan->persentase)->toBe(0.0);
 
     $this->actingAs($admin)
-        ->put("/penerimaan/{$penerimaan->id}", [
-            'opd_id' => $opd->id,
-            'rekening_id' => $rekening->id,
-            'nama_sumber_dana' => 'PAD',
-            'target' => 2000000,
-            'realisasi' => 500000,
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $penerimaan->id,
+            'realisasi' => 300000,
+            'tanggal' => now()->format('Y-m-d'),
         ]);
 
-    expect((float) $penerimaan->fresh()->persentase)->toBe(25.0);
+    expect((float) $penerimaan->fresh()->persentase)->toBe(30.0)
+        ->and((float) $penerimaan->fresh()->realisasi)->toBe(300000.0);
+
+    $this->actingAs($admin)
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $penerimaan->id,
+            'realisasi' => 200000,
+            'tanggal' => now()->format('Y-m-d'),
+        ]);
+
+    $fresh = $penerimaan->fresh();
+    expect((float) $fresh->persentase)->toBe(50.0)
+        ->and((float) $fresh->realisasi)->toBe(500000.0);
 });
 
 test('opd user cannot edit penerimaan from another opd', function () {
@@ -171,13 +181,33 @@ test('opd user cannot edit penerimaan from another opd', function () {
         'opd_id' => $opdB->id,
         'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
-        'realisasi' => 0,
     ]);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
 
     $this->actingAs($userA)
-        ->get("/penerimaan/{$penerimaanB->id}/edit")
+        ->get("/master-data/penerimaan/{$penerimaanB->id}/edit")
         ->assertForbidden();
+});
+
+test('opd user cannot create transaksi against another opd penerimaan', function () {
+    $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
+    $penerimaanB = Penerimaan::create([
+        'opd_id' => $opdB->id,
+        'nama_sumber_dana' => 'PAD B',
+        'target' => 1000000,
+    ]);
+    $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
+
+    $this->actingAs($userA)
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $penerimaanB->id,
+            'realisasi' => 100000,
+            'tanggal' => now()->format('Y-m-d'),
+        ])
+        ->assertSessionHasErrors('penerimaan_id');
+
+    expect(TransaksiPenerimaan::count())->toBe(0);
 });
 
 test('admin can create pengeluaran with persentase', function () {

@@ -100,7 +100,8 @@ class ImportSihandal extends Command
                 ['Kegiatan', number_format($report['created']['kegiatan'])],
                 ['Sub kegiatan', number_format($report['created']['subKegiatan'])],
                 ['Belanja (budget lines)', number_format($report['created']['belanja'])],
-                ['Penerimaan (revenue rows)', number_format($report['created']['penerimaan'])],
+                ['Penerimaan (master rows)', number_format($report['created']['penerimaan'])],
+                ['Transaksi Penerimaan (revenue rows)', number_format($report['created']['transaksiPenerimaan'])],
             ]
         );
 
@@ -129,7 +130,7 @@ class ImportSihandal extends Command
                 ['Revenue rows created', number_format($r['created'])],
                 ['Already present (skipped)', number_format($r['skipped'])],
                 ['Source SUM(H)', 'Rp '.number_format($r['expectedSum'], 2, ',', '.')],
-                ['Imported Penerimaan SUM(realisasi)', 'Rp '.number_format($r['actualSum'], 2, ',', '.')],
+                ['Imported Transaksi Penerimaan SUM(realisasi)', 'Rp '.number_format($r['actualSum'], 2, ',', '.')],
                 ['Reconciled', $r['reconciled'] ? 'YES' : 'NO'],
             ]
         );

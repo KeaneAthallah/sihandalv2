@@ -75,7 +75,10 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   │   │   │   ├── SumberDanaController.php        # Fund sources CRUD
   │   │   │   ├── RekeningKasController.php       # Cash accounts CRUD
   │   │   │   ├── ProgramKegiatanController.php   # Programs/activities CRUD
-  │   │   │   ├── PenerimaanController.php        # Revenue CRUD
+  │   │   │   ├── PenerimaanController.php        # Master Data Penerimaan CRUD (definition: OPD/rekening/
+  │   │   │   │                                     #   sumber dana/tahun anggaran/target; no realization)
+  │   │   │   ├── TransaksiPenerimaanController.php# Transaksi Penerimaan CRUD (realisasi/tanggal/keterangan
+  │   │   │   │                                     #   recorded against a master penerimaan)
   │   │   │   ├── PengeluaranController.php       # Expenditure CRUD
   │   │   │   ├── PosisiKasController.php         # Cash position CRUD
   │   │   │   ├── PermintaanDanaController.php    # Fund request CRUD + submit
@@ -96,8 +99,8 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   │   │       │   └── ValidatesPermintaanDana.php  # shared request-validation trait
   │   │       ├── LoginRequest.php
   │   │       ├── ProfileUpdateRequest.php
-  │   │       └── Store*/Update* Request.php       # 24 CRUD form-request classes
-  │   ├── Models/                        # 19 Eloquent models (see below)
+  │   │       └── Store*/Update* Request.php       # 26 CRUD form-request classes
+  │   ├── Models/                        # 20 Eloquent models (see below)
   │   ├── Notifications/
   │   │   └── PermintaanDanaNotification.php  # database-channel notification for request approval flow
   │   ├── Providers/
@@ -108,7 +111,7 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   │       └── GuestLayout.php
   ├── config/                            # standard Laravel config files
   ├── database/
-  │   ├── migrations/                    # 33 migrations (see below)
+  │   ├── migrations/                    # 35 migrations (see below)
   │   ├── seeders/
   │   │   ├── DatabaseSeeder.php
   │   │   └── SampleDataSeeder.php
@@ -124,7 +127,7 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   │       ├── components/                # ~23 reusable Blade components
   │       ├── layouts/                   # app, guest, navbar, navigation, sidebar
   │       ├── dashboard/index.blade.php
-  │       ├── opd/  penerimaan/  pengeluaran/  permintaan-dana/  persetujuan/
+  │       ├── opd/  penerimaan/  transaksi-penerimaan/  pengeluaran/  permintaan-dana/  persetujuan/
   │       ├── sumber-dana/  rekening-kas/  program-kegiatan/  posisi-kas/
   │       ├── transfer-dana/  tahun-anggaran/  user-management/  pengaturan/
   │       ├── upt/  sub-kegiatan/  belanja/
@@ -233,12 +236,23 @@ nama_sumber_dana) are kept for backward compatibility and display only.
     source_file, source_identifier
     Referenced by FK from Belanja, Penerimaan, Pengeluaran, PermintaanDana.
 
-  penerimaans
-    opd_id (NULLABLE — province-wide revenue rows are stored with opd_id = NULL),
+  penerimaans                      # MASTER DATA Penerimaan (the "definition")
+    opd_id (NULLABLE — province-wide revenue masters are stored with opd_id = NULL),
     rekening_id (FK), sumber_dana_id (FK), tahun_anggaran_id
     kode_sumber_dana, nama_sumber_dana  (legacy text, display/backfill only)
-    target, realisasi, persentase, tanggal, keterangan
+    target
+    source_file, source_identifier
+    NO direct realization columns: realisasi is COMPUTED as the sum of the
+      penerimaan's transaksi_penerimaans. Realization (realisasi), persentase
+      (target-safe), and tanggal (latest transaction date) are provided as
+      non-persisted, eager-load-aware accessors on the model.
+    hasMany: transaksiPenerimaans() -> TransaksiPenerimaan
+
+  transaksi_penerimaans            # TRANSACTION rows (the realization records)
+    penerimaan_id (FK -> penerimaans, cascadeOnDelete), realisasi, tanggal, keterangan
     source_file, source_row, source_identifier  (unique (source_file, source_row))
+    belongsTo: penerimaan();  opdId() helper resolves the owning OPD.
+    The realization total for a master = SUM(realisasi) of its transactions.
 
   pengeluarans
     opd_id, rekening_id (FK), kegiatan_id (FK), sub_kegiatan_id (FK),
@@ -286,6 +300,13 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   sub_kegiatan+belanja legacy backfill, and the import-traceability migration that
   adds source_file/source_row/source_identifier columns and makes
   penerimaans.opd_id nullable).
+  The split migration (2026_09_02_200000_split_penerimaan_into_master_...) creates
+  transaksi_penerimaans (penerimaan_id FK cascadeOnDelete, realisasi, tanggal,
+  keterangan, source_file/source_row/source_identifier, unique(source_file,
+  source_row)); drops realisasi/persentase/tanggal/keterangan/source_row/
+  unique(source_file,source_row) from penerimaans; and backfills each legacy row
+  into one master + one transaction. On MySQL the index on opd_id/tanggal is
+  preserved (DROP COLUMN auto-prunes it); on SQLite it is dropped first.
 
 ================================================================================
                               KEY FEATURES
@@ -305,7 +326,13 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   Sub Kegiatan          Nested under Kegiatan (Program -> Kegiatan -> SubKegiatan)
   Belanja               Budget leaf (rekening + sumber dana + pagu) nested under
                         SubKegiatan; owns the fund locking (commit/release/realize)
-  Penerimaan            Revenue with target vs. realization + FK sumber_dana
+  Penerimaan            Master Data Penerimaan (definition: OPD, rekening, sumber
+                        dana, tahun anggaran, target) + Transaksi Penerimaan
+                        (realisasi/tanggal/keterangan per transaction). Master
+                        realization = SUM of its transactions, shown via
+                        computed accessors. Master path /master-data/penerimaan,
+                        transactions at /transaksi-penerimaan. Non-admin OPD users
+                        only see/act on their own OPD's masters.
   Pengeluaran           Expenditure with budget vs. actual + FK kegiatan/sub/belanja
   Posisi Kas            Cash position snapshot (saldo_awal +/- changes)
   Permintaan Dana       Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja
@@ -414,7 +441,10 @@ nama_sumber_dana) are kept for backward compatibility and display only.
 
   5. Computed fields persisted on write: persentase is recomputed wherever
      realisasi/target/pagu change; saldo_akhir = saldo_awal + penerimaan -
-     pengeluaran.
+     pengeluaran. Exception: penerimaan realization is COMPUTED on read via
+     accessors (realisasi = SUM of transaksi_penerimaans, persentase target-safe,
+     tanggal = latest transaction) so the master definition and its transaction
+     rows stay the single source of truth.
 
   6. Shared validation via a trait: ValidatesPermintaanDana is used by both
      StorePermintaanDanaRequest and UpdatePermintaanDanaRequest to guarantee
@@ -485,22 +515,25 @@ nama_sumber_dana) are kept for backward compatibility and display only.
                  SubKegiatan per unique (OPD, kegiatan, sub-kegiatan) key.
     Leaf budget  One Belanja row per CSV row (7,441) at the leaf, so pagu is never
                  double-counted: rekening + sumber dana + pagu.
-    Revenue      Every XLSX "Data Input" row is imported (5,844 incl. SALDO AWAL);
-                 province-wide rows get opd_id = NULL. The "REALISASI SMB 2026"
-                 sheet is a SUMIF summary and is NOT imported.
+    Revenue      Every XLSX "Data Input" row is imported (5,844 incl. SALDO AWAL)
+                 as a TransaksiPenerimaan grouped under one master Penerimaan per
+                 Sumber Dana (province-wide rows get opd_id = NULL). Each import
+                 creates master(s) + transaction(s) together. The "REALISASI SMB
+                 2026" sheet is a SUMIF summary and is NOT imported.
     Rollups      sub_kegiatans.pagu, kegiatan.pagu and opds.total_pagu are
                  PERSISTED from the leaf sums because existing views read them
                  directly (without recomputation).
 
   Reconciliation (scoped to the imported source_file):
     Budget:   imported SUM(belanjas.pagu) == SUM(ROUND(PAGU,2)) of the CSV.
-    Revenue:  imported SUM(penerimaans.realisasi) == SUM(H) of the XLSX.
+    Revenue:  imported SUM(transaksi_penerimaans.realisasi) == SUM(H) of the
+              XLSX (the reconciliation rolls up a master's transactions).
 
   Idempotency (unique keys per row) lets a re-run skip every already-present row:
     Opd->kode, Program->kode_program, Rekening->kode, SumberDana->nama_sumber_dana,
     Kegiatan->(opd_id,kode_kegiatan,tahun_anggaran_id),
     SubKegiatan->(kegiatan_id,kode_sub_kegiatan),
-    Belanja/Penerimaan->(source_file,source_row).
+    Belanja->(source_file,source_row); TransaksiPenerimaan->(source_file,source_row).
 
   Traceability: source_file / source_row / source_identifier on records so any
   imported row is traceable back to its exact origin.
@@ -541,7 +574,8 @@ nama_sumber_dana) are kept for backward compatibility and display only.
     CRUD   /program-kegiatan/{program}/kegiatan        nested kegiatan within program
     CRUD   /kegiatan/{kegiatan}/sub-kegiatan           sub-kegiatan within kegiatan
     CRUD   /sub-kegiatan/{subKegiatan}/belanja         belanja within sub-kegiatan
-    CRUD   /penerimaan                                 revenue
+    CRUD   /master-data/penerimaan                     master data penerimaan
+    CRUD   /transaksi-penerimaan                       transaksi penerimaan
     CRUD   /pengeluaran                                expenditure
     CRUD   /posisi-kas                                 cash positions
     CRUD   /permintaan-dana (throttle:30)              fund requests

@@ -18,15 +18,16 @@ use App\Http\Controllers\RekeningKasController;
 use App\Http\Controllers\SubKegiatanController;
 use App\Http\Controllers\SumberDanaController;
 use App\Http\Controllers\TahunAnggaranController;
+use App\Http\Controllers\TransaksiPenerimaanController;
 use App\Http\Controllers\TransferDanaController;
 use App\Http\Controllers\UptController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\Belanja;
 use App\Models\Opd;
-use App\Models\Penerimaan;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
 use App\Models\Rekening;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,7 +44,10 @@ Route::get('/dashboard', function () {
     if ($totalBelanja > 0) {
         $totalAnggaran = $totalBelanja;
     }
-    $totalPenerimaan = $opdScope(Penerimaan::query())->sum('realisasi');
+    $totalPenerimaan = (float) DB::table('transaksi_penerimaans')
+        ->join('penerimaans', 'penerimaans.id', '=', 'transaksi_penerimaans.penerimaan_id')
+        ->when(! $isAdmin, fn ($q) => $q->where('penerimaans.opd_id', $user->opd_id))
+        ->sum('transaksi_penerimaans.realisasi');
     $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('realisasi');
     $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
     $totalPagu = $totalAnggaran > 0 ? $totalAnggaran : 1;
@@ -66,9 +70,11 @@ Route::get('/dashboard', function () {
         ->groupBy('status')
         ->pluck('count', 'status');
 
-    $sumberDanaPenerimaan = $opdScope(Penerimaan::query())
-        ->selectRaw('COALESCE(sd.nama_sumber_dana, penerimaans.nama_sumber_dana) as sumber_dana, sum(penerimaans.realisasi) as total')
+    $sumberDanaPenerimaan = DB::table('transaksi_penerimaans')
+        ->join('penerimaans', 'penerimaans.id', '=', 'transaksi_penerimaans.penerimaan_id')
         ->leftJoin('sumber_danas as sd', 'sd.id', '=', 'penerimaans.sumber_dana_id')
+        ->selectRaw('COALESCE(sd.nama_sumber_dana, penerimaans.nama_sumber_dana) as sumber_dana, sum(transaksi_penerimaans.realisasi) as total')
+        ->when(! $isAdmin, fn ($q) => $q->where('penerimaans.opd_id', $user->opd_id))
         ->groupBy('sumber_dana')
         ->pluck('total', 'sumber_dana');
 
@@ -110,7 +116,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/sub-kegiatan/{subKegiatan}/belanja/{belanja}', [BelanjaController::class, 'update'])->name('belanja.update')->middleware('throttle:30');
     Route::delete('/sub-kegiatan/{subKegiatan}/belanja/{belanja}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
 
-    Route::resource('penerimaan', PenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('master-data/penerimaan', PenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->names('master-data.penerimaan');
+    Route::resource('transaksi-penerimaan', TransaksiPenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
+        'transaksi-penerimaan' => 'transaksiPenerimaan',
+    ]);
     Route::resource('pengeluaran', PengeluaranController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('posisi-kas', PosisiKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'posisi-kas' => 'posisiKas',

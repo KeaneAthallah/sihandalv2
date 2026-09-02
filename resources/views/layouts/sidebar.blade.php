@@ -134,12 +134,22 @@
             @endif
         </a>
 
-        <a href="{{ route('penerimaan.index') }}"
+        <a href="{{ route('master-data.penerimaan.index') }}"
            :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
-           class="{{ $linkClass }} {{ $isActive('penerimaan.*') ? $activeBg : $inactiveBg }}">
-            <x-heroicon-o-arrow-down-left class="shrink-0" :class="$isActive('penerimaan.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
-            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Penerimaan</span>
-            @if($isActive('penerimaan.*'))
+           class="{{ $linkClass }} {{ $isActive('master-data.penerimaan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-arrow-down-left class="shrink-0" :class="$isActive('master-data.penerimaan.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Master Data Penerimaan</span>
+            @if($isActive('master-data.penerimaan.*'))
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
+            @endif
+        </a>
+
+        <a href="{{ route('transaksi-penerimaan.index') }}"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+           class="{{ $linkClass }} {{ $isActive('transaksi-penerimaan.*') ? $activeBg : $inactiveBg }}">
+            <x-heroicon-o-banknotes class="shrink-0" :class="$isActive('transaksi-penerimaan.*') ? 'w-4 h-4 text-white' : 'w-4 h-4 text-white/50 group-hover:text-white/70'" />
+            <span :class="sidebarCollapsed ? 'lg:hidden' : ''" class="truncate transition-opacity duration-200">Transaksi Penerimaan</span>
+            @if($isActive('transaksi-penerimaan.*'))
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-white rounded-r-full"></div>
             @endif
         </a>

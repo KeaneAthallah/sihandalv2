@@ -9,6 +9,7 @@ use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransaksiPenerimaan;
 use App\Services\SihandalImportService;
 use Tests\Fixtures\XlsxFixture;
 
@@ -104,26 +105,30 @@ test('re-import is idempotent and never doubles budget or revenue', function () 
     runImporter();
 
     $belanjaBefore = Belanja::count();
-    $penerimaanBefore = Penerimaan::count();
+    $transaksiBefore = TransaksiPenerimaan::count();
 
     runImporter();
 
     expect(Belanja::count())->toBe($belanjaBefore)
-        ->and(Penerimaan::count())->toBe($penerimaanBefore)
-        ->and(Belanja::count())->toBe(4);
+        ->and(TransaksiPenerimaan::count())->toBe($transaksiBefore)
+        ->and(Belanja::count())->toBe(4)
+        ->and(Penerimaan::count())->toBe(3);
 });
 
-test('revenue XLSX import stores province-wide rows with null opd_id', function () {
+test('revenue XLSX import stores province-wide transactions grouped by master', function () {
     runImporter();
 
-    expect(Penerimaan::count())->toBe(5);
+    // Each workbook row becomes a transaction, grouped under a master per
+    // Sumber Dana (SILPA, PAD, BLUD).
+    expect(TransaksiPenerimaan::count())->toBe(5)
+        ->and(Penerimaan::count())->toBe(3);
 
     $allNullOpd = Penerimaan::whereNotNull('opd_id')->count() === 0;
     expect($allNullOpd)->toBeTrue();
 
-    // SALDO AWAL row present.
-    expect(Penerimaan::where('keterangan', 'SALDO AWAL 2026')->count())->toBe(1)
-        ->and(Penerimaan::where('keterangan', 'SALDO AWAL 2026')->value('nama_sumber_dana'))->toBe('SILPA');
+    $saldoAwal = TransaksiPenerimaan::where('keterangan', 'SALDO AWAL 2026')->first();
+    expect($saldoAwal)->not->toBeNull()
+        ->and($saldoAwal->penerimaan->nama_sumber_dana)->toBe('SILPA');
 });
 
 test('revenue total reconciles to the XLSX column H sum', function () {
@@ -141,7 +146,7 @@ test('row traceability columns are populated from the source', function () {
         ->and($belanja1->source_file)->toBe('sumberdana-fixture.csv')
         ->and($belanja1->source_identifier)->toBe('1');
 
-    $penerimaan = Penerimaan::where('source_row', 8)->first();
+    $penerimaan = TransaksiPenerimaan::where('source_row', 8)->first();
     expect($penerimaan)->not->toBeNull()
         ->and($penerimaan->source_file)->toBe(basename(fixtureXlsxPath()));
 });
