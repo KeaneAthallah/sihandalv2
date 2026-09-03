@@ -296,19 +296,6 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   notifications
     standard Laravel database-notifications table (read_at, data json)
 
-  laporan_snapshots               # AGGREGATE REPORT SNAPSHOTS (immutable PDF imports)
-    One generic table holding whole-report snapshots imported from BPKAD PDFs,
-    discriminated by `jenis` ('realisasi_pendapatan' | 'posisi_kas'). It does NOT
-    duplicate transactional data (penerimaans / transaksi_penerimaans /
-    pengeluarans / posisi_kas remain authoritative for source-of-truth balances).
-    Period/scope stored in periode, tahun_anggaran, tanggal_laporan;
-    report layout in section, sub, tipe_baris, kode, level, uraian; amounts in
-    target / realisasi_bulan_ini / realisasi_sd_bulan_lalu / realisasi_sd_bulan_ini /
-    persentase / lebih_kurang / nilai / penerimaan / pengeluaran / sisa / keterangan
-    (decimal:2 cast). Idempotency = unique(source_file, source_row);
-    source_identifier is traceability-only. Populated by the
-    `app:import-laporan-snapshots` CLI (see LAPORAN SNAPSHOTS section).
-
   Migrations total: hierarchy refactor + importer support (users, cache, jobs,
   rekenings, opds, penerimaans, programs, sumber_danas, pengeluarans,
   permintaan_danas, persetujuans, posisi_kas, transfer_danas, + role/opd on users,
@@ -364,14 +351,10 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   Audit Log             Automatic trail of create/update/delete on models
                         that use the Auditable trait
   User Management       Admin-only user CRUD + role/OPD assignment
-  Data Import           CLI command to import the full 2026 budget (CSV) and
-                        revenue (XLSX) datasets into the normalized hierarchy,
-                        with reconciliation, idempotency and source traceability
-                        (see DATA IMPORT section below)
-  Laporan Snapshots     CLI-only import of BPKAD PDF report snapshots (realisasi
-                        pendapatan, posisi kas) into the immutable laporan_snapshots
-                        table — aggregate snapshots, never duplicating or altering
-                        transactional data (see LAPORAN SNAPSHOTS section)
+   Data Import           CLI command to import the full 2026 budget (CSV) and
+                         revenue (XLSX) datasets into the normalized hierarchy,
+                         with reconciliation, idempotency and source traceability
+                         (see DATA IMPORT section below)
 
 ================================================================================
                           FUND REQUEST WORKFLOW (CORE)
@@ -579,45 +562,7 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   Program::where('opd_id', $opd->id) made every OPD detail page empty after import
   and has been fixed to scope via whereHas('kegiatans', opd).
 
-===============================================================================
-                             LAPORAN SNAPSHOTS
-===============================================================================
-
-  Purpose: Import two aggregate BPKAD PDF report snapshots into SIHANDAL V2 as
-  immutable `laporan_snapshots` rows — stored SEPARATELY from transactional data
-  (penerimaans / transaksi_penerimaans / pengeluarans / posisi_kas) so existing
-  CSV/XLSX transaction data and derived balances are never duplicated or altered.
-
-  Pipeline: PDF -> Python `plan/scripts/parse_pdf.py` (pdfplumber) -> JSON on the
-  `laporan` disk (storage/app/laporan/) -> `php artisan app:import-laporan-snapshots`.
-
-  Command:  php artisan app:import-laporan-snapshots {file?} [--dry-run] [--force]
-    Without {file} it imports every .json on the disk; --dry-run rolls back and
-    reports without persisting; --force skips the confirm prompt. Exits 0 only when
-    every file reconciles and has no failures.
-
-  Service:  App\Services\LaporanSnapshotImportService
-    import()      single file, own transaction
-    importDir()   ALL files in ONE transaction (atomic: any bad file rolls back the
-                  entire batch, so an error can never leave earlier files committed)
-    Idempotency   unique(source_file, source_row): re-runs skip existing rows.
-    Imported total is re-derived from the DB INSIDE the transaction, so a re-run
-    that skips everything still reconciles against what is already stored.
-
-  Reconciliation targets (aggregate report lines only — subtotal rows that
-  duplicate their children are EXCLUDED):
-    realisasi_pendapatan  = SUM(realisasi_sd_bulan_ini) of the three LEVEL-2 rows
-                            (4.1 + 4.2 + 4.3) = 453.374.970.858,87 (grand total).
-    posisi_kas            = SUM(sisa) of the "Jumlah I" / "Jumlah II" total rows
-                            (section posisi_silpa_2025 or posisi_realisasi_2026,
-                            tipe_baris=total, uraian like 'Jumlah%') =
-                            161.654.959.503,89 (jumlah saldo buku). The
-                            "TOTAL SISA SALDO KAS" row is deliberately excluded.
-
-  Imported on live MySQL: 119 revenue + 47 posisi rows; both reconcile YES;
-  re-import is idempotent (0 created, all skipped) and still reconciles.
-
-===============================================================================
+================================================================================
                                 ROUTES (SUMMARY)
 ================================================================================
 
@@ -698,9 +643,6 @@ nama_sumber_dana) are kept for backward compatibility and display only.
       # + --dry-run (validate only, persists nothing)
       # + --fresh    (wipe + reimport)
       # + --force    (skip confirmation)
-  - Import BPKAD PDF report snapshots (see LAPORAN SNAPSHOTS):
-      php artisan app:import-laporan-snapshots       # all parsed JSON on the disk
-      php artisan app:import-laporan-snapshots file.json [--dry-run] [--force]
   - Seed all data (runs the importer idempotently):
       php artisan db:seed
   - Reset sample data:
