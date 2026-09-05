@@ -1,58 +1,169 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIHANDAL V2
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistem Informasi Keuangan Daerah** is a regional financial information system for Indonesian local / regional government agencies (OPD — *Organisasi Perangkat Daerah*).
 
-## About Laravel
+Each agency (OPD) tracks budgets (pagu), revenue (penerimaan), expenditure (pengeluaran), cash positions (posisi kas), programs/activities (program-kegiatan), and submits formal fund requests (permintaan dana) that flow through an approval workflow (`draft → menunggu → disetujui/ditolak`) managed by admins.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Table of Contents
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Data Model Overview](#data-model-overview)
+- [Architecture Patterns](#architecture-patterns)
+- [Installation](#installation)
+- [Common Tasks](#common-tasks)
+- [Testing](#testing)
+- [License](#license)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Features
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Module | Purpose |
+| ------ | ------- |
+| Dashboard | Overview: bar/donut/radial charts, stat cards, recent fund requests, status breakdown |
+| OPD Management | List departments, drill into OPD detail (Dinas / Unit / UPT cards + full hierarchy table) |
+| UPT | Technical implementation units (OPD → UPT(s)) CRUD |
+| Sumber Dana | Master fund sources used across the hierarchy |
+| Rekening Kas | Master cash/rekening accounts (`kas` / `pendapatan` / `belanja`); balance is derived from transactions, never stored |
+| Program & Kegiatan | Program + nested Kegiatan budget tracking with codes |
+| Sub Kegiatan | Nested under Kegiatan (Program → Kegiatan → SubKegiatan) |
+| Belanja | Budget leaf (rekening + sumber dana + pagu); owns fund locking (commit/release/realize) |
+| Penerimaan | Master data Penerimaan (definition: OPD, rekening, sumber dana, tahun anggaran, target) + Transaksi Penerimaan (realisasi/tanggal/keterangan per transaction), with computed realization accessors. A master's rekening **must** be tipe `pendapatan` (server-side validated) |
+| Pengeluaran | Expenditure with budget vs. actual + FK kegiatan/sub/belanja. The rekening **must** be tipe `belanja` (server-side validated) |
+| Posisi Kas | Cash position snapshot (`saldo_awal` ± changes) |
+| Permintaan Dana | Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja |
+| Persetujuan | Admin approve/reject of pending requests (realize/release) |
+| Transfer Dana | Fund-transfer tracking with status workflow |
+| Tahun Anggaran | Fiscal-year management (only one active at a time) |
+| Laporan | Read-only reports: penerimaan, pengeluaran, posisi kas, rekap permintaan — each with CSV export |
+| Notifikasi | In-app (database) notifications on request flow |
+| Audit Log | Automatic trail of create/update/delete on models using the `Auditable` trait |
+| User Management | Admin-only user CRUD + role/OPD assignment |
+| Data Import | CLI command to import the full budget (CSV) and revenue (XLSX) datasets into the normalized hierarchy with reconciliation |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Rekening business rules
 
-## Agentic Development
+`rekenings.tipe` is one of `kas` | `pendapatan` | `belanja`, and it is enforced **server-side**:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- **Penerimaan** may only reference a Rekening with `tipe = 'pendapatan'`.
+- **Pengeluaran** may only reference a Rekening with `tipe = 'belanja'`.
+- `kas` Rekening is accepted by neither module.
 
-```bash
-composer require laravel/boost --dev
+Validation lives in the `Store*`/`Update*` Form Requests (`Rule::exists('rekenings', 'id')->where(tipe)`, Indonesian error messages) on both **create and update**, with the dropdowns filtered to matching types as a UX convenience.
 
-php artisan boost:install
+---
+
+## Tech Stack
+
+| Layer | Technology | Version |
+| ----- | ---------- | ------- |
+| Language | PHP | 8.5 |
+| Framework | Laravel | 13.x |
+| Auth | Laravel Breeze | 2.x |
+| Database | MySQL | — |
+| CSS | Tailwind CSS | 4.x (via `@tailwindcss/vite`) |
+| JS | Alpine.js | 3.x |
+| Charts | ApexCharts | 5.x |
+| Build | Vite | — |
+| Testing | Pest / PHPUnit | 4.x / 12 |
+
+---
+
+## Data Model Overview
+
+Budget is aggregated upward from the leaves:
+
+```
+Program → Kegiatan → SubKegiatan → Belanja (rekening + sumber dana + pagu)
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+with pagu entered only at the **Belanja leaf** and derived upward through model helper methods. Master data (Sumber Dana, Rekening, Program, Kegiatan, Sub Kegiatan) is referenced by foreign keys; legacy denormalized text columns are kept for backfill/display only.
 
-## Contributing
+Key money logic:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Belanja** — `availablePagu()` = pagu − realisasi − `dana_di_commit`; `commit()`, `releaseCommit()`, `realize()` encapsulate fund-locking invariants and throw when a request exceeds available budget.
+- **Penerimaan** — realization (realisasi) is computed as the sum of its `transaksi_penerimaans`; `persentase` and `tanggal` are eager-load-aware accessors.
+- **Rekening** — no persisted `saldo`; balances are derived via `totalPenerimaan()`, `totalPengeluaran()`, and `saldo()` from transactions, DB-aggregated and OPD-scoped.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Architecture Patterns
 
-## Security Vulnerabilities
+1. **Standard MVC** — form-request validation → controller → Eloquent model → Blade view. Server-rendered pages enhanced with Alpine.js (no separate frontend framework).
+2. **Fund locking on Belanja** — domain methods (`commit`/`releaseCommit`/`realize`) encapsulate money invariants.
+3. **Transactional multi-step operations** — submit/approve/reject and the CSV importer run inside `DB::transaction`.
+4. **Auto-generated identifiers** — sequential `PD-XXXX/YYYY` and `TF-XXXX/YYYY` strings per year.
+5. **Computed fields** — `persentase`/`saldo_akhir` persisted on write; revenue realization and rekening balance computed on read from transactions (single source of truth).
+6. **Shared validation trait** — `ValidatesPermintaanDana` used by Store/Update requests for identical business rules.
+7. **Automatic audit trail** — `Auditable` trait writes diff snapshots to `audit_logs`.
+8. **In-app notifications** — database-channel notifications on the fund-request flow.
+9. **Separate read/report controllers** — each money module has a read-only `Laporan*`/`Rekap*` controller with streaming CSV export.
+10. **Reusable Blade component library** (~23 components) backed by a `@layer components` design system.
+11. **OPD-scoped multi-tenancy** — base `Controller` helpers (`applyOpdScope`, `userOpds`, `authorizeOpdRecord`) confine OPD users to their own rows.
+12. **Server-side business rules** (rekening tipe, cross-OPD FK checks) — enforced in Form Requests, not just the UI.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
+
+## Installation
+
+Prerequisites: PHP 8.5, Composer, Node.js/npm, MySQL.
+
+```bash
+# 1. Install PHP + JS dependencies
+composer install
+npm install
+
+# 2. Environment configuration
+cp .env.example .env
+php artisan key:generate
+#   → edit .env: set DB_* credentials for your MySQL database
+
+# 3. Run migrations and seed (seeds run the importer idempotently)
+php artisan migrate --seed
+
+# 4. Build frontend assets (or use npm run dev during development)
+npm run build
+
+# 5. Start the development server
+php artisan serve
+```
+
+### Importing the full budget + revenue dataset
+
+```bash
+php artisan app:import-sihandal database/seeders/data/sumberdana26.csv \
+                              database/seeders/data/penerimaan-2026.xlsx
+#   + --dry-run   (validate only, persists nothing)
+#   + --fresh     (wipe + reimport)
+#   + --force     (skip confirmation)
+```
+
+---
+
+## Common Tasks
+
+- Reset sample data: `php artisan db:seed --class=SampleDataSeeder`
+- Rebuild frontend: `npm run build` (or `npm run dev` / `composer run dev`)
+- Inspect routes: `php artisan route:list`
+- Clear views: `php artisan view:clear` (after editing Blade)
+
+---
+
+## Testing
+
+```bash
+php artisan test --compact                          # full suite
+php artisan test --compact --filter=PageSmokeTest    # page-render smoke
+vendor/bin/pint --dirty --format agent               # code style
+```
+
+Key test files: `ModuleWorkflowTest`, `OpdScopingTest`, `RekeningTipeValidationTest`, `HierarchyTest`, `PermintaanDanaCommitTest`, `PageSmokeTest`, `UserManagementTest`, `SihandalImportTest`, `ProfileTest`, `Auth/`.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT). This project builds upon it for a regional government financial management application.
