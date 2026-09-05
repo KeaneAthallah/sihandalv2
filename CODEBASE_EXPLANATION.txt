@@ -240,10 +240,18 @@ nama_sumber_dana) are kept for backward compatibility and display only.
     totalPengeluaran($opdId) and saldo($opdId) (sum of transaksi_penerimaans.
     realisasi minus sum of pengeluarans.realisasi), all DB-aggregated. The
     rekening-kas list computes these per OPD in grouped queries.
+    TIPE ENFORCEMENT (server-side): a master Penerimaan may only reference a
+    rekening with tipe = 'pendapatan' and a Pengeluaran may only reference a
+    rekening with tipe = 'belanja'. Enforced in the Store/Update Form Requests
+    (Rule::exists('rekenings','id')->where(tipe)) with Indonesian error messages,
+    and reflected in the create/edit dropdowns (edit dropdowns also merge the
+    currently-selected rekening so legacy rows keep rendering). 'kas' rekenings
+    are accepted by neither module.
 
   penerimaans                      # MASTER DATA Penerimaan (the "definition")
     opd_id (NULLABLE — province-wide revenue masters are stored with opd_id = NULL),
-    rekening_id (FK), sumber_dana_id (FK), tahun_anggaran_id
+    rekening_id (FK -> rekenings.tipe = 'pendapatan'), sumber_dana_id (FK),
+    tahun_anggaran_id
     kode_sumber_dana, nama_sumber_dana  (legacy text, display/backfill only)
     target
     source_file, source_identifier
@@ -260,8 +268,8 @@ nama_sumber_dana) are kept for backward compatibility and display only.
     The realization total for a master = SUM(realisasi) of its transactions.
 
   pengeluarans
-    opd_id, rekening_id (FK), kegiatan_id (FK), sub_kegiatan_id (FK),
-    belanja_id (FK), sumber_dana_id (FK), tahun_anggaran_id
+    opd_id, rekening_id (FK -> rekenings.tipe = 'belanja'), kegiatan_id (FK),
+    sub_kegiatan_id (FK), belanja_id (FK), sumber_dana_id (FK), tahun_anggaran_id
     kode_kegiatan, nama_kegiatan, sumber_dana  (legacy text)
     anggaran, realisasi, persentase, tanggal, keterangan
 
@@ -338,8 +346,12 @@ nama_sumber_dana) are kept for backward compatibility and display only.
                         realization = SUM of its transactions, shown via
                         computed accessors. Master path /master-data/penerimaan,
                         transactions at /transaksi-penerimaan. Non-admin OPD users
-                        only see/act on their own OPD's masters.
-  Pengeluaran           Expenditure with budget vs. actual + FK kegiatan/sub/belanja
+                        only see/act on their own OPD's masters. The master's
+                        rekening MUST be tipe 'pendapatan' (server-side
+                        validation; dropdown filtered accordingly).
+  Pengeluaran           Expenditure with budget vs. actual + FK kegiatan/sub/belanja.
+                        The rekening MUST be tipe 'belanja' (server-side
+                        validation; dropdown filtered accordingly).
   Posisi Kas            Cash position snapshot (saldo_awal +/- changes)
   Permintaan Dana       Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja
   Persetujuan           Admin approve/reject of pending requests (realize/release)
@@ -501,6 +513,20 @@ nama_sumber_dana) are kept for backward compatibility and display only.
       to the user's OPD, preventing one OPD from attaching another OPD's
       records.
 
+  15. Server-side rekening-tipe business rules: Store*/Update* Penerimaan and
+      Pengeluaran Form Requests constrain rekening_id with
+      Rule::exists('rekenings','id')->where(tipe) so a master Penerimaan can
+      only ever reference a 'pendapatan' rekening and a Pengeluaran only a
+      'belanja' rekening ('kas' is accepted by neither — this also blocks a
+      Penerimaan master referencing a 'belanja' rekening and vice versa). The
+      validator's after hook rewrites any rekening_id failure to a single
+      Indonesian message ("Rekening penerimaan harus bertipe pendapatan." /
+      "Rekening pengeluaran harus bertipe belanja."), so the UI never leaks the
+      raw exists-where message. Enforced on BOTH create and update paths; the
+      Blade dropdowns mirror it as a UX convenience only. Existing records with
+      a legacy-tipe rekening keep rendering on edit (the dropdown merges the
+      current rekening back in) and are never silently modified.
+
 ================================================================================
                                 DATA IMPORT
 ===============================================================================
@@ -613,6 +639,11 @@ nama_sumber_dana) are kept for backward compatibility and display only.
   ---------------------------------  -------------------------------------------
   ModuleWorkflowTest.php             Full CRUD workflows for every module
   OpdScopingTest.php                 Data isolation between OPDs
+  RekeningTipeValidationTest.php     Rekening tipe business rules: master
+                                     Penerimaan only accepts 'pendapatan'
+                                     rekenings, Pengeluaran only 'belanja';
+                                     create + update paths, admin + OPD users,
+                                     error messages, nullable rekening intact
   HierarchyTest.php                  Hierarchy relationships, aggregation, and
                                      Belanja commit/release/realize + OPD security
   PermintaanDanaCommitTest.php       Fund commit/realize/release workflow

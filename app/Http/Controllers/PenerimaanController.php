@@ -62,7 +62,7 @@ class PenerimaanController extends Controller
     public function create()
     {
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::orderBy('kode')->get();
+        $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
         $tahunAnggarans = TahunAnggaran::orderByDesc('tahun')->get();
 

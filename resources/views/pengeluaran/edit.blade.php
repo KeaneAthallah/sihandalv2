@@ -25,7 +25,7 @@
                         <x-input-label value="Rekening" />
                         <select name="rekening_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">Pilih Rekening (Opsional)</option>
-                            @foreach($rekenings as $rek)
+                            @foreach($rekenings->where('tipe', 'belanja')->merge($pengeluaran->rekening_id ? $rekenings->where('id', $pengeluaran->rekening_id) : collect()) as $rek)
                                 <option value="{{ $rek->id }}" {{ old('rekening_id', $pengeluaran->rekening_id) == $rek->id ? 'selected' : '' }}>{{ $rek->nama }}</option>
                             @endforeach
                         </select>

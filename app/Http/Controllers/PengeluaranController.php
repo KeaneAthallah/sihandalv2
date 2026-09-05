@@ -62,7 +62,7 @@ class PengeluaranController extends Controller
         }
         $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
 
-        $rekenings = Rekening::orderBy('kode')->get();
+        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
         return view('pengeluaran.create', compact('opds', 'kegiatans', 'rekenings', 'sumberDanas'));

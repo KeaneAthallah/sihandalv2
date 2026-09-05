@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Kegiatan;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePengeluaranRequest extends FormRequest
 {
@@ -16,7 +18,7 @@ class UpdatePengeluaranRequest extends FormRequest
     {
         return [
             'opd_id' => ['required', 'exists:opds,id'],
-            'rekening_id' => ['nullable', 'exists:rekenings,id'],
+            'rekening_id' => ['nullable', Rule::exists('rekenings', 'id')->where(fn (Builder $q) => $q->where('tipe', 'belanja'))],
             'kegiatan_id' => ['nullable', 'exists:kegiatan,id'],
             'sub_kegiatan_id' => ['nullable', 'exists:sub_kegiatans,id'],
             'belanja_id' => ['nullable', 'exists:belanjas,id'],
@@ -47,6 +49,11 @@ class UpdatePengeluaranRequest extends FormRequest
                 if ($kegiatan && (int) $kegiatan->opd_id !== (int) $opdId) {
                     $validator->errors()->add('kegiatan_id', 'Kegiatan tidak sesuai dengan OPD yang dipilih.');
                 }
+            }
+
+            if ($validator->errors()->has('rekening_id')) {
+                $validator->errors()->forget('rekening_id');
+                $validator->errors()->add('rekening_id', 'Rekening pengeluaran harus bertipe belanja.');
             }
         });
     }
