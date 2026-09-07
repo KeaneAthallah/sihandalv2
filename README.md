@@ -31,7 +31,7 @@ Each agency (OPD) tracks budgets (pagu), revenue (penerimaan), expenditure (peng
 | Program & Kegiatan | Program + nested Kegiatan budget tracking with codes |
 | Sub Kegiatan | Nested under Kegiatan (Program → Kegiatan → SubKegiatan) |
 | Belanja | Budget leaf (rekening + sumber dana + pagu); owns fund locking (commit/release/realize) |
-| Penerimaan | Master data Penerimaan (definition: OPD, rekening, sumber dana, tahun anggaran, target) + Transaksi Penerimaan (realisasi/tanggal/keterangan per transaction), with computed realization accessors. A master's rekening **must** be tipe `pendapatan` (server-side validated) |
+| Penerimaan | Master data Penerimaan (definition: OPD, rekening, sumber dana, tahun anggaran, target) + Transaksi Penerimaan (realisasi/tanggal/keterangan per transaction), with computed realization accessors. Every transaction requires a unique `nomor_registrasi` and may carry optional **BKU detail rows** (`transaksi_penerimaan_bkus`, `0..N`); when any are recorded their total must equal the transaction's realisasi. A master's rekening **must** be tipe `pendapatan` (server-side validated) |
 | Pengeluaran | Expenditure with budget vs. actual + FK kegiatan/sub/belanja. The rekening **must** be tipe `belanja` (server-side validated) |
 | Posisi Kas | Cash position snapshot (`saldo_awal` ± changes) |
 | Permintaan Dana | Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja |
@@ -85,7 +85,7 @@ with pagu entered only at the **Belanja leaf** and derived upward through model 
 Key money logic:
 
 - **Belanja** — `availablePagu()` = pagu − realisasi − `dana_di_commit`; `commit()`, `releaseCommit()`, `realize()` encapsulate fund-locking invariants and throw when a request exceeds available budget.
-- **Penerimaan** — realization (realisasi) is computed as the sum of its `transaksi_penerimaans`; `persentase` and `tanggal` are eager-load-aware accessors.
+- **Penerimaan** — realization (realisasi) is computed as the sum of its `transaksi_penerimaans`; `persentase` and `tanggal` are eager-load-aware accessors. Each transaction carries a required unique `nomor_registrasi` and optional BKU detail rows (`transaksi_penerimaan_bkus`); the detail total (`totalBku()`) must equal the transaction's realisasi whenever at least one row exists.
 - **Rekening** — no persisted `saldo`; balances are derived via `totalPenerimaan()`, `totalPengeluaran()`, and `saldo()` from transactions, DB-aggregated and OPD-scoped.
 
 ---
@@ -104,6 +104,7 @@ Key money logic:
 10. **Reusable Blade component library** (~23 components) backed by a `@layer components` design system.
 11. **OPD-scoped multi-tenancy** — base `Controller` helpers (`applyOpdScope`, `userOpds`, `authorizeOpdRecord`) confine OPD users to their own rows.
 12. **Server-side business rules** (rekening tipe, cross-OPD FK checks) — enforced in Form Requests, not just the UI.
+13. **Optional nested-detail validation** — Transaksi Penerimaan BKU rows are optional (`0..N`, managed via `nullable|array` in the shared `TransaksiPenerimaanRequest`); the *total = realisasi* invariant only applies once a row exists, so BKU can be added or removed freely through update.
 
 ---
 
@@ -160,7 +161,7 @@ php artisan test --compact --filter=PageSmokeTest    # page-render smoke
 vendor/bin/pint --dirty --format agent               # code style
 ```
 
-Key test files: `ModuleWorkflowTest`, `OpdScopingTest`, `RekeningTipeValidationTest`, `HierarchyTest`, `PermintaanDanaCommitTest`, `PageSmokeTest`, `UserManagementTest`, `SihandalImportTest`, `ProfileTest`, `Auth/`.
+Key test files: `ModuleWorkflowTest`, `OpdScopingTest`, `RekeningTipeValidationTest`, `TransaksiPenerimaanBkuTest`, `HierarchyTest`, `PermintaanDanaCommitTest`, `PageSmokeTest`, `UserManagementTest`, `SihandalImportTest`, `ProfileTest`, `Auth/`.
 
 ---
 
