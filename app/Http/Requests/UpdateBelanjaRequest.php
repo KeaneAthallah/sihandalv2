@@ -38,6 +38,21 @@ class UpdateBelanjaRequest extends FormRequest
             if ($subKegiatan && (int) $subKegiatan->kegiatan?->opd_id !== (int) $opdId) {
                 $validator->errors()->add('sub_kegiatan_id', 'Sub kegiatan tidak sesuai dengan OPD yang dipilih.');
             }
+
+            $belanja = $this->route('belanja');
+            if ($belanja) {
+                $newRealisasi = (float) ($this->input('realisasi') ?? $belanja->realisasi);
+
+                if ($newRealisasi < (float) $belanja->realisasi) {
+                    $validator->errors()->add('realisasi', 'Realisasi tidak boleh dikurangi dari nilai yang telah ditetapkan.');
+                }
+
+                $minimum = round((float) $belanja->dana_di_commit + $newRealisasi, 2);
+
+                if ((float) $this->input('pagu') < $minimum) {
+                    $validator->errors()->add('pagu', 'Pagu tidak boleh kurang dari total dana commit dan realisasi.');
+                }
+            }
         });
     }
 }

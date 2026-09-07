@@ -81,6 +81,17 @@ class SubKegiatanController extends Controller
     public function destroy(Request $request, Kegiatan $kegiatan, SubKegiatan $subKegiatan)
     {
         $this->authorizeOpdRecord($kegiatan, $request->user());
+
+        $hasCommittedFunds = $subKegiatan->belanjas()
+            ->where(fn ($q) => $q->where('dana_di_commit', '>', 0)->orWhere('realisasi', '>', 0))
+            ->exists();
+
+        if ($hasCommittedFunds) {
+            return back()->withErrors([
+                'sub_kegiatan' => 'Sub kegiatan memiliki belanja dengan dana berkomitmen/terealisasi sehingga tidak dapat dihapus.',
+            ]);
+        }
+
         $subKegiatan->delete();
 
         return back()->with('success', 'Sub kegiatan berhasil dihapus.');

@@ -41,7 +41,7 @@ test('admin can create transaksi with 1 bku', function () {
         ->and(TransaksiPenerimaanBku::count())->toBe(1);
 
     $tx = TransaksiPenerimaan::first();
-    expect($tx->nomor_registrasi)->toBe('REG-001')
+    expect($tx->nomor_registrasi)->toBe('REG-00001/'.now()->year)
         ->and((float) $tx->realisasi)->toBe(500000.0);
 
     $bku = $tx->bkus()->first();
@@ -125,7 +125,7 @@ test('transaksi without bku is valid', function () {
         ->and(TransaksiPenerimaanBku::count())->toBe(0);
 
     $tx = TransaksiPenerimaan::first();
-    expect($tx->nomor_registrasi)->toBe('REG-NOBKU')
+    expect($tx->nomor_registrasi)->toBe('REG-00001/'.now()->year)
         ->and((float) $tx->realisasi)->toBe(10000000.0)
         ->and($tx->bkus()->count())->toBe(0);
 });
@@ -145,7 +145,7 @@ test('transaksi with empty bku array is valid', function () {
         ->and(TransaksiPenerimaanBku::count())->toBe(0);
 });
 
-test('transaksi without nomor registrasi is rejected', function () {
+test('nomor registrasi is auto-generated when not submitted', function () {
     $this->actingAs($this->admin)
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
@@ -153,22 +153,27 @@ test('transaksi without nomor registrasi is rejected', function () {
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
         ])
-        ->assertSessionHasErrors('nomor_registrasi');
+        ->assertSessionHasNoErrors();
 
-    expect(TransaksiPenerimaan::count())->toBe(0);
+    $tx = TransaksiPenerimaan::first();
+    expect($tx)->not->toBeNull()
+        ->and($tx->nomor_registrasi)->toBe('REG-00001/'.now()->year);
 });
 
-test('transaksi without nomor registrasi shows indonesian error message', function () {
+test('submitted nomor registrasi is ignored and rebuilt by the system', function () {
     $this->actingAs($this->admin)
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'nomor_registrasi' => 'REG-MANUAL',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
         ])
-        ->assertSessionHasErrors([
-            'nomor_registrasi' => 'Nomor registrasi wajib diisi.',
-        ]);
+        ->assertSessionHasNoErrors();
+
+    $tx = TransaksiPenerimaan::first();
+    expect($tx->nomor_registrasi)->toBe('REG-00001/'.now()->year)
+        ->and($tx->nomor_registrasi)->not->toBe('REG-MANUAL');
 });
 
 test('transaksi fails when bku has missing required fields', function () {
@@ -210,11 +215,10 @@ test('transaksi fails when bku rekening is not pendapatan type', function () {
     expect(TransaksiPenerimaan::count())->toBe(0);
 });
 
-test('nomor registrasi must be unique', function () {
+test('auto-generated nomor registrasi is sequential and unique', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
-            'nomor_registrasi' => 'REG-DUP',
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -226,16 +230,20 @@ test('nomor registrasi must be unique', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
-            'nomor_registrasi' => 'REG-DUP',
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
                 ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000, 'rekening_id' => $this->rekening->id],
             ],
         ])
-        ->assertSessionHasErrors('nomor_registrasi');
+        ->assertSessionHasNoErrors();
 
-    expect(TransaksiPenerimaan::count())->toBe(1);
+    $numbers = TransaksiPenerimaan::orderBy('id')->pluck('nomor_registrasi')->all();
+
+    expect($numbers)->toBe([
+        'REG-00001/'.now()->year,
+        'REG-00002/'.now()->year,
+    ])->and(TransaksiPenerimaan::count())->toBe(2);
 });
 
 test('admin can update transaksi and add new bku', function () {
@@ -596,7 +604,7 @@ test('create page renders with rekening dropdown', function () {
     $this->actingAs($this->admin)
         ->get('/transaksi-penerimaan/create')
         ->assertSuccessful()
-        ->assertSee('nomor_registrasi')
+        ->assertSee('Nomor Registrasi')
         ->assertSee('Tambah BKU')
         ->assertSee('4.1.1');
 });

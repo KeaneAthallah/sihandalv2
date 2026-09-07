@@ -7,7 +7,7 @@
     $unreadNotificationCount = Auth::user()?->unreadNotifications()->count() ?? 0;
 @endphp
 
-<header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80" x-data>
+<header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
     <div class="flex items-center justify-between h-16 px-4 lg:px-6">
 
         {{-- Left: Navigation controls + Breadcrumbs --}}

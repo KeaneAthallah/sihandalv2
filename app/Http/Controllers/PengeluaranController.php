@@ -8,6 +8,7 @@ use App\Models\Kegiatan;
 use App\Models\Pengeluaran;
 use App\Models\Rekening;
 use App\Models\SumberDana;
+use App\Models\TahunAnggaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -91,6 +92,7 @@ class PengeluaranController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($request, &$data) {
+            $data['tahun_anggaran_id'] = TahunAnggaran::currentActive()?->id;
             $data['persentase'] = $data['anggaran'] > 0 ? round(($data['realisasi'] ?? 0) / $data['anggaran'] * 100, 2) : 0;
 
             if ($data['kegiatan_id'] ?? null) {

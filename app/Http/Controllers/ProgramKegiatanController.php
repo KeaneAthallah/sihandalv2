@@ -98,6 +98,17 @@ class ProgramKegiatanController extends Controller
     public function destroy(Program $program)
     {
         $this->authorizeProgram($program, request()->user());
+
+        $hasFundedBelanjas = $program->kegiatans()
+            ->whereHas('subKegiatans.belanjas', fn ($q) => $q->where('dana_di_commit', '>', 0)->orWhere('realisasi', '>', 0))
+            ->exists();
+
+        if ($hasFundedBelanjas) {
+            return back()->withErrors([
+                'program' => 'Program memiliki belanja dengan dana berkomitmen/terealisasi sehingga tidak dapat dihapus.',
+            ]);
+        }
+
         $program->delete();
 
         return Redirect::route('program-kegiatan.index')->with('success', 'Program berhasil dihapus.');
@@ -140,6 +151,17 @@ class ProgramKegiatanController extends Controller
     {
         $this->authorizeProgram($program, request()->user());
         $this->authorizeOpdRecord($kegiatan, request()->user());
+
+        $hasFundedBelanjas = $kegiatan->subKegiatans()
+            ->whereHas('belanjas', fn ($q) => $q->where('dana_di_commit', '>', 0)->orWhere('realisasi', '>', 0))
+            ->exists();
+
+        if ($hasFundedBelanjas) {
+            return back()->withErrors([
+                'kegiatan' => 'Kegiatan memiliki belanja dengan dana berkomitmen/terealisasi sehingga tidak dapat dihapus.',
+            ]);
+        }
+
         $kegiatan->delete();
 
         return back()->with('success', 'Kegiatan berhasil dihapus.');

@@ -9,6 +9,7 @@ use App\Models\Kegiatan;
 use App\Models\PermintaanDana;
 use App\Models\Rekening;
 use App\Models\SumberDana;
+use App\Models\TahunAnggaran;
 use App\Models\User;
 use App\Notifications\PermintaanDanaNotification;
 use Illuminate\Http\Request;
@@ -67,6 +68,7 @@ class PermintaanDanaController extends Controller
         $data['sumber_dana'] = $sumberDana->nama_sumber_dana;
         $data['nomor_permintaan'] = $this->generateNomorPermintaan();
         $data['status'] = 'draft';
+        $data['tahun_anggaran_id'] = TahunAnggaran::currentActive()?->id;
 
         PermintaanDana::create($data);
 
@@ -124,20 +126,26 @@ class PermintaanDanaController extends Controller
     {
         $this->authorizeOpdRecord($permintaanDana, request()->user());
 
-        DB::transaction(function () use ($permintaanDana) {
-            $permintaanDana = PermintaanDana::findOrFail($permintaanDana->id);
+        try {
+            DB::transaction(function () use ($permintaanDana) {
+                $permintaanDana = PermintaanDana::whereKey($permintaanDana->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($permintaanDana->status !== 'draft') {
-                throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
-            }
+                if ($permintaanDana->status !== 'draft') {
+                    throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
+                }
 
-            $this->commitFunds($permintaanDana);
+                $this->commitFunds($permintaanDana);
 
-            $permintaanDana->update([
-                'status' => 'menunggu',
-                'tanggal' => $permintaanDana->tanggal ?? now(),
-            ]);
-        });
+                $permintaanDana->update([
+                    'status' => 'menunggu',
+                    'tanggal' => $permintaanDana->tanggal ?? now(),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['jumlah' => $e->getMessage()]);
+        }
 
         $admins = User::where('role', 'admin')->get();
         $nomor = $permintaanDana->fresh()->nomor_permintaan;
@@ -157,12 +165,27 @@ class PermintaanDanaController extends Controller
 
     protected function commitFunds(PermintaanDana $permintaanDana): void
     {
-        if ($permintaanDana->belanja_id) {
-            $belanja = Belanja::find($permintaanDana->belanja_id);
-            if ($belanja) {
-                $belanja->commit((float) $permintaanDana->jumlah);
-            }
+        if (! $permintaanDana->belanja_id) {
+            return;
         }
+
+        $belanja = Belanja::whereKey($permintaanDana->belanja_id)->lockForUpdate()->first();
+
+        if ($belanja === null) {
+            throw new \RuntimeException('Belanja terkait tidak ditemukan.');
+        }
+
+        if ($belanja->opd_id !== $permintaanDana->opd_id) {
+            throw new \RuntimeException('Belanja tidak sesuai dengan OPD permintaan.');
+        }
+
+        $jumlah = (float) $permintaanDana->jumlah;
+
+        if ($belanja->availablePagu() < $jumlah) {
+            throw new \RuntimeException('Jumlah permintaan melebihi pagu belanja yang tersedia.');
+        }
+
+        $belanja->commit($jumlah);
     }
 
     protected function releaseFunds(PermintaanDana $permintaanDana): void
@@ -178,9 +201,18 @@ class PermintaanDanaController extends Controller
     protected function generateNomorPermintaan(): string
     {
         $year = now()->format('Y');
-        $lastNumber = (int) PermintaanDana::where('nomor_permintaan', 'like', "PD-%/{$year}")
-            ->count();
 
-        return 'PD-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
+        $lastNumber = PermintaanDana::query()
+            ->where('nomor_permintaan', 'like', "PD-%/{$year}")
+            ->get(['nomor_permintaan'])
+            ->map(function (PermintaanDana $permintaan) {
+                preg_match('/^PD-(\d+)\//', $permintaan->nomor_permintaan, $matches);
+
+                return $matches[1] ?? null;
+            })
+            ->filter()
+            ->max() ?? 0;
+
+        return 'PD-'.str_pad((int) $lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }

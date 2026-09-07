@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Belanja extends Model
 {
@@ -58,16 +59,46 @@ class Belanja extends Model
             return;
         }
 
-        if ($this->availablePagu() < $amount) {
-            throw new \RuntimeException('Dana commit melebihi pagu yang tersedia.');
-        }
+        DB::transaction(function () use ($amount) {
+            $belanja = static::query()->whereKey($this->id)->lockForUpdate()->first();
 
-        $this->increment('dana_di_commit', $amount);
+            if ($belanja === null) {
+                return;
+            }
+
+            if ($belanja->availablePagu() < $amount) {
+                throw new \RuntimeException('Dana commit melebihi pagu yang tersedia.');
+            }
+
+            $belanja->update([
+                'dana_di_commit' => round((float) $belanja->dana_di_commit + $amount, 2),
+            ]);
+
+            $this->refresh();
+        });
     }
 
     public function releaseCommit(float $amount): void
     {
-        $this->decrement('dana_di_commit', max(0, $amount));
+        DB::transaction(function () use ($amount) {
+            $belanja = static::query()->whereKey($this->id)->lockForUpdate()->first();
+
+            if ($belanja === null) {
+                return;
+            }
+
+            $released = min(max($amount, 0), (float) $belanja->dana_di_commit);
+
+            if ($released <= 0) {
+                return;
+            }
+
+            $belanja->update([
+                'dana_di_commit' => round((float) $belanja->dana_di_commit - $released, 2),
+            ]);
+
+            $this->refresh();
+        });
     }
 
     public function realize(float $amount): void
@@ -76,11 +107,23 @@ class Belanja extends Model
             return;
         }
 
-        if ($this->availablePagu() < $amount) {
-            throw new \RuntimeException('Realisasi melebihi pagu yang tersedia.');
-        }
+        DB::transaction(function () use ($amount) {
+            $belanja = static::query()->whereKey($this->id)->lockForUpdate()->first();
 
-        $this->increment('realisasi', $amount);
-        $this->decrement('dana_di_commit', min($amount, (float) $this->dana_di_commit));
+            if ($belanja === null) {
+                return;
+            }
+
+            if ($belanja->availablePagu() < $amount) {
+                throw new \RuntimeException('Realisasi melebihi pagu yang tersedia.');
+            }
+
+            $belanja->update([
+                'realisasi' => round((float) $belanja->realisasi + $amount, 2),
+                'dana_di_commit' => round((float) $belanja->dana_di_commit - min($amount, (float) $belanja->dana_di_commit), 2),
+            ]);
+
+            $this->refresh();
+        });
     }
 }

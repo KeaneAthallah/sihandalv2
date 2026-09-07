@@ -87,7 +87,7 @@
                                     <a href="{{ route('rekening-kas.edit', $rek) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
-                                    <form method="POST" action="{{ route('rekening-kas.destroy', $rek) }}" @submit.prevent="if(confirm('Yakin ingin menghapus rekening {{ $rek->nama }}?')) $el.submit()">
+                                    <form method="POST" action="{{ route('rekening-kas.destroy', $rek) }}" @submit.prevent="if(confirm('Yakin ingin menghapus rekening {{ addslashes($rek->nama) }}?')) $el.submit()">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="icon-btn hover:text-red-600 hover:bg-red-50" title="Hapus">

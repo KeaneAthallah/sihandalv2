@@ -8,7 +8,9 @@ use App\Models\Penerimaan;
 use App\Models\Rekening;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class TransaksiPenerimaanController extends Controller
@@ -62,11 +64,14 @@ class TransaksiPenerimaanController extends Controller
         return view('transaksi-penerimaan.edit', compact('transaksiPenerimaan', 'penerimaans', 'rekenings'));
     }
 
-    public function store(StoreTransaksiPenerimaanRequest $request)
+    public function store(StoreTransaksiPenerimaanRequest $request, DocumentNumberService $numbers)
     {
         $data = $request->validated();
         $bkus = $data['bkus'] ?? [];
         unset($data['bkus']);
+
+        $year = Carbon::parse($data['tanggal'])->year;
+        $data['nomor_registrasi'] = $numbers->next('transaksi_penerimaan', 'REG', $year);
 
         $transaksi = DB::transaction(function () use ($data, $bkus) {
             $transaksi = TransaksiPenerimaan::create($data);
@@ -79,7 +84,7 @@ class TransaksiPenerimaanController extends Controller
             return $transaksi;
         });
 
-        return back()->with('success', 'Transaksi Penerimaan beserta detail BKU berhasil ditambahkan.');
+        return back()->with('success', "Transaksi Penerimaan ({$data['nomor_registrasi']}) beserta detail BKU berhasil ditambahkan.");
     }
 
     public function update(UpdateTransaksiPenerimaanRequest $request, TransaksiPenerimaan $transaksiPenerimaan)

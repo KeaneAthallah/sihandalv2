@@ -60,8 +60,9 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label value="Nomor Registrasi" />
-                                <x-text-input name="nomor_registrasi" type="text" :value="old('nomor_registrasi', $transaksiPenerimaan->nomor_registrasi)" placeholder="Contoh: REG-001" required />
-                                <x-input-error :messages="$errors->get('nomor_registrasi')" />
+                                <div class="px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700">
+                                    {{ $transaksiPenerimaan->nomor_registrasi ?? 'Otomatis' }}
+                                </div>
                             </div>
 
                             <div>

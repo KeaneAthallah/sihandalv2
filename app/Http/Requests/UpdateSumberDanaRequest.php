@@ -14,7 +14,7 @@ class UpdateSumberDanaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_sumber_dana' => ['required', 'string', 'max:255', 'unique:sumber_danas,nama_sumber_dana,'.$this->route('sumberDana')],
+            'nama_sumber_dana' => ['required', 'string', 'max:255', 'unique:sumber_danas,nama_sumber_dana,'.$this->route('sumber_dana')?->id],
         ];
     }
 }

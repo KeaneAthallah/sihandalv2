@@ -187,7 +187,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-800">Detail Permintaan Dana</h3>
-                    <p class="text-sm text-slate-400 mt-0.5" x-data x-text="'Nomor: ' + ($event?.detail?.nomor || '')" x-init="$el.textContent = ''"></p>
+                    <p class="text-sm text-slate-400 mt-0.5" x-data x-on:open-view-permintaan.window="$el.textContent = 'Nomor: ' + ($event.detail.nomor || '')" x-init="$el.textContent = ''"></p>
                 </div>
                 <button @click="$dispatch('close-modal', 'view-permintaan-dana')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
                     <x-heroicon-o-x-mark class="w-5 h-5"/>
@@ -254,7 +254,7 @@
                 </div>
 
                 @if(isset($item) && $item->catatan)
-                <div x-data x-init="$el.style.display = (viewData.catatan && viewData.catatan !== '-') ? 'block' : 'none'">
+                <div x-show="viewData.catatan && viewData.catatan !== '-'">
                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Catatan</p>
                     <p class="text-sm text-slate-600 italic" x-text="viewData.catatan"></p>
                 </div>

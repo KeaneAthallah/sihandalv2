@@ -92,7 +92,7 @@
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
                                     <button type="button" title="Lihat BKU"
-                                        @click="window.selectedTransaksi = {
+                                        @click="$dispatch('open-detail-bku', {
                                             nomor_registrasi: @js($item->nomor_registrasi),
                                             tanggal: @js($item->tanggal?->format('d-m-Y')),
                                             keterangan: @js($item->keterangan),
@@ -103,7 +103,7 @@
                                                 'nilai' => (float) $b->nilai,
                                                 'rekening' => ($b->rekening?->kode ?? '').' '.($b->rekening?->nama ?? '-'),
                                             ])->values()->all()),
-                                        }; $dispatch('open-modal', 'detail-bku')"
+                                        }); $dispatch('open-modal', 'detail-bku')"
                                         class="icon-btn hover:text-blue-600 hover:bg-blue-50">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </button>
@@ -153,12 +153,12 @@
     {{-- Detail BKU Modal --}}
     <x-modal name="detail-bku" max-width="2xl">
         <div class="p-6" x-data="{
-            get t() { return window.selectedTransaksi || {} },
+            t: {},
             formatRupiah(value) {
                 const n = parseFloat(value) || 0;
                 return 'Rp ' + n.toLocaleString('id-ID');
             },
-        }">
+        }" x-on:open-detail-bku.window="t = $event.detail">
             <div class="flex items-start justify-between gap-3 mb-5">
                 <div>
                     <h3 class="text-base font-semibold text-slate-800">Detail BKU</h3>

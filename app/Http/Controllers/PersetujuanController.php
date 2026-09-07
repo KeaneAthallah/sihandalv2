@@ -36,29 +36,35 @@ class PersetujuanController extends Controller
             abort(403, 'Hanya admin yang dapat menyetujui permintaan dana.');
         }
 
-        DB::transaction(function () use ($permintaanDana) {
-            $permintaanDana = PermintaanDana::findOrFail($permintaanDana->id);
+        try {
+            DB::transaction(function () use ($permintaanDana) {
+                $permintaanDana = PermintaanDana::whereKey($permintaanDana->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($permintaanDana->status !== 'menunggu') {
-                throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
-            }
+                if ($permintaanDana->status !== 'menunggu') {
+                    throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
+                }
 
-            $this->realizeFunds($permintaanDana);
+                $this->realizeFunds($permintaanDana);
 
-            $permintaanDana->update([
-                'status' => 'disetujui',
-                'tanggal_disetujui' => now(),
-            ]);
+                $permintaanDana->update([
+                    'status' => 'disetujui',
+                    'tanggal_disetujui' => now(),
+                ]);
 
-            Persetujuan::create([
-                'permintaan_dana_id' => $permintaanDana->id,
-                'user_id' => auth()->id(),
-                'keputusan' => 'disetujui',
-                'catatan' => 'Disetujui oleh '.auth()->user()->name,
-            ]);
+                Persetujuan::create([
+                    'permintaan_dana_id' => $permintaanDana->id,
+                    'user_id' => auth()->id(),
+                    'keputusan' => 'disetujui',
+                    'catatan' => 'Disetujui oleh '.auth()->user()->name,
+                ]);
 
-            $this->notifyOpdUser($permintaanDana->fresh(), 'disetujui');
-        });
+                $this->notifyOpdUser($permintaanDana->fresh(), 'disetujui');
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['status' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Permintaan dana berhasil disetujui.');
     }
@@ -71,28 +77,34 @@ class PersetujuanController extends Controller
             abort(403, 'Hanya admin yang dapat menolak permintaan dana.');
         }
 
-        DB::transaction(function () use ($permintaanDana) {
-            $permintaanDana = PermintaanDana::findOrFail($permintaanDana->id);
+        try {
+            DB::transaction(function () use ($permintaanDana) {
+                $permintaanDana = PermintaanDana::whereKey($permintaanDana->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($permintaanDana->status !== 'menunggu') {
-                throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
-            }
+                if ($permintaanDana->status !== 'menunggu') {
+                    throw new \RuntimeException('Permintaan ini tidak dalam status menunggu.');
+                }
 
-            $this->releaseFunds($permintaanDana);
+                $this->releaseFunds($permintaanDana);
 
-            $permintaanDana->update([
-                'status' => 'ditolak',
-            ]);
+                $permintaanDana->update([
+                    'status' => 'ditolak',
+                ]);
 
-            Persetujuan::create([
-                'permintaan_dana_id' => $permintaanDana->id,
-                'user_id' => auth()->id(),
-                'keputusan' => 'ditolak',
-                'catatan' => 'Ditolak oleh '.auth()->user()->name,
-            ]);
+                Persetujuan::create([
+                    'permintaan_dana_id' => $permintaanDana->id,
+                    'user_id' => auth()->id(),
+                    'keputusan' => 'ditolak',
+                    'catatan' => 'Ditolak oleh '.auth()->user()->name,
+                ]);
 
-            $this->notifyOpdUser($permintaanDana->fresh(), 'ditolak');
-        });
+                $this->notifyOpdUser($permintaanDana->fresh(), 'ditolak');
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['status' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Permintaan dana ditolak.');
     }

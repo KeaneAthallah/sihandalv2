@@ -13,7 +13,18 @@ class LaporanPenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'transaksiPenerimaans']);
+        $query = Penerimaan::with([
+            'opd', 'sumberDana', 'rekening',
+            'transaksiPenerimaans' => fn ($t) => $t
+                ->when(
+                    $request->filled('tanggal_dari'),
+                    fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari'))
+                )
+                ->when(
+                    $request->filled('tanggal_sampai'),
+                    fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))
+                ),
+        ]);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -51,7 +62,18 @@ class LaporanPenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'transaksiPenerimaans']);
+        $query = Penerimaan::with([
+            'opd', 'sumberDana', 'rekening',
+            'transaksiPenerimaans' => fn ($t) => $t
+                ->when(
+                    $request->filled('tanggal_dari'),
+                    fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari'))
+                )
+                ->when(
+                    $request->filled('tanggal_sampai'),
+                    fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))
+                ),
+        ]);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);

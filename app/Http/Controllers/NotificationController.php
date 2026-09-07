@@ -22,6 +22,12 @@ class NotificationController extends Controller
 
     public function markAsRead(Request $request, DatabaseNotification $notification): RedirectResponse
     {
+        abort_unless(
+            $notification->notifiable_id === $request->user()->id
+                && $notification->notifiable_type === get_class($request->user()),
+            403
+        );
+
         $notification->update(['read_at' => now()]);
 
         return back()->with('success', 'Notifikasi ditandai sudah dibaca.');

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Belanja;
 use App\Models\Kegiatan;
+use App\Models\SubKegiatan;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -48,6 +50,34 @@ class StorePengeluaranRequest extends FormRequest
                 $kegiatan = Kegiatan::find($kegiatanId);
                 if ($kegiatan && (int) $kegiatan->opd_id !== (int) $opdId) {
                     $validator->errors()->add('kegiatan_id', 'Kegiatan tidak sesuai dengan OPD yang dipilih.');
+                }
+            }
+
+            $subKegiatanId = $this->input('sub_kegiatan_id');
+            if ($subKegiatanId) {
+                $subKegiatan = SubKegiatan::with('kegiatan')->find($subKegiatanId);
+                if ($subKegiatan) {
+                    if ($kegiatanId && (int) $subKegiatan->kegiatan_id !== (int) $kegiatanId) {
+                        $validator->errors()->add('sub_kegiatan_id', 'Sub kegiatan tidak sesuai dengan kegiatan yang dipilih.');
+                    }
+
+                    if ((int) $subKegiatan->kegiatan?->opd_id !== (int) $opdId) {
+                        $validator->errors()->add('sub_kegiatan_id', 'Sub kegiatan tidak sesuai dengan OPD yang dipilih.');
+                    }
+                }
+            }
+
+            $belanjaId = $this->input('belanja_id');
+            if ($belanjaId) {
+                $belanja = Belanja::find($belanjaId);
+                if ($belanja) {
+                    if ($subKegiatanId && (int) $belanja->sub_kegiatan_id !== (int) $subKegiatanId) {
+                        $validator->errors()->add('belanja_id', 'Belanja tidak sesuai dengan sub kegiatan yang dipilih.');
+                    }
+
+                    if ((int) $belanja->opd_id !== (int) $opdId) {
+                        $validator->errors()->add('belanja_id', 'Belanja tidak sesuai dengan OPD yang dipilih.');
+                    }
                 }
             }
 

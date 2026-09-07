@@ -93,15 +93,15 @@
                                         type="button"
                                         x-data="{
                                             item: {
-                                                id: {{ $item->id }},
-                                                nomor: '{{ $item->nomor_permintaan }}',
-                                                jumlah: '{{ number_format($item->jumlah, 0, ',', '.') }}',
-                                                opd: '{{ $item->opd->nama ?? '-' }}',
-                                                sumberDana: '{{ $item->sumber_dana }}',
-                                                keperluan: '{{ addslashes(Str::limit($item->keperluan, 60)) }}'
+                                                id: @js($item->id),
+                                                nomor: @js($item->nomor_permintaan),
+                                                jumlah: @js(number_format($item->jumlah, 0, ',', '.')),
+                                                opd: @js($item->opd->nama ?? '-'),
+                                                sumberDana: @js($item->sumber_dana),
+                                                keperluan: @js(Str::limit($item->keperluan, 60))
                                             }
                                         }"
-                                        @click="$dispatch('open-modal', 'approve-confirm'); window.selectedItem = $data.item"
+                                        @click="$dispatch('open-modal', 'approve-confirm'); $dispatch('approve-item', $data.item)"
                                         class="icon-btn hover:text-emerald-600 hover:bg-emerald-50"
                                         title="Setujui"
                                     >
@@ -111,15 +111,15 @@
                                         type="button"
                                         x-data="{
                                             item: {
-                                                id: {{ $item->id }},
-                                                nomor: '{{ $item->nomor_permintaan }}',
-                                                jumlah: '{{ number_format($item->jumlah, 0, ',', '.') }}',
-                                                opd: '{{ $item->opd->nama ?? '-' }}',
-                                                sumberDana: '{{ $item->sumber_dana }}',
-                                                keperluan: '{{ addslashes(Str::limit($item->keperluan, 60)) }}'
+                                                id: @js($item->id),
+                                                nomor: @js($item->nomor_permintaan),
+                                                jumlah: @js(number_format($item->jumlah, 0, ',', '.')),
+                                                opd: @js($item->opd->nama ?? '-'),
+                                                sumberDana: @js($item->sumber_dana),
+                                                keperluan: @js(Str::limit($item->keperluan, 60))
                                             }
                                         }"
-                                        @click="$dispatch('open-modal', 'reject-confirm'); window.selectedItem = $data.item"
+                                        @click="$dispatch('open-modal', 'reject-confirm'); $dispatch('reject-item', $data.item)"
                                         class="icon-btn hover:text-red-600 hover:bg-red-50"
                                         title="Tolak"
                                     >
@@ -159,7 +159,7 @@
 
     {{-- Modal Konfirmasi Setuju --}}
     <x-modal name="approve-confirm" max-width="md">
-        <div class="p-6" x-data="{ get item() { return window.selectedItem || {} } }">
+        <div class="p-6" x-data="{ item: {} }" x-on:approve-item.window="item = $event.detail">
             <div class="flex items-center gap-3 mb-4">
                 <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
                     <x-heroicon-o-check-circle class="w-6 h-6"/>
@@ -217,7 +217,7 @@
 
     {{-- Modal Konfirmasi Tolak --}}
     <x-modal name="reject-confirm" max-width="md">
-        <div class="p-6" x-data="{ get item() { return window.selectedItem || {} } }">
+        <div class="p-6" x-data="{ item: {} }" x-on:reject-item.window="item = $event.detail">
             <div class="flex items-center gap-3 mb-4">
                 <div class="p-2.5 rounded-xl bg-red-50 text-red-600">
                     <x-heroicon-o-x-circle class="w-6 h-6"/>

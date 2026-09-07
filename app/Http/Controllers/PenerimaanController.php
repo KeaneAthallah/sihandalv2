@@ -17,7 +17,18 @@ class PenerimaanController extends Controller
     {
         $user = $request->user();
 
-        $query = Penerimaan::with(['opd', 'sumberDana', 'rekening', 'tahunAnggaran', 'transaksiPenerimaans']);
+        $query = Penerimaan::with([
+            'opd', 'sumberDana', 'rekening', 'tahunAnggaran',
+            'transaksiPenerimaans' => fn ($t) => $t
+                ->when(
+                    $request->filled('tanggal_dari'),
+                    fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari'))
+                )
+                ->when(
+                    $request->filled('tanggal_sampai'),
+                    fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))
+                ),
+        ]);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -32,6 +43,8 @@ class PenerimaanController extends Controller
             ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')));
 
         // Tanggal filters apply to the realization transactions, not the master.
+        // The eager load above is constrained by the same window so the in-memory
+        // realisasi/persentase sums only count transactions inside the period.
         $query->when(
             $request->filled('tanggal_dari'),
             fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari')))

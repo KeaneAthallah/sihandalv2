@@ -15,7 +15,7 @@ class UpdateTransferDanaRequest extends FormRequest
     {
         return [
             'opd_id' => ['required', 'exists:opds,id'],
-            'jumlah' => ['required', 'numeric', 'min:0'],
+            'jumlah' => ['required', 'numeric', 'gt:0'],
             'sumber_dana' => ['required', 'string', 'max:255'],
             'keterangan' => ['nullable', 'string', 'max:255'],
             'tanggal' => ['nullable', 'date'],

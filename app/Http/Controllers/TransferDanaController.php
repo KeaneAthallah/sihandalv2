@@ -65,7 +65,16 @@ class TransferDanaController extends Controller
     public function update(UpdateTransferDanaRequest $request, TransferDana $transferDana)
     {
         $this->authorizeOpdRecord($transferDana, $request->user());
+
+        if ($transferDana->status === 'selesai') {
+            return back()->withErrors(['status' => 'Transfer yang sudah selesai tidak dapat diubah.']);
+        }
+
         $data = $request->validated();
+
+        if (! $request->user()->isAdmin()) {
+            $data['opd_id'] = $request->user()->opd_id;
+        }
 
         if (isset($data['status']) && $data['status'] === 'selesai' && $transferDana->status !== 'selesai') {
             $data['tanggal_selesai'] = now();
@@ -79,6 +88,11 @@ class TransferDanaController extends Controller
     public function destroy(TransferDana $transferDana)
     {
         $this->authorizeOpdRecord($transferDana, request()->user());
+
+        if ($transferDana->status === 'selesai') {
+            return back()->withErrors(['status' => 'Transfer yang sudah selesai tidak dapat dihapus.']);
+        }
+
         $transferDana->delete();
 
         return back()->with('success', 'Transfer dana berhasil dihapus.');
@@ -87,9 +101,18 @@ class TransferDanaController extends Controller
     protected function generateNomorTransfer(): string
     {
         $year = now()->format('Y');
-        $lastNumber = (int) TransferDana::where('nomor_transfer', 'like', "TF-%/{$year}")
-            ->count();
 
-        return 'TF-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
+        $lastNumber = TransferDana::query()
+            ->where('nomor_transfer', 'like', "TF-%/{$year}")
+            ->get(['nomor_transfer'])
+            ->map(function (TransferDana $transfer) {
+                preg_match('/^TF-(\d+)\//', $transfer->nomor_transfer, $matches);
+
+                return $matches[1] ?? null;
+            })
+            ->filter()
+            ->max() ?? 0;
+
+        return 'TF-'.str_pad((int) $lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }

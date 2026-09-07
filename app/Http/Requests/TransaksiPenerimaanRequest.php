@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 abstract class TransaksiPenerimaanRequest extends FormRequest
 {
@@ -17,7 +16,6 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
     {
         return [
             'penerimaan_id' => ['required', 'exists:penerimaans,id'],
-            'nomor_registrasi' => ['required', 'string', 'max:100', Rule::unique('transaksi_penerimaans', 'nomor_registrasi')->ignore($this->route('transaksiPenerimaan'))],
             'realisasi' => ['required', 'numeric', 'min:0'],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:255'],
@@ -32,10 +30,7 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
-            'nomor_registrasi.required' => 'Nomor registrasi wajib diisi.',
-            'nomor_registrasi.unique' => 'Nomor registrasi sudah digunakan.',
-        ];
+        return [];
     }
 
     public function withValidator($validator): void

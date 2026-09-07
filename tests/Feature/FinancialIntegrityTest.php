@@ -5,6 +5,7 @@ use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransferDana;
 use App\Models\User;
 
 test('double submission does not change an already submitted permintaan', function () {
@@ -152,4 +153,95 @@ test('audit log is created for financial operations', function () {
         'action' => 'created',
         'auditable_type' => 'App\\Models\\SumberDana',
     ]);
+});
+
+test('transfer dana requires amount greater than zero', function () {
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    $this->actingAs($user)
+        ->from('/transfer-dana/create')
+        ->post('/transfer-dana', [
+            'opd_id' => $opd->id,
+            'jumlah' => 0,
+            'sumber_dana' => 'DAU',
+        ])
+        ->assertSessionHasErrors('jumlah');
+
+    $this->assertDatabaseCount('transfer_danas', 0);
+});
+
+test('completed transfer dana cannot be edited', function () {
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    $transfer = TransferDana::create([
+        'nomor_transfer' => 'TF-0001/'.now()->year,
+        'opd_id' => $opd->id,
+        'jumlah' => 500000,
+        'sumber_dana' => 'DAU',
+        'status' => 'selesai',
+    ]);
+
+    $this->actingAs($user)
+        ->from("/transfer-dana/{$transfer->id}/edit")
+        ->put("/transfer-dana/{$transfer->id}", [
+            'opd_id' => $opd->id,
+            'jumlah' => 750000,
+            'sumber_dana' => 'DAU',
+            'status' => 'draft',
+        ])
+        ->assertSessionHasErrors('status');
+
+    $this->assertDatabaseHas('transfer_danas', [
+        'id' => $transfer->id,
+        'jumlah' => 500000,
+        'status' => 'selesai',
+    ]);
+});
+
+test('opd user cannot reassign transfer to another opd', function () {
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    $transfer = TransferDana::create([
+        'nomor_transfer' => 'TF-0002/'.now()->year,
+        'opd_id' => $opd->id,
+        'jumlah' => 500000,
+        'sumber_dana' => 'DAU',
+        'status' => 'draft',
+    ]);
+
+    $this->actingAs($user)
+        ->from("/transfer-dana/{$transfer->id}/edit")
+        ->put("/transfer-dana/{$transfer->id}", [
+            'opd_id' => $opdB->id,
+            'jumlah' => 500000,
+            'sumber_dana' => 'DAU',
+        ]);
+
+    $this->assertDatabaseHas('transfer_danas', [
+        'id' => $transfer->id,
+        'opd_id' => $opd->id,
+    ]);
+});
+
+test('completed transfer dana cannot be deleted', function () {
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    $transfer = TransferDana::create([
+        'nomor_transfer' => 'TF-0003/'.now()->year,
+        'opd_id' => $opd->id,
+        'jumlah' => 500000,
+        'sumber_dana' => 'DAU',
+        'status' => 'selesai',
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/transfer-dana/{$transfer->id}")
+        ->assertSessionHasErrors('status');
+
+    $this->assertDatabaseHas('transfer_danas', ['id' => $transfer->id]);
 });

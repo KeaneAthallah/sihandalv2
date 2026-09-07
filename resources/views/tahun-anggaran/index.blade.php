@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-page-header title="Tahun Anggaran" :breadcrumbs="['Tahun Anggaran']">
             <x-slot name="actions">
-                <button @click="$dispatch('open-modal', { name: 'add-tahun-anggaran' })" class="btn-primary">
+                <button @click="$dispatch('open-modal', 'add-tahun-anggaran')" class="btn-primary">
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah Tahun Anggaran
                 </button>
@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="mt-5 flex items-center justify-end gap-3">
-                    <x-secondary-button @click="$dispatch('close-modal', { name: 'add-tahun-anggaran' })">Batal</x-secondary-button>
+                    <x-secondary-button @click="$dispatch('close-modal', 'add-tahun-anggaran')">Batal</x-secondary-button>
                     <x-primary-button>Simpan</x-primary-button>
                 </div>
             </form>

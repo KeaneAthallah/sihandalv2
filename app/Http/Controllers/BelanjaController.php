@@ -8,6 +8,7 @@ use App\Models\Belanja;
 use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
+use App\Models\TahunAnggaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -56,6 +57,7 @@ class BelanjaController extends Controller
             $data = $request->validated();
             $data['sub_kegiatan_id'] = $subKegiatan->id;
             $data['dana_di_commit'] = 0;
+            $data['tahun_anggaran_id'] = TahunAnggaran::currentActive()?->id;
 
             if (! $request->user()->isAdmin()) {
                 $data['opd_id'] = $request->user()->opd_id;
@@ -86,6 +88,11 @@ class BelanjaController extends Controller
 
         DB::transaction(function () use ($request, $belanja) {
             $data = $request->validated();
+
+            if (! $request->user()->isAdmin()) {
+                $data['opd_id'] = $request->user()->opd_id;
+            }
+
             $belanja->update($data);
         });
 
@@ -96,6 +103,11 @@ class BelanjaController extends Controller
     {
         $kegiatan = $subKegiatan->kegiatan;
         $this->authorizeOpdRecord($kegiatan, $request->user());
+
+        if ((float) $belanja->dana_di_commit > 0 || (float) $belanja->realisasi > 0) {
+            return back()->withErrors(['belanja' => 'Belanja yang sudah memiliki dana commit atau realisasi tidak dapat dihapus.']);
+        }
+
         $belanja->delete();
 
         return back()->with('success', 'Belanja berhasil dihapus.');
