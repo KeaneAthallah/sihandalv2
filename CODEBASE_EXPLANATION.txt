@@ -1,686 +1,213 @@
-================================================================================
-                                SIHANDAL V2 - CODEBASE EXPLANATION
-================================================================================
+SIHANDAL V2 — CODEBASE EXPLANATION
+====================================
 
-Sihandal (Sistem Informasi Keuangan Daerah) is a Regional Financial Information
-System — a web application for managing the finances of Indonesian local /
-regional government agencies (OPD — Organisasi Perangkat Daerah).
+1. WHAT THIS APP IS
+-------------------
+SIHANDAL V2 ("Sistem Informasi Keuangan Daerah") is a regional financial
+information system for Indonesian local government agencies (OPD — Organisasi
+Perangkat Daerah). Each OPD tracks its budget (pagu), revenue (penerimaan),
+expenditure (pengeluaran), cash position (posisi kas), program/activity budget
+(program-kegiatan), and submits formal fund requests (permintaan dana) that flow
+through an approval workflow managed by admins.
 
-It lets each government agency (OPD) track budgets (pagu), revenue (penerimaan),
-expenditure (pengeluaran), cash positions (posisi kas), programs/activities, and
-submit formal fund requests (permintaan dana) that flow through an approval
-workflow (draft -> menunggu -> disetujui/ditolak) managed by admins.
+The app is a classic server-rendered Laravel application, not an SPA. Pages are
+Blade views enhanced with Alpine.js; styling is Tailwind CSS v4. There is no
+separate frontend framework and no public JSON API.
 
-The data is organized around a strict government budget hierarchy:
-  OPD -> Dinas -> Unit            (organizational structure, optional)
-  OPD -> UPT(s)                   (technical implementation units)
+2. TECH STACK
+-------------
+- PHP 8.5, Laravel 13.x
+- Laravel Breeze 2.x (auth scaffolding)
+- MySQL (production) / SQLite in-memory (tests)
+- Tailwind CSS 4.x via @tailwindcss/vite, Alpine.js 3.x, ApexCharts 5.x
+- Pest 4 (PHPUnit 12 underneath)
+- Laravel Pint for code style
+
+3. DIRECTORY MAP
+----------------
+app/
+  Controllers/           MVC controllers; resource controllers per module
+                         + read-only Laporan*/Rekap* report controllers
+  Http/Requests/         Form Request classes; ALL input validation + the
+                         server-side business rules live here
+  Models/                Eloquent models; money logic lives on the models
+  Services/
+    SihandalImportService.php   CSV/XLSX budget+revenue importer
+    DocumentNumberService.php   race-safe sequential document numbers
+  Traits/Auditable.php   writes create/update/delete diff rows to audit_logs
+  Notifications/         database-channel notifications
+database/
+  migrations/            schema (see data model below)
+  seeders/               SampleDataSeeder + imported data files
+resources/views/
+  components/            ~23 reusable Blade components (design system)
+  layouts/               app shell (navbar, sidebar, modals)
+  <module>/              one folder per module
+routes/web.php           all web routes (named, resource style)
+tests/
+  Feature/               feature tests, RefreshDatabase per test
+  Pest.php               global helpers + shared test data creation
+
+4. DATA MODEL OVERVIEW
+----------------------
+Budget hierarchy (pagu lives ONLY at the leaf and is derived upwards):
+
   Program -> Kegiatan -> SubKegiatan -> Belanja (rekening + sumber dana + pagu)
 
-Budget (pagu) is aggregated upward from the leaves: Belanja -> SubKegiatan ->
-Kegiatan -> Program -> OPD. Master data (Sumber Dana, Rekening, Program, Kegiatan,
-Sub Kegiatan) is referenced by foreign keys rather than free text, while legacy
-denormalized text columns (kode/nama_sub_kegiatan, kode/nama_rekening,
-nama_sumber_dana) are kept for backward compatibility and display only.
-
-================================================================================
-                                TECH STACK
-================================================================================
-
-  Layer         Technology               Version
-  -----------   ----------------------   --------
-  Language      PHP                      8.5 (target)
-  Framework     Laravel                  13.x
-  Auth          Laravel Breeze           2.x
-  Database      MySQL (127.0.0.1:3306, db `sihandal`)   —
-  CSS           Tailwind CSS             4.x (via @tailwindcss/vite)
-  JS            Alpine.js                3.x
-  Charts        ApexCharts               5.x
-  Build         Vite                     —
-  Testing       Pest / PHPUnit           4.x / 12
-  Icons         Blade Heroicons          2.x
-  Font          Instrument Sans          —
-
-================================================================================
-                            DIRECTORY STRUCTURE
-================================================================================
-
-  D:\sihandalv2\
-  ├── app/
-  │   ├── Console/Commands/
-  │   │   ├── ImportSihandal.php         # Full dataset import (budget CSV + revenue XLSX)
-  │   │   │                             #   into the normalized hierarchy with reconciliation.
-  │   │   │                             #   Flags: --fresh (wipe+reimport), --dry-run (validate
-  │   │   │                             #   in a rolled-back transaction, persist nothing),
-  │   │   │                             #   --force (skip confirmation). Emits a STEP-29 report
-  │   │   │                             #   and exits non-zero on any failed/unreconciled record.
-  │   │   └── ImportSumberDana.php      # (legacy) flat CSV budget importer, kept for reference
-  │   ├── Services/
-  │   │   └── SihandalImportService.php  # Opaque orchestration of the full import inside a
-  │   │                                 #   single DB::transaction (masters + hierarchy +
-  │   │                                 #   Belanja leaf + revenue + persisted rollups +
-  │   │                                 #   scoped reconciliation), honoring --dry-run rollback.
-  │   ├── Support/
-  │   │   ├── XlsxReader.php            # Self-contained OOXML reader (ZipArchive + SimpleXML;
-  │   │   │                             #   no PhpSpreadsheet). Namespace-aware, date-aware,
-  │   │   │                             #   built-in + custom numFmtId date detection.
-  │   │   └── CsvReader.php             # BOM-strip + whitespace-collapse fgetcsv reader.
-  │   ├── Http/
-  │   │   ├── Controllers/
-  │   │   │   ├── Auth/                 # Breeze auth controllers (8)
-  │   │   │   ├── Controller.php        # Base controller w/ OPD-scoping helpers
-  │   │   │   ├── OpdController.php               # OPD list + detail
-  │   │   │   ├── UptController.php               # UPT CRUD
-  │   │   │   ├── SubKegiatanController.php       # Sub Kegiatan CRUD (nested under Kegiatan)
-  │   │   │   ├── BelanjaController.php           # Belanja CRUD (nested under SubKegiatan)
-  │   │   │   ├── SumberDanaController.php        # Fund sources CRUD
-  │   │   │   ├── RekeningKasController.php       # Cash accounts CRUD
-  │   │   │   ├── ProgramKegiatanController.php   # Programs/activities CRUD
-  │   │   │   ├── PenerimaanController.php        # Master Data Penerimaan CRUD (definition: OPD/rekening/
-  │   │   │   │                                     #   sumber dana/tahun anggaran/target; no realization)
-  │   │   │   ├── TransaksiPenerimaanController.php# Transaksi Penerimaan CRUD (realisasi/tanggal/keterangan
-  │   │   │   │                                     #   recorded against a master penerimaan)
-  │   │   │   ├── PengeluaranController.php       # Expenditure CRUD
-  │   │   │   ├── PosisiKasController.php         # Cash position CRUD
-  │   │   │   ├── PermintaanDanaController.php    # Fund request CRUD + submit
-  │   │   │   ├── PersetujuanController.php       # Approve/reject pending requests
-  │   │   │   ├── TransferDanaController.php      # Fund transfer CRUD
-  │   │   │   ├── TahunAnggaranController.php     # Fiscal year management
-  │   │   │   ├── NotificationController.php      # In-app notification read state
-  │   │   │   ├── LaporanPenerimaanController.php # Revenue report + CSV export
-  │   │   │   ├── LaporanPengeluaranController.php# Expenditure report + CSV export
-  │   │   │   ├── LaporanPosisiKasController.php  # Cash position report + CSV export
-  │   │   │   ├── RekapPermintaanDanaController.php# Request recap + CSV export
-  │   │   │   ├── UserManagementController.php    # Admin-only user management
-  │   │   │   └── ProfileController.php           # Edit/update/delete account
-  │   │   ├── Middleware/
-  │   │   │   └── EnsureUserIsAdmin.php  # 'admin' route guard (aborts 403)
-  │   │   └── Requests/
-  │   │       ├── Concerns/
-  │   │       │   └── ValidatesPermintaanDana.php  # shared request-validation trait
-  │   │       ├── LoginRequest.php
-  │   │       ├── ProfileUpdateRequest.php
-  │   │       └── Store*/Update* Request.php       # 26 CRUD form-request classes
-  │   ├── Models/                        # 20 Eloquent models (see below)
-  │   ├── Notifications/
-  │   │   └── PermintaanDanaNotification.php  # database-channel notification for request approval flow
-  │   ├── Providers/
-  │   ├── Traits/
-  │   │   └── Auditable.php              # model events -> AuditLog
-  │   └── View/Components/
-  │       ├── AppLayout.php
-  │       └── GuestLayout.php
-  ├── config/                            # standard Laravel config files
-  ├── database/
-  │   ├── migrations/                    # 35 migrations (see below)
-  │   ├── seeders/
-  │   │   ├── DatabaseSeeder.php
-  │   │   └── SampleDataSeeder.php
-  │   ├── factories/
-  │   │   └── UserFactory.php            # admin() and opd() states
-  │   └── database.sqlite
-  ├── plan/                              # planning data (Excel, CSV, images)
-  ├── resources/
-  │   ├── css/app.css                    # Tailwind 4 theme + @layer components design system
-  │   ├── js/app.js                      # Alpine.js + ApexCharts bootstrap
-  │   └── views/
-  │       ├── auth/                      # Breeze auth views
-  │       ├── components/                # ~23 reusable Blade components
-  │       ├── layouts/                   # app, guest, navbar, navigation, sidebar
-  │       ├── dashboard/index.blade.php
-  │       ├── opd/  penerimaan/  transaksi-penerimaan/  pengeluaran/  permintaan-dana/  persetujuan/
-  │       ├── sumber-dana/  rekening-kas/  program-kegiatan/  posisi-kas/
-  │       ├── transfer-dana/  tahun-anggaran/  user-management/  pengaturan/
-  │       ├── upt/  sub-kegiatan/  belanja/
-  │       ├── laporan-penerimaan/  laporan-pengeluaran/  laporan-posisi-kas/
-  │       ├── rekap-permintaan-dana/
-  │       ├── notifications/
-  │       ├── profile/
-  │       └── welcome.blade.php         # public landing page
-  ├── routes/
-  │   ├── web.php                       # all application routes
-  │   ├── auth.php                      # Breeze auth routes
-  │   └── console.php
-  └── tests/
-      ├── Feature/
-      │   ├── Auth/
-      │   ├── ModuleWorkflowTest.php    # full CRUD workflows per module
-  │       ├── OpdScopingTest.php        # OPD data-isolation tests
-  │       ├── HierarchyTest.php         # hierarchy + aggregation + commit/release/realize
-  │       ├── PageSmokeTest.php         # every page renders 200
-      │   ├── PermintaanDanaCommitTest.php # fund commit/realize/release flow
-      │   ├── ProfileTest.php
-      │   └── UserManagementTest.php
-      └── Unit/ExampleTest.php
-
-================================================================================
-                                DATA MODEL
-================================================================================
-
-  users
-    role (enum: 'admin'|'opd'), opd_id (nullable FK -> opds)
-    isAdmin() helper
-    hasMany persetujuans; notifications (Laravel database notifications)
-
-  opds
-    kode (unique), kode_sub_unit, nama_sub_unit, total_pagu
-    nmskpd (pendapatan detail text), dinas_id (FK), unit_id (FK)
-    source_file, source_identifier (import traceability; see DATA MODEL — Import)
-    Organizational relationships:
-      dinas      -> belongsTo Dinas (the OPD's parent Dinas, via opds.dinas_id)
-      dinasList  -> hasMany Dinas   (the Dinas records that belong to this OPD)
-      unit       -> belongsTo Unit
-      units      -> hasMany Unit
-      upts       -> hasMany Upt     (OPD -> UPT(s) technical units)
-    Budget aggregation helpers (non-persisted, derived from children):
-      paguProgram()  = sum of all Programs' Kegiatan pagu (via withSum)
-      paguBelanja()  = sum of all Belanja pagu (the authoritative leaf total)
-    hasMany: belanjas, kegiatans, programs, penerimaans, pengeluarans,
-             permintaanDanas, transferDanas, posisiKas
-
-  dinas        kode, nama, opd_id;  hasMany units
-  units        kode, nama, opd_id, dinas_id (FK)
-  upts         kode (unique), nama, opd_id
-
-  sumber_danas
-    opd_id, nama_sumber_dana, pagu, realisasi, dana_di_commit, persentase
-    source_file, source_identifier
-    availablePagu() = pagu - realisasi - dana_di_commit
-    Uses Auditable trait.
-    (NOTE: fund locking for requests now happens at the Belanja level rather
-     than on SumberDana directly; see belanjas below.)
-
-  programs
-    opd_id (nullable — GLOBAL programs are stored opd_id = NULL; the owning
-      OPD(s) live on kegiatan.opd_id), kode_program, nama_program, tahun_anggaran_id
-    source_file, source_identifier
-    hasMany kegiatans
-    (No longer a budget-holder itself; pagu comes from its Kegiatan/SubKegiatan/
-     Belanja descendants. NOTE because programs are global, OPD-scoped drill-down
-     must scope via the kegiatan rows, never Program.opd_id — see OpdController::show.)
-
-  kegiatan
-    program_id, opd_id, sumber_dana_id, rekening_id, tahun_anggaran_id
-    kode_kegiatan, nama_kegiatan
-    Legacy denormalized display columns (kept for backfill/display only):
-      kode_sub_kegiatan, nama_sub_kegiatan, kode_rekening, nama_rekening
-    computed: pagu, realisasi, persentase (derived from sub-kegiatans, and
-      PERSISTED by the importer so existing views that read them directly work)
-    source_file, source_identifier
-    subKegiatans()        -> hasMany SubKegiatan
-    belanjas()            -> hasManyThrough(Belanja, SubKegiatan)  [leaf budget]
-    paguSubKegiatan()/realisasiSubKegiatan()  = sums of descendant SubKegiatan
-
-  sub_kegiatans
-    kegiatan_id, opd_id, kode_sub_kegiatan, nama_sub_kegiatan
-    pagu, realisasi, persentase
-    source_file, source_identifier
-    belanjas() -> hasMany Belanja;  hasManyThrough leaves
-    Aggregation: sum of descendant Belanja pagu/realisasi (pagu PERSISTED by importer).
-
-  belanjas
-    sub_kegiatan_id, rekening_id (FK), sumber_dana_id (FK), opd_id,
-    tahun_anggaran_id, pagu, realisasi, dana_di_commit
-    source_file, source_row, source_identifier  (unique (source_file, source_row))
-    FUND MANAGEMENT METHODS (core money logic, Auditable trait):
-      availablePagu()   = pagu - realisasi - dana_di_commit
-      commit(x)         locks x into dana_di_commit (throws if insufficient)
-      releaseCommit(x)  frees committed funds back into availability
-      realize(x)        moves committed -> realized and decrements dana_di_commit
-                         (throws if it exceeds available pagu)
-    Belanja is the budget LEAF in the hierarchy: pagu is entered here and
-    aggregated upward (SubKegiatan -> Kegiatan -> Program -> OPD), not entered
-    manually at parent levels.
-
-  rekenings
-    kode (unique), nama, tipe ('kas'|'pendapatan'|'belanja')
-    source_file, source_identifier
-    Referenced by FK from Belanja, Penerimaan, Pengeluaran, PermintaanDana.
-    MASTER/REFERENCE data only — no persisted `saldo`. Balances are DERIVED from
-    financial transactions via Rekening->totalPenerimaan($opdId),
-    totalPengeluaran($opdId) and saldo($opdId) (sum of transaksi_penerimaans.
-    realisasi minus sum of pengeluarans.realisasi), all DB-aggregated. The
-    rekening-kas list computes these per OPD in grouped queries.
-    TIPE ENFORCEMENT (server-side): a master Penerimaan may only reference a
-    rekening with tipe = 'pendapatan' and a Pengeluaran may only reference a
-    rekening with tipe = 'belanja'. Enforced in the Store/Update Form Requests
-    (Rule::exists('rekenings','id')->where(tipe)) with Indonesian error messages,
-    and reflected in the create/edit dropdowns (edit dropdowns also merge the
-    currently-selected rekening so legacy rows keep rendering). 'kas' rekenings
-    are accepted by neither module.
-
-  penerimaans                      # MASTER DATA Penerimaan (the "definition")
-    opd_id (NULLABLE — province-wide revenue masters are stored with opd_id = NULL),
-    rekening_id (FK -> rekenings.tipe = 'pendapatan'), sumber_dana_id (FK),
-    tahun_anggaran_id
-    kode_sumber_dana, nama_sumber_dana  (legacy text, display/backfill only)
-    target
-    source_file, source_identifier
-    NO direct realization columns: realisasi is COMPUTED as the sum of the
-      penerimaan's transaksi_penerimaans. Realization (realisasi), persentase
-      (target-safe), and tanggal (latest transaction date) are provided as
-      non-persisted, eager-load-aware accessors on the model.
-    hasMany: transaksiPenerimaans() -> TransaksiPenerimaan
-
-  transaksi_penerimaans            # TRANSACTION rows (the realization records)
-    penerimaan_id (FK -> penerimaans, cascadeOnDelete), realisasi, tanggal, keterangan
-    source_file, source_row, source_identifier  (unique (source_file, source_row))
-    belongsTo: penerimaan();  opdId() helper resolves the owning OPD.
-    The realization total for a master = SUM(realisasi) of its transactions.
-
-  pengeluarans
-    opd_id, rekening_id (FK -> rekenings.tipe = 'belanja'), kegiatan_id (FK),
-    sub_kegiatan_id (FK), belanja_id (FK), sumber_dana_id (FK), tahun_anggaran_id
-    kode_kegiatan, nama_kegiatan, sumber_dana  (legacy text)
-    anggaran, realisasi, persentase, tanggal, keterangan
-
-  permintaan_danas
-    nomor_permintaan (unique, e.g. "PD-0001/2026")
-    opd_id, sumber_dana_id (FK), kegiatan_id (FK), sub_kegiatan_id (FK),
-    belanja_id (FK), rekening_id (FK), tahun_anggaran_id
-    jumlah, sumber_dana (string), keperluan
-    status ('draft'|'menunggu'|'disetujui'|'ditolak'), tanggal, tanggal_disetujui, catatan
-    hasMany persetujuans
-
-  persetujuans
-    permintaan_dana_id, user_id, keputusan ('disetujui'|'ditolak'), catatan
-
-  transfer_danas
-    nomor_transfer (unique, e.g. "TF-0001/2026")
-    opd_id, jumlah, sumber_dana (string), keterangan
-    status ('draft'|'diproses'|'selesai'|'gagal'), tanggal, tanggal_selesai
-
-  posisi_kas
-    opd_id, rekening_id, tanggal, saldo_awal, penerimaan, pengeluaran, saldo_akhir
-
-  tahun_anggarans
-    tahun, tanggal_mulai, tanggal_selesai, status ('open'|'closed'), is_active
-    activate() deactivates all others then activates this; only one active.
-
-  audit_logs
-    user_id, action ('created'|'updated'|'deleted'),
-    auditable_type, auditable_id, old_values, new_values (json),
-    ip_address, user_agent
-
-  notifications
-    standard Laravel database-notifications table (read_at, data json)
-
-  Migrations total: hierarchy refactor + importer support (users, cache, jobs,
-  rekenings, opds, penerimaans, programs, sumber_danas, pengeluarans,
-  permintaan_danas, persetujuans, posisi_kas, transfer_danas, + role/opd on users,
-  dana_di_commit, tahun_anggarans, audit_logs, notifications, performance indexes,
-  nmskpd on opds, dinas, units, upts, sub_kegiatans, belanjas, dinas_id/unit_id on
-  opds, enhance programs/kegiatan/penerimaans/pengeluarans/permintaan_danas,
-  sub_kegiatan+belanja legacy backfill, and the import-traceability migration that
-  adds source_file/source_row/source_identifier columns and makes
-  penerimaans.opd_id nullable).
-  The split migration (2026_09_02_200000_split_penerimaan_into_master_...) creates
-  transaksi_penerimaans (penerimaan_id FK cascadeOnDelete, realisasi, tanggal,
-  keterangan, source_file/source_row/source_identifier, unique(source_file,
-  source_row)); drops realisasi/persentase/tanggal/keterangan/source_row/
-  unique(source_file,source_row) from penerimaans; and backfills each legacy row
-  into one master + one transaction. On MySQL the index on opd_id/tanggal is
-  preserved (DROP COLUMN auto-prunes it); on SQLite it is dropped first.
-
-================================================================================
-                              KEY FEATURES
-================================================================================
-
-  Module                Purpose
-  -------------------   ------------------------------------------------------
-  Dashboard             Overview: bar/donut/radial charts, stat cards,
-                        recent fund requests, status breakdown
-  OPD Management        List departments, drill into OPD detail showing
-                        Dinas / Unit / UPT cards + the full hierarchy table
-                        Program -> Kegiatan -> SubKegiatan -> Belanja
-  UPT                   Technical implementation units (OPD -> UPT(s)) CRUD
-  Sumber Dana           Master fund sources used across the hierarchy
-  Rekening Kas          Master cash/rekening accounts (kas / pendapatan / belanja);
-                        balance is derived from transactions, never stored
-  Program & Kegiatan    Program + nested Kegiatan budget tracking with codes
-  Sub Kegiatan          Nested under Kegiatan (Program -> Kegiatan -> SubKegiatan)
-  Belanja               Budget leaf (rekening + sumber dana + pagu) nested under
-                        SubKegiatan; owns the fund locking (commit/release/realize)
-  Penerimaan            Master Data Penerimaan (definition: OPD, rekening, sumber
-                        dana, tahun anggaran, target) + Transaksi Penerimaan
-                        (realisasi/tanggal/keterangan per transaction). Master
-                        realization = SUM of its transactions, shown via
-                        computed accessors. Master path /master-data/penerimaan,
-                        transactions at /transaksi-penerimaan. Non-admin OPD users
-                        only see/act on their own OPD's masters. The master's
-                        rekening MUST be tipe 'pendapatan' (server-side
-                        validation; dropdown filtered accordingly).
-  Pengeluaran           Expenditure with budget vs. actual + FK kegiatan/sub/belanja.
-                        The rekening MUST be tipe 'belanja' (server-side
-                        validation; dropdown filtered accordingly).
-  Posisi Kas            Cash position snapshot (saldo_awal +/- changes)
-  Permintaan Dana       Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja
-  Persetujuan           Admin approve/reject of pending requests (realize/release)
-  Transfer Dana         Fund-transfer tracking with status workflow
-  Tahun Anggaran        Fiscal-year management (only one active)
-  Laporan               Read-only reports: penerimaan, pengeluaran,
-                        posisi kas, rekap permintaan — each with CSV export
-  Notifikasi            In-app (database) notifications on request flow
-  Audit Log             Automatic trail of create/update/delete on models
-                        that use the Auditable trait
-  User Management       Admin-only user CRUD + role/OPD assignment
-   Data Import           CLI command to import the full 2026 budget (CSV) and
-                         revenue (XLSX) datasets into the normalized hierarchy,
-                         with reconciliation, idempotency and source traceability
-                         (see DATA IMPORT section below)
-
-================================================================================
-                          FUND REQUEST WORKFLOW (CORE)
-================================================================================
-
-  1. create        -> PermintaanDana created with status 'draft', unique
-                       nomor_permintaan "PD-0001/2026" (auto-incrementing),
-                       linked to a SumberDana and optionally a Kegiatan /
-                       SubKegiatan / Belanja / Rekening via foreign keys.
-  2. submit        -> PermintaanDanaController::submit, inside a DB::transaction:
-                       - verifies status is 'draft'
-                       - if the request targets a Belanja (belanja_id set),
-                         verifies jumlah <= Belanja::availablePagu() and calls
-                         Belanja::commit() to lock the funds
-                       - sets status 'menunggu'
-                       - notifies every admin (database notification)
-  3. setujui       -> PersetujuanController::setujui (admin only, transactional):
-                       - requires status 'menunggu'
-                       - Belanja::realize() moves committed -> realized (when a
-                         belanja is linked)
-                       - sets status 'disetujui' + tanggal_disetujui
-                       - records a Persetujuan row
-                       - notifies the requesting OPD's users
-  4. tolak         -> PersetujuanController::tolak (admin only, transactional):
-                       - requires status 'menunggu'
-                       - Belanja::releaseCommit() frees locked funds (when a
-                         belanja is linked)
-                       - sets status 'ditolak'
-                       - records a Persetujuan row
-                       - notifies the requesting OPD's users
-
-  Editing/Deleting a request is only allowed while it is 'draft' or 'ditolak'
-  (never once funds have been committed to a 'menunggu' request).
-
-================================================================================
-                            AUTH & AUTHORIZATION
-================================================================================
-
-  - Authentication: Laravel Breeze (email/password, verification, password
-    reset). Routes in routes/auth.php.
-  - Two roles:
-      admin  -> sees all OPD data; manages users; approves/rejects requests;
-                manages fiscal years.
-      opd    -> sees only own OPD's data; creates/edits own records; submits
-                requests; remembers requests are not self-approvable.
-  - Middleware:
-      'verified' -> email must be verified (wraps the whole main group)
-      'admin'    -> EnsureUserIsAdmin, aborts 403 unless user->isAdmin()
-
-================================================================================
-                          OPD-SCOPED MULTI-TENANCY
-================================================================================
-
-  The base Controller provides three reusable helpers used by every data
-  controller so OPD users only ever touch their own rows:
-
-    applyOpdScope(Builder $query, ?User $user, $column = 'opd_id'): Builder
-        For a non-admin, adds ->where($column, $user->opd_id). Admins pass thru.
-
-    userOpds(?User $user): Collection
-        Returns the user's single OPD (non-admin) or all OPDs (admin) — used to
-        populate OPD filter dropdowns.
-
-    authorizeOpdRecord(Model $record, ?User $user, $column = 'opd_id'): void
-        abort(403) if a non-admin tries to access another OPD's record.
-
-  The dashboard route (routes/web.php) uses the same pattern inline via a
-  closure ($opdScope) to scope every aggregate query to the user's OPD.
-
-================================================================================
-                            ARCHITECTURE PATTERNS
-================================================================================
-
-  1. Standard MVC: form-request validation -> controller -> Eloquent model ->
-     Blade view. No separate frontend framework; server-rendered pages enhanced
-     with Alpine.js for modals, filters, and interactivity.
-
-  2. Fund locking with Belanja domain methods (availablePagu / commit /
-     releaseCommit / realize). Belanja is the budget leaf in the hierarchy; these
-     methods encapsulate the money invariants and throw exceptions when a request
-     exceeds an item's available budget. The same method names remain on
-     SumberDana for standalone (non-Belanja) fund-source tracking.
-
-  3. Transactional multi-step operations: submit / setujui / tolak and the
-     CSV importer run inside DB::transaction to keep state consistent (e.g. the
-     permintaan status change and the belanja commit are atomic).
-
-  4. Auto-generated identifiers: nomor_permintaan and nomor_transfer are
-     generated as sequential "PD-XXXX/YYYY" / "TF-XXXX/YYYY" strings per year.
-
-  5. Computed fields persisted on write: persentase is recomputed wherever
-     realisasi/target/pagu change; saldo_akhir = saldo_awal + penerimaan -
-     pengeluaran. Exceptions computed on read (never stored): penerimaan
-     realization (realisasi = SUM of transaksi_penerimaans, persentase target-safe,
-     tanggal = latest transaction) and Rekening cash balance (saldo = total
-     penerimaan - total pengeluaran, DB-aggregated, OPD-scoped) so master/reference
-     data stays the single source of truth while financial state lives in
-     transactions.
-
-  6. Shared validation via a trait: ValidatesPermintaanDana is used by both
-     StorePermintaanDanaRequest and UpdatePermintaanDanaRequest to guarantee
-     identical business rules (including cross-OPD validation).
-
-  7. Automatic audit trail: the Auditable trait hooks Eloquent created/updated/
-     deleted events and writes diff snapshots (old/new values, IP, user agent)
-     to audit_logs. Used by the hierarchy budget models (Belanja, etc.) and the
-     money modules.
-
-  8. In-app notifications: PermintaanDanaNotification (database channel)
-     keeps admins informed of new submissions and OPD users of approvals/
-     rejections. NotificationController manages read state.
-
-  9. Separate read/report controllers: each money module keeps a focused,
-     read-only report controller (Laporan*/Rekap*) with a streaming CSV export
-     endpoint, keeping read paths independent of CRUD.
-
-  10. Reusable Blade component library (~23 components): card, stat-card,
-      chart-card, status-badge, priority-badge, filter-bar, page-header,
-      progress-card, alert, modal, timeline, text-input, input-label,
-      input-error, dropdown, primary/secondary/danger buttons, app-layout,
-      guest-layout. A @layer components CSS design system in resources/css/
-      app.css (.card, .btn-*, .table-*, .badge, .empty-state, .icon-btn, etc.)
-      backs these for a consistent government-SaaS look.
-
-  11. Centralized theme: Tailwind CSS 4 semantic tokens — primary deep blue
-      (#0F4C81), surface gray (#F5F7FB), success/warning/danger/info palettes,
-      Instrument Sans font.
-
-  12. Performance indexes: a dedicated migration adds composite indexes on the
-      hot query paths (OPD-scoped, status-filtered queries).
-
-  13. Hierarchy-driven budget aggregation: pagu/realisasi are entered only at
-      the Belanja leaf (Program -> Kegiatan -> SubKegiatan -> Belanja) and
-      derived upward through model helper methods (Kegiatan::paguSubKegiatan,
-      Opd::paguBelanja, etc.) rather than being hand-entered at parent levels.
-      Master data (Dinas, Unit, UPT, Sumber Dana, Rekening, Program, Kegiatan,
-      Sub Kegiatan) is referenced via foreign keys; legacy denormalized text
-      columns (kode/nama_sub_kegiatan, kode/nama_rekening, nama_sumber_dana)
-      are retained solely for backfill and display.
-
-  14. Server-side cross-OPD protection: form requests force a non-admin user's
-      own opd_id before validation (e.g. StoreKegiatanRequest::
-      prepareForValidation) and validate that submitted master-data FKs belong
-      to the user's OPD, preventing one OPD from attaching another OPD's
-      records.
-
-  15. Server-side rekening-tipe business rules: Store*/Update* Penerimaan and
-      Pengeluaran Form Requests constrain rekening_id with
-      Rule::exists('rekenings','id')->where(tipe) so a master Penerimaan can
-      only ever reference a 'pendapatan' rekening and a Pengeluaran only a
-      'belanja' rekening ('kas' is accepted by neither — this also blocks a
-      Penerimaan master referencing a 'belanja' rekening and vice versa). The
-      validator's after hook rewrites any rekening_id failure to a single
-      Indonesian message ("Rekening penerimaan harus bertipe pendapatan." /
-      "Rekening pengeluaran harus bertipe belanja."), so the UI never leaks the
-      raw exists-where message. Enforced on BOTH create and update paths; the
-      Blade dropdowns mirror it as a UX convenience only. Existing records with
-      a legacy-tipe rekening keep rendering on edit (the dropdown merges the
-      current rekening back in) and are never silently modified.
-
-================================================================================
-                                DATA IMPORT
-===============================================================================
-
-  Command:  php artisan app:import-sihandal {csv} {xlsx}
-              [--fresh] [--force] [--dry-run]
-
-  Produces a "STEP 29" reconciliation report and exits non-zero if any record
-  fails or a sum does not reconcile. Source files live in database/seeders/data/
-  (sumberdana26.csv budget, penerimaan-2026.xlsx revenue as a seed on database:seed).
-
-  Imports 100% of both source files into the normalized hierarchy with ZERO
-  silent omissions — every source row becomes a record or is reported as FAIL.
-
-  Pipeline (inside ONE DB::transaction):
-    Masters      Opd (kode), Program (kode_program, global opd_id=NULL),
-                 Rekening (kode), SumberDana (nama_sumber_dana), TahunAnggaran.
-    Hierarchy    Kegiatan (kode_kegiatan; program_id from the first 3 dot-segments
-                 of KDKEGIATAN — no program column in the CSV), then one
-                 SubKegiatan per unique (OPD, kegiatan, sub-kegiatan) key.
-    Leaf budget  One Belanja row per CSV row (7,441) at the leaf, so pagu is never
-                 double-counted: rekening + sumber dana + pagu.
-    Revenue      Every XLSX "Data Input" row is imported (5,844 incl. SALDO AWAL)
-                 as a TransaksiPenerimaan grouped under one master Penerimaan per
-                 Sumber Dana (province-wide rows get opd_id = NULL). Each import
-                 creates master(s) + transaction(s) together. The "REALISASI SMB
-                 2026" sheet is a SUMIF summary and is NOT imported.
-    Rollups      sub_kegiatans.pagu, kegiatan.pagu and opds.total_pagu are
-                 PERSISTED from the leaf sums because existing views read them
-                 directly (without recomputation).
-
-  Reconciliation (scoped to the imported source_file):
-    Budget:   imported SUM(belanjas.pagu) == SUM(ROUND(PAGU,2)) of the CSV.
-    Revenue:  imported SUM(transaksi_penerimaans.realisasi) == SUM(H) of the
-              XLSX (the reconciliation rolls up a master's transactions).
-
-  Idempotency (unique keys per row) lets a re-run skip every already-present row:
-    Opd->kode, Program->kode_program, Rekening->kode, SumberDana->nama_sumber_dana,
-    Kegiatan->(opd_id,kode_kegiatan,tahun_anggaran_id),
-    SubKegiatan->(kegiatan_id,kode_sub_kegiatan),
-    Belanja->(source_file,source_row); TransaksiPenerimaan->(source_file,source_row).
-
-  Traceability: source_file / source_row / source_identifier on records so any
-  imported row is traceable back to its exact origin.
-
-  Idempotent seeding: DatabaseSeeder and SampleDataSeeder are guarded so running
-  them again never duplicates the imported dataset.
-
-  Self-contained readers (no PhpSpreadsheet; no approved composer deps):
-    XlsxReader — PHP ZipArchive + SimpleXML. Namespace-aware; converts Excel
-    serial dates via built-in numFmtIds 14-22/27-36/45-47/50-58 plus custom
-    format-code detection. Iterating <xf> elements yields the tag name as the
-    loop key (not an index) — use an explicit counter; always read attributes via
-    ->attributes(), never array access.
-
-  KNOWN DATA-SHAPE NOTE: Imported Programs are GLOBAL (opd_id = NULL) while OPD
-  ownership lives on kegiatan.opd_id. Any OPD-scoped Program drill-down must scope
-  through the kegiatan rows (see OpdController::show). A bug that filtered
-  Program::where('opd_id', $opd->id) made every OPD detail page empty after import
-  and has been fixed to scope via whereHas('kegiatans', opd).
-
-================================================================================
-                                ROUTES (SUMMARY)
-================================================================================
-
-  PUBLIC
-    GET  /                                            welcome page
-
-  AUTH (Breeze, routes/auth.php)
-    login / logout / forgot+reset password / email verification
-
-  AUTHENTICATED + verified
-    GET    /dashboard                                 dashboard
-    GET    /opd, /opd/{opd}                           OPD list + detail (hierarchy)
-    CRUD   /upt                                        UPT management
-    CRUD   /sumber-dana                                fund sources (master)
-    CRUD   /rekening-kas                               cash/rekening accounts (master)
-    CRUD   /program-kegiatan                           programs
-    CRUD   /program-kegiatan/{program}/kegiatan        nested kegiatan within program
-    CRUD   /kegiatan/{kegiatan}/sub-kegiatan           sub-kegiatan within kegiatan
-    CRUD   /sub-kegiatan/{subKegiatan}/belanja         belanja within sub-kegiatan
-    CRUD   /master-data/penerimaan                     master data penerimaan
-    CRUD   /transaksi-penerimaan                       transaksi penerimaan
-    CRUD   /pengeluaran                                expenditure
-    CRUD   /posisi-kas                                 cash positions
-    CRUD   /permintaan-dana (throttle:30)              fund requests
-    POST   /permintaan-dana/{id}/submit (throttle:10)  submit draft
-    GET    /persetujuan (admin)                        approve screen
-    POST   /persetujuan/{id}/setujui (admin, throttle:20)
-    POST   /persetujuan/{id}/tolak  (admin, throttle:20)
-    CRUD   /transfer-dana                              transfers
-    GET    /laporan-penerimaan        (+ /export CSV)
-    GET    /laporan-pengeluaran       (+ /export CSV)
-    GET    /rekap-permintaan-dana     (+ /export CSV)
-    GET    /laporan-posisi-kas        (+ /export CSV)
-    CRUD   /user-management (admin, throttle:30)
-    GET    /tahun-anggaran (admin) + POST/PUT/activate/DELETE
-    GET    /pengaturan                                 settings (notification prefs)
-    GET/POST /notifications (+ markAsRead, markAllAsRead)
-    GET    /profile, PATCH /profile, DELETE /profile   (auth only)
-
-  Throttling is applied to the fund-request write + approval endpoints to guard
-  against rapid-fire submissions.
-
-================================================================================
-                                  TESTS
-================================================================================
-
-  Test File                          Focus
-  ---------------------------------  -------------------------------------------
-  ModuleWorkflowTest.php             Full CRUD workflows for every module
-  OpdScopingTest.php                 Data isolation between OPDs
-  RekeningTipeValidationTest.php     Rekening tipe business rules: master
-                                     Penerimaan only accepts 'pendapatan'
-                                     rekenings, Pengeluaran only 'belanja';
-                                     create + update paths, admin + OPD users,
-                                     error messages, nullable rekening intact
-  HierarchyTest.php                  Hierarchy relationships, aggregation, and
-                                     Belanja commit/release/realize + OPD security
-  PermintaanDanaCommitTest.php       Fund commit/realize/release workflow
-  PageSmokeTest.php                  Every page renders without errors (HTTP 200),
-                                     incl. upt / sub-kegiatan / belanja pages
-  UserManagementTest.php             User CRUD (admin-only)
-  SihandalImportTest.php             Full import: hierarchy/reconcile, persisted
-                                     rollups, one Belanja per row, idempotency,
-                                     revenue opd_id=NULL + SALDO AWAL, revenue
-                                     reconcile, traceability, fiscal year, sumber
-                                     dana preserved, malformed-row failure to roll
-                                     back, and --dry-run persists nothing.
-  ProfileTest.php                    Profile edit/update/delete
-  Auth/                              Standard Breeze auth tests
-
-  Run with:
-    php artisan test --compact
-    php artisan test --compact --filter=PageSmokeTest      (page-render smoke)
-    vendor/bin/pint --dirty --format agent                 (code style)
-
-================================================================================
-                          COMMON DEVELOPMENT TASKS
-================================================================================
-
-  - Import the full budget + revenue data (see DATA IMPORT):
-      php artisan app:import-sihandal database/seeders/data/sumberdana26.csv \
-                                        database/seeders/data/penerimaan-2026.xlsx
-      # + --dry-run (validate only, persists nothing)
-      # + --fresh    (wipe + reimport)
-      # + --force    (skip confirmation)
-  - Seed all data (runs the importer idempotently):
-      php artisan db:seed
-  - Reset sample data:
-      php artisan db:seed --class=SampleDataSeeder
-  - Rebuild frontend assets:
-      npm run build   (or npm run dev / composer run dev during development)
-  - Inspect routes:   php artisan route:list
-  - Clear views:      php artisan view:clear   (after editing Blade)
-
-================================================================================
+Program is global (programs.opd_id is nullable); OPD scoping for programs is
+resolved through Kegiatan.opd_id. SumberDana and Rekening are master data with
+no financial state.
+
+Core leaf: Belanja carries the money state for the approval flow:
+  availablePagu() = pagu - realisasi - dana_di_commit
+
+Key tables:
+  - belanjas:             pagu, realisasi, dana_di_commit (pagu money state)
+  - penerimaans:          master revenue definition (opd, rekening, sumber dana,
+                          tahun anggaran, target). NO persisting realisasi.
+  - transaksi_penerimaans: actual revenue receipts (realisasi, tanggal,
+                          nomor_registrasi). Each master's realization is
+                          computed as the SUM of its transactions.
+  - transaksi_penerimaan_bkus: optional nested BKU detail rows (nomor_bku,
+                          tanggal_bku, nilai, rekening). 0..N per transaction.
+  - pengeluarans:         expenditure rows, FK to kegiatan/sub/belanja
+  - posisi_kas:           snapshot (saldo_awal +- changes)
+  - permintaan_danas:     fund requests + status workflow
+  - persetujuans:         per-approver decision rows
+  - transfer_danas:       fund transfers with status workflow
+  - document_counters:    per-(type, year) counters backing auto document
+                          numbers (type, year, last_value)
+  - audit_logs:           Auditable trait snapshots
+  - notifications:        in-app database notifications
+  - tahun_anggarans:      fiscal years (only one active at a time)
+
+Recurring master rows keep denormalized text columns (e.g. nama_sumber_dana)
+for legacy data display/backfill; FKs are the source of truth.
+
+5. FINANCIAL INVARIANTS
+-----------------------
+These rules are enforced in code and covered by dedicated tests
+(BelanjaIntegrityTest, FinancialIntegrityTest, PermintaanDanaCommitTest):
+
+PAGU                           realisasi + dana_di_commit <= pagu, always.
+BELANJA.COMMIT                 moves pagu -> dana_di_commit, throws if it would
+                               exceed availablePagu().
+BELANJA.RELEASE                moves dana_di_commit -> available (floor at 0).
+BELANJA.REALIZE                cannot exceed availablePagu(); reduces the
+                               remaining dana_di_commit accordingly.
+REALISASI MONOTONIC            Update* requests prevent reducing an already
+                               recorded realisasi.
+BKU TOTAL                      IF any BKU detail rows exist for a transaction,
+                               their total MUST equal that transaction's
+                               realisasi.
+REKENG TYPE                    rekenings.tipe in (kas|pendapatan|belanja):
+                               Penerimaan requires 'pendapatan', Pengeluaran
+                               requires 'belanja', 'kas' is accepted nowhere.
+                               Enforced in Form Requests on create AND update.
+NOMOR REGISTRASI               unique per receipt; auto-generated (see #7).
+NESTED FK CHECKS               Pengeluaran must reference sub_kegiatan under the
+                               chosen kegiatan, and belanja under that
+                               sub_kegiatan (cross-ID consistency validated).
+DELETE GUARDS                  A SubKegiatan/Program cannot be deleted while
+                               its belanjas still hold dana_di_commit > 0 or
+                               realisasi > 0.
+
+6. MONEY WORKFLOWS
+------------------
+PERMINTAAN DANA (request flow)
+  draft -> menunggu -> disetujui / ditolak  (per-OPD admins approve)
+  On SUBMIT:     the PermintaanDana row is locked (lockForUpdate) and re-checked
+                 so the same request cannot be committed twice.
+  On APPROVE:    PersetujuanController locks the permintaan, re-checks status,
+                 then Belanja::commit(amount). Failures (e.g. over-budget,
+                 already processed) return back()->withErrors, never a 500.
+  On REJECT:     releases nothing, records the rejection.
+  PERMINTAAN DANA has no money state itself; the money lives on Belanja.
+
+TRANSFER DANA  draft -> selesai style status workflow, OPD-scoped.
+
+TRANSFER PENERIMAAN
+  store(): validates via TransaksiPenerimaanRequest, generates nomor_registrasi
+  (see #7), inserts the transaksi + optional BKU rows inside one
+  DB::transaction. update() may freely add/remove BKU rows but never touches
+  nomor_registrasi (immutable after creation).
+
+7. AUTO-GENERATED DOCUMENT NUMBERS
+----------------------------------
+PD-XXXX/YYYY and TF-XXXX/YYYY have been generated per fiscal year for a while.
+Transaksi penerimaan numbers (REG-XXXXX/YYYY) now also are — via
+app/Services/DocumentNumberService.php:
+
+  next(string $type, string $prefix, int $year): string
+
+  - runs inside DB::transaction
+  - locks the (type, year) counter row with lockForUpdate
+  - reads last_value+1, writes it back, returns
+    "{prefix}-{str_pad(next,5,'0',LEFT)}/{year}"
+  - the very first allocation of a year is a race: the insert may throw a
+    unique (type, year) QueryException; it then re-reads the locked counter and
+    increments — so concurrent first-allocations converge on one number
+  - the DB unique index on transaksi_penerimaans.nomor_registrasi is a second,
+    hard guarantee against duplicates (column is nullable so legacy imported
+    rows without numbers are unaffected)
+
+nomor_registrasi is derived from the transaction's tanggal year (fallback:
+current year) and is NOT user-settable: creating requests drop it in
+transaksi-penerimaan/create, edit shows it as read-only, and store() ignores
+any submitted value.
+
+nomor_bku on the nested BKU rows remains MANUAL (per user decision).
+
+8. ARCHITECTURE PATTERNS
+------------------------
+1) Standard MVC: Form Request -> Controller -> Eloquent model -> Blade view;
+   Alpine.js on top. All flows go through named routes.
+2) Money invariants as domain methods on Belanja (commit/releaseCommit/realize)
+   instead of scattered controller arithmetic.
+3) Transactional multi-step writes (submit/approve/reject/import/build) inside
+   DB::transaction, with lockForUpdate on the contended row to prevent
+   double-commit/double-realize races.
+4) Computed money: revenue realization and rekening saldo are read-time
+   SQL aggregates (single source of truth = transactions). persentase /
+   saldo_akhir are persisted on write for cheap display.
+5) OPD multi-tenancy through base Controller helpers
+   (Controller.php: applyOpdScope, userOpds, authorizeOpdRecord): OPD users
+   only ever see/affect their own rows; admins see everything.
+6) Separate read-only report controllers (LaporanPenerimaanController,
+   LaporanPengeluaranController, LaporanPosisiKasController,
+   RekapPermintaanDanaController) with streaming CSV export.
+7) Shared validation via traits and one TransaksiPenerimaanRequest servicing
+   both store and update paths.
+8) Auditable trait -> audit_logs diff snapshots on model writes.
+9) In-app notifications via Laravel's database channel.
+
+9. IMPORT PIPELINE
+------------------
+php artisan app:import-sihandal <sumberdana.csv> <penerimaan.xlsx>
+  --dry-run   validate only, persist nothing
+  --fresh     wipe + reimport
+  --force     skip confirmation
+Run by SihandalImportService inside a transaction; inserts the normalized
+hierarchy and reconciles totals; it is idempotent so db:seed can run it safely.
+
+10. TESTING
+-----------
+php artisan test --compact                      full suite (~164 tests)
+php artisan test --compact --filter=Name        single file/filter
+vendor/bin/pint --dirty --format agent          code style
+
+tests/Pest.php bootstraps RefreshDatabase for Feature tests and builds shared
+fixture data. Reference suites:
+  FinancialIntegrityTest, BelanjaIntegrityTest, PermintaanDanaCommitTest (money)
+  TransaksiPenerimaanNomorRegistrasiTest (auto numbers: 5-digit minimum,
+  sequential, reset per fiscal year, submitted value ignored, immutable on edit)
+  TransaksiPenerimaanBkuTest (BKU totals, immutability, OPD scoping)
+  RekeningTipeValidationTest, HierarchyTest, OpdScopingTest, ModuleWorkflowTest,
+  PageSmokeTest, UserManagementTest, SihandalImportTest, ExportAndNotificationTest
+
+11. KNOWN/DEFERRED ITEMS
+------------------------
+- AuditLog rows are written per model write; bulk imports flood audit_logs.
+- Some index/report queries still fetch full tables (get()) rather than
+  paginate — acceptable at current data volume.
+- PD/TF numbering uses a max()+1 scan; only REG uses a dedicated counter table.
