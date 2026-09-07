@@ -14,6 +14,7 @@ use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
+use App\Models\TransaksiPenerimaanBku;
 use App\Models\TransferDana;
 use App\Models\Unit;
 use App\Models\Upt;
@@ -128,11 +129,20 @@ function seedFullDataset(): array
         'target' => 1000000000,
     ]);
 
-    TransaksiPenerimaan::create([
+    $transaksiPenerimaan = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
+        'nomor_registrasi' => 'REG-001',
         'realisasi' => 400000000,
         'tanggal' => now(),
         'keterangan' => 'Penerimaan awal',
+    ]);
+
+    TransaksiPenerimaanBku::create([
+        'transaksi_penerimaan_id' => $transaksiPenerimaan->id,
+        'nomor_bku' => 'BKU-001',
+        'tanggal_bku' => now(),
+        'nilai' => 400000000,
+        'rekening_id' => $rekening->id,
     ]);
 
     Pengeluaran::create([

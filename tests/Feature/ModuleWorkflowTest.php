@@ -156,8 +156,17 @@ test('admin can create penerimaan master and persentase reflects transactions', 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'nomor_registrasi' => 'REG-001',
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
+            'bkus' => [
+                [
+                    'nomor_bku' => 'BKU-001',
+                    'tanggal_bku' => now()->format('Y-m-d'),
+                    'nilai' => 300000,
+                    'rekening_id' => $rekening->id,
+                ],
+            ],
         ]);
 
     expect((float) $penerimaan->fresh()->persentase)->toBe(30.0)
@@ -166,8 +175,17 @@ test('admin can create penerimaan master and persentase reflects transactions', 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'nomor_registrasi' => 'REG-002',
             'realisasi' => 200000,
             'tanggal' => now()->format('Y-m-d'),
+            'bkus' => [
+                [
+                    'nomor_bku' => 'BKU-002',
+                    'tanggal_bku' => now()->format('Y-m-d'),
+                    'nilai' => 200000,
+                    'rekening_id' => $rekening->id,
+                ],
+            ],
         ]);
 
     $fresh = $penerimaan->fresh();
