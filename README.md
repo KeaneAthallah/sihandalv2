@@ -31,7 +31,7 @@ Each agency (OPD) tracks budgets (pagu), revenue (penerimaan), expenditure (peng
 | Program & Kegiatan | Program + nested Kegiatan budget tracking with codes |
 | Sub Kegiatan | Nested under Kegiatan (Program → Kegiatan → SubKegiatan) |
 | Belanja | Budget leaf (rekening + sumber dana + pagu); owns fund locking (commit/release/realize) |
-| Penerimaan | Master data Penerimaan (definition: OPD, rekening, sumber dana, tahun anggaran, target) + Transaksi Penerimaan (realisasi/tanggal/keterangan per transaction), with computed realization accessors. Every transaction requires a unique `nomor_registrasi` and may carry optional **BKU detail rows** (`transaksi_penerimaan_bkus`, `0..N`); when any are recorded their total must equal the transaction's realisasi. A master's rekening **must** be tipe `pendapatan` (server-side validated) |
+| Penerimaan | Master data Penerimaan (definition: OPD, rekening, sumber dana, tahun anggaran, target) + Transaksi Penerimaan (realisasi/tanggal/keterangan per transaction), with computed realization accessors. Each transaction's `nomor_registrasi` is **auto-generated** (unique, sequential `REG-XXXXX/YYYY`, reset per fiscal year) and may carry optional **BKU detail rows** (`transaksi_penerimaan_bkus`, `0..N`); when any are recorded their total must equal the transaction's realisasi. A master's rekening **must** be tipe `pendapatan` (server-side validated) |
 | Pengeluaran | Expenditure with budget vs. actual + FK kegiatan/sub/belanja. The rekening **must** be tipe `belanja` (server-side validated) |
 | Posisi Kas | Cash position snapshot (`saldo_awal` ± changes) |
 | Permintaan Dana | Fund-request workflow, links to Kegiatan/SubKegiatan/Belanja |
@@ -85,7 +85,7 @@ with pagu entered only at the **Belanja leaf** and derived upward through model 
 Key money logic:
 
 - **Belanja** — `availablePagu()` = pagu − realisasi − `dana_di_commit`; `commit()`, `releaseCommit()`, `realize()` encapsulate fund-locking invariants and throw when a request exceeds available budget.
-- **Penerimaan** — realization (realisasi) is computed as the sum of its `transaksi_penerimaans`; `persentase` and `tanggal` are eager-load-aware accessors. Each transaction carries a required unique `nomor_registrasi` and optional BKU detail rows (`transaksi_penerimaan_bkus`); the detail total (`totalBku()`) must equal the transaction's realisasi whenever at least one row exists.
+- **Penerimaan** — realization (realisasi) is computed as the sum of its `transaksi_penerimaans`; `persentase` and `tanggal` are eager-load-aware accessors. Each transaction's `nomor_registrasi` is **auto-generated** — unique and sequential `REG-XXXXX/YYYY` issuing per fiscal year via `DocumentNumberService`, guarded by a DB unique index and a locked counter row — and carries optional BKU detail rows (`transaksi_penerimaan_bkus`); the detail total (`totalBku()`) must equal the transaction's realisasi whenever at least one row exists.
 - **Rekening** — no persisted `saldo`; balances are derived via `totalPenerimaan()`, `totalPengeluaran()`, and `saldo()` from transactions, DB-aggregated and OPD-scoped.
 
 ---
@@ -95,7 +95,7 @@ Key money logic:
 1. **Standard MVC** — form-request validation → controller → Eloquent model → Blade view. Server-rendered pages enhanced with Alpine.js (no separate frontend framework).
 2. **Fund locking on Belanja** — domain methods (`commit`/`releaseCommit`/`realize`) encapsulate money invariants.
 3. **Transactional multi-step operations** — submit/approve/reject and the CSV importer run inside `DB::transaction`.
-4. **Auto-generated identifiers** — sequential `PD-XXXX/YYYY` and `TF-XXXX/YYYY` strings per year.
+4. **Auto-generated identifiers** — sequential `PD-XXXX/YYYY` and `TF-XXXX/YYYY` strings per year, plus transaksi penerimaan `REG-XXXXX/YYYY`. All of the latter are issued by `DocumentNumberService` (`app/Services`), which allocates per-(type, year) numbers inside a transaction using `lockForUpdate` on a `document_counters` counter row (a `QueryException` catch handles the first allocation of a new year), enforced additionally by a DB unique index.
 5. **Computed fields** — `persentase`/`saldo_akhir` persisted on write; revenue realization and rekening balance computed on read from transactions (single source of truth).
 6. **Shared validation trait** — `ValidatesPermintaanDana` used by Store/Update requests for identical business rules.
 7. **Automatic audit trail** — `Auditable` trait writes diff snapshots to `audit_logs`.
@@ -161,7 +161,7 @@ php artisan test --compact --filter=PageSmokeTest    # page-render smoke
 vendor/bin/pint --dirty --format agent               # code style
 ```
 
-Key test files: `ModuleWorkflowTest`, `OpdScopingTest`, `RekeningTipeValidationTest`, `TransaksiPenerimaanBkuTest`, `HierarchyTest`, `PermintaanDanaCommitTest`, `PageSmokeTest`, `UserManagementTest`, `SihandalImportTest`, `ProfileTest`, `Auth/`.
+Key test files: `ModuleWorkflowTest`, `OpdScopingTest`, `RekeningTipeValidationTest`, `TransaksiPenerimaanBkuTest`, `TransaksiPenerimaanNomorRegistrasiTest`, `BelanjaIntegrityTest`, `FinancialIntegrityTest`, `HierarchyTest`, `PermintaanDanaCommitTest`, `PageSmokeTest`, `UserManagementTest`, `SihandalImportTest`, `ProfileTest`, `Auth/`.
 
 ---
 
