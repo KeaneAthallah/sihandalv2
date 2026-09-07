@@ -83,6 +83,32 @@ test('belanja has unavailable fund protection on commit', function () {
     expect(fn () => $belanja->commit(999999999))->toThrow(RuntimeException::class, 'melebihi pagu');
 });
 
+test('opd show page lists belanja detail rows per sub kegiatan', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
+
+    $program = Program::create(['kode_program' => '1.2', 'nama_program' => 'Program A', 'opd_id' => $opd->id]);
+    $kegiatan = Kegiatan::create([
+        'program_id' => $program->id, 'opd_id' => $opd->id,
+        'kode_kegiatan' => '1.2.3', 'nama_kegiatan' => 'Kegiatan A', 'pagu' => 0, 'realisasi' => 0,
+    ]);
+    $sub = SubKegiatan::create([
+        'kegiatan_id' => $kegiatan->id, 'kode_sub_kegiatan' => '1.2.3.1', 'nama_sub_kegiatan' => 'Sub 1',
+        'pagu' => 0, 'realisasi' => 0,
+    ]);
+    Belanja::create(['sub_kegiatan_id' => $sub->id, 'rekening_id' => $rekening->id, 'sumber_dana_id' => $sumberDana->id, 'opd_id' => $opd->id, 'pagu' => 1000000, 'realisasi' => 200000, 'dana_di_commit' => 0]);
+
+    $this->actingAs($admin)
+        ->get("/opd/{$opd->id}")
+        ->assertOk()
+        ->assertSee('Belanja Jasa')
+        ->assertSee('DAU')
+        ->assertSee('1.000.000')
+        ->assertSee('200.000');
+});
+
 test('opd user cannot access sub-kegiatan of another opd', function () {
     $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);

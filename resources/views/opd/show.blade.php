@@ -234,6 +234,37 @@
                                         <span class="text-xs font-medium text-slate-500">Rp {{ number_format($sub->belanjas->sum('realisasi'), 0, ',', '.') }}</span>
                                     </td>
                                 </tr>
+                                @forelse($sub->belanjas as $belanja)
+                                    <tr class="table-row hover:bg-primary/[0.03]">
+                                        <td></td>
+                                        <td class="px-5 py-1.5 pl-[4.75rem]">
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
+                                                <x-heroicon-o-chevron-right class="w-3 h-3 text-slate-300"/>
+                                                <span class="font-mono font-medium text-slate-500">{{ $belanja->rekening?->kode ?? '-' }}</span>
+                                                <span class="truncate max-w-[240px]">{{ $belanja->rekening?->nama ?? 'Belanja' }}</span>
+                                                @if((float) $belanja->dana_di_commit > 0)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/70 whitespace-nowrap">Commit</span>
+                                                @endif
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-1.5">
+                                            <span class="text-xs text-slate-500">{{ $belanja->rekening?->nama ?? '-' }}</span>
+                                        </td>
+                                        <td class="px-5 py-1.5">
+                                            <span class="text-xs text-slate-500">{{ $belanja->sumberDana?->nama_sumber_dana ?? '-' }}</span>
+                                        </td>
+                                        <td class="px-5 py-1.5 text-right">
+                                            <span class="text-xs font-medium text-slate-500 tabular-nums">Rp {{ number_format((float) $belanja->pagu, 0, ',', '.') }}</span>
+                                        </td>
+                                        <td class="px-5 py-1.5 text-right">
+                                            <span class="text-xs font-medium text-emerald-600 tabular-nums">Rp {{ number_format((float) $belanja->realisasi, 0, ',', '.') }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr class="table-row">
+                                        <td colspan="6" class="px-5 py-1 pl-[4.75rem] text-xs text-slate-400">Tidak ada belanja pada sub kegiatan ini</td>
+                                    </tr>
+                                @endforelse
                             @empty
                                 <tr class="table-row">
                                     <td colspan="6" class="px-5 py-2.5 pl-16 text-xs text-slate-400">Tidak ada sub kegiatan</td>
