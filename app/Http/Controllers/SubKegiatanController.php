@@ -16,12 +16,19 @@ class SubKegiatanController extends Controller
         $user = $request->user();
         $this->authorizeOpdRecord($kegiatan, $user);
 
-        $subKegiatans = $kegiatan->subKegiatans()
+        $subQuery = $kegiatan->subKegiatans()
             ->with(['belanjas.rekening', 'belanjas.sumberDana'])
-            ->orderBy('kode_sub_kegiatan')
-            ->get();
+            ->orderBy('kode_sub_kegiatan');
 
-        return view('sub-kegiatan.index', compact('kegiatan', 'subKegiatans'));
+        $subKegiatans = $subQuery->paginate(15);
+
+        $totalPagu = (float) (clone $subQuery)->sum('pagu');
+        $totalRealisasi = (float) (clone $subQuery)->sum('realisasi');
+        $persentase = $totalPagu > 0 ? round($totalRealisasi / $totalPagu * 100, 2) : 0;
+
+        return view('sub-kegiatan.index', compact(
+            'kegiatan', 'subKegiatans', 'totalPagu', 'totalRealisasi', 'persentase'
+        ));
     }
 
     public function create(Request $request, Kegiatan $kegiatan)

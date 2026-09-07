@@ -15,7 +15,7 @@ class RekeningKasController extends Controller
         $user = $request->user();
         $opdId = $user->isAdmin() ? null : $user->opd_id;
 
-        $rekenings = Rekening::orderBy('kode')->get();
+        $rekenings = Rekening::orderBy('kode')->paginate(15);
 
         $penerimaanSums = DB::table('transaksi_penerimaans as t')
             ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
@@ -30,17 +30,17 @@ class RekeningKasController extends Controller
             ->groupBy('rekening_id')
             ->pluck('total', 'rekening_id');
 
-        $rekenings->each(function (Rekening $rekening) use ($penerimaanSums, $pengeluaranSums) {
-            $total = (float) ($penerimaanSums[$rekening->id] ?? 0) - (float) ($pengeluaranSums[$rekening->id] ?? 0);
+        $rekenings->getCollection()->each(function (Rekening $rekening) use ($penerimaanSums, $pengeluaranSums) {
             $rekening->setAttribute('penerimaan_total', (float) ($penerimaanSums[$rekening->id] ?? 0));
             $rekening->setAttribute('pengeluaran_total', (float) ($pengeluaranSums[$rekening->id] ?? 0));
-            $rekening->setAttribute('saldo_total', round($total, 2));
+            $rekening->setAttribute('saldo_total', round($rekening->penerimaan_total - $rekening->pengeluaran_total, 2));
         });
 
-        $kasOnly = $rekenings->where('tipe', 'kas');
-        $totalKas = $kasOnly->sum('saldo_total');
-        $totalPenerimaan = $rekenings->sum('penerimaan_total');
-        $totalPengeluaran = $rekenings->sum('pengeluaran_total');
+        $totalPenerimaan = $penerimaanSums->sum();
+        $totalPengeluaran = $pengeluaranSums->sum();
+        $totalKas = Rekening::where('tipe', 'kas')->get()->reduce(function (float $carry, Rekening $rekening) use ($penerimaanSums, $pengeluaranSums) {
+            return $carry + ((float) ($penerimaanSums[$rekening->id] ?? 0) - (float) ($pengeluaranSums[$rekening->id] ?? 0));
+        }, 0.0);
 
         return view('rekening-kas.index', compact(
             'rekenings', 'totalKas', 'totalPenerimaan', 'totalPengeluaran'

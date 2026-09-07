@@ -19,19 +19,22 @@ class PermintaanDanaController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with(['opd', 'kegiatan', 'subKegiatan', 'belanja', 'sumberDana']), $user)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $permintaanQuery = $this->applyOpdScope(PermintaanDana::with(['opd', 'kegiatan', 'subKegiatan', 'belanja', 'sumberDana']), $user)
+            ->orderBy('created_at', 'desc');
 
-        $totalPermintaan = $permintaanDanas->sum('jumlah');
-        $totalDisetujui = $permintaanDanas->where('status', 'disetujui')->sum('jumlah');
-        $totalMenunggu = $permintaanDanas->where('status', 'menunggu')->sum('jumlah');
+        $totalPermintaan = (clone $permintaanQuery)->sum('jumlah');
+        $totalDisetujui = (clone $permintaanQuery)->where('status', 'disetujui')->sum('jumlah');
+        $totalMenunggu = (clone $permintaanQuery)->where('status', 'menunggu')->sum('jumlah');
+        $totalPermintaanCount = (clone $permintaanQuery)->count();
+        $totalMenungguCount = (clone $permintaanQuery)->where('status', 'menunggu')->count();
+
+        $permintaanDanas = $permintaanQuery->paginate(15);
 
         $opds = $this->userOpds($user);
 
         return view('permintaan-dana.index', compact(
             'permintaanDanas', 'totalPermintaan', 'totalDisetujui',
-            'totalMenunggu', 'opds'
+            'totalMenunggu', 'totalPermintaanCount', 'totalMenungguCount', 'opds'
         ));
     }
 

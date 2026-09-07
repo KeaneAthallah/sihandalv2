@@ -20,17 +20,17 @@
                 <x-heroicon-o-arrows-right-left class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Transfer Berhasil" value="Rp {{ number_format($totalSelesai / 1000000000, 1, ',', '.') }} M" change="{{ $transferDanas->where('status', 'selesai')->count() }} transfer" changeType="up" color="success">
+        <x-stat-card title="Transfer Berhasil" value="Rp {{ number_format($totalSelesai / 1000000000, 1, ',', '.') }} M" change="{{ $totalSelesaiCount }} transfer" changeType="up" color="success">
             <x-slot name="icon">
                 <x-heroicon-o-check-circle class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Transfer Diproses" value="Rp {{ number_format($totalDiproses / 1000000000, 1, ',', '.') }} M" change="{{ $transferDanas->where('status', 'diproses')->count() }} transfer" changeType="up" color="warning">
+        <x-stat-card title="Transfer Diproses" value="Rp {{ number_format($totalDiproses / 1000000000, 1, ',', '.') }} M" change="{{ $totalDiprosesCount }} transfer" changeType="up" color="warning">
             <x-slot name="icon">
                 <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Jumlah Transfer" value="{{ $transferDanas->count() }}" change="total" changeType="up" color="info">
+        <x-stat-card title="Jumlah Transfer" value="{{ $transferDanas->total() }}" change="total" changeType="up" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-clipboard-document-list class="w-6 h-6"/>
             </x-slot>
@@ -42,7 +42,7 @@
             <h3 class="card-title">Daftar Transfer Dana</h3>
         </div>
 
-        @if($transferDanas->count() > 0)
+        @if($transferDanas->total() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
@@ -97,8 +97,13 @@
                 </table>
             </div>
 
-            <div class="px-5 py-3 border-t border-slate-100">
-                <p class="text-sm text-slate-500">Menampilkan {{ $transferDanas->count() }} transfer dana</p>
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $transferDanas->total() }}</span> transfer dana</p>
+                @if(method_exists($transferDanas, 'links'))
+                    <div class="text-sm">
+                        {{ $transferDanas->withQueryString()->links() }}
+                    </div>
+                @endif
             </div>
         @else
             <div class="px-5 py-14 text-center">

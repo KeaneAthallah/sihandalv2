@@ -27,11 +27,15 @@ class LaporanPenerimaanController extends Controller
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
 
-        $penerimaans = $query->orderByDesc('target')->get();
-
-        $totalTarget = $penerimaans->sum('target');
-        $totalRealisasi = $penerimaans->sum('realisasi');
+        $allPenerimaans = (clone $query)->orderByDesc('target')->get();
+        $totalTarget = $allPenerimaans->sum('target');
+        $totalRealisasi = $allPenerimaans->sum('realisasi');
         $persentase = $totalTarget > 0 ? round(($totalRealisasi / $totalTarget) * 100, 1) : 0;
+        $totalCount = $allPenerimaans->count();
+        $opdCount = $allPenerimaans->pluck('opd_id')->unique()->count();
+
+        $penerimaans = $query->orderByDesc('target')->paginate(15);
+        unset($allPenerimaans);
 
         $opds = $this->userOpds($user);
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
@@ -39,7 +43,7 @@ class LaporanPenerimaanController extends Controller
 
         return view('laporan-penerimaan.index', compact(
             'penerimaans', 'totalTarget', 'totalRealisasi', 'persentase',
-            'opds', 'sumberDanas', 'filters'
+            'totalCount', 'opdCount', 'opds', 'sumberDanas', 'filters'
         ));
     }
 

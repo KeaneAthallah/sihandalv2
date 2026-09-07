@@ -15,14 +15,14 @@ class OpdController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $opds = $this->applyOpdScope(Opd::query(), $user, 'id')
+        $opdQuery = $this->applyOpdScope(Opd::query(), $user, 'id')
             ->withCount(['kegiatans', 'penerimaans', 'pengeluarans', 'upts', 'programs'])
             ->withSum('kegiatans as total_pagu_kegiatan', 'pagu')
-            ->orderBy('nama')
-            ->get();
+            ->orderBy('nama');
 
-        $totalOpd = $opds->count();
-        $totalPagu = $opds->sum('total_pagu_kegiatan');
+        $totalOpd = (clone $opdQuery)->count();
+        $totalPagu = (clone $opdQuery)->get()->sum('total_pagu_kegiatan');
+        $opds = $opdQuery->paginate(15);
 
         return view('opd.index', compact('opds', 'totalOpd', 'totalPagu'));
     }

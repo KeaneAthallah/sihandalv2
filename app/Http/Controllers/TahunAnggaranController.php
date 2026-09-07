@@ -13,7 +13,7 @@ class TahunAnggaranController extends Controller
     {
         $this->authorizeAdmin();
 
-        $tahunAnggarans = TahunAnggaran::orderBy('tahun', 'desc')->get();
+        $tahunAnggarans = TahunAnggaran::orderBy('tahun', 'desc')->paginate(15);
 
         return view('tahun-anggaran.index', compact('tahunAnggarans'));
     }

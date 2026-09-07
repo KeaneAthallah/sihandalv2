@@ -32,11 +32,12 @@ class TransaksiPenerimaanController extends Controller
         $query
             ->when($request->filled('penerimaan_id'), fn ($q) => $q->where('penerimaan_id', $request->input('penerimaan_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
-            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
+            ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')))
+            ->orderByDesc('tanggal');
 
-        $transaksis = $query->orderByDesc('tanggal')->get();
+        $totalRealisasi = (clone $query)->sum('realisasi');
+        $transaksis = $query->paginate(15);
 
-        $totalRealisasi = $transaksis->sum('realisasi');
         $penerimaans = $this->authorizedMasters($user);
         $filters = $request->only(['penerimaan_id', 'tanggal_dari', 'tanggal_sampai']);
 

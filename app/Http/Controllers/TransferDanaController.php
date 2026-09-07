@@ -12,19 +12,22 @@ class TransferDanaController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $transferDanas = $this->applyOpdScope(TransferDana::with('opd'), $user)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $transferQuery = $this->applyOpdScope(TransferDana::with('opd'), $user)
+            ->orderBy('created_at', 'desc');
 
-        $totalTransfer = $transferDanas->sum('jumlah');
-        $totalSelesai = $transferDanas->where('status', 'selesai')->sum('jumlah');
-        $totalDiproses = $transferDanas->where('status', 'diproses')->sum('jumlah');
+        $totalTransfer = (clone $transferQuery)->sum('jumlah');
+        $totalSelesai = (clone $transferQuery)->where('status', 'selesai')->sum('jumlah');
+        $totalDiproses = (clone $transferQuery)->where('status', 'diproses')->sum('jumlah');
+        $totalSelesaiCount = (clone $transferQuery)->where('status', 'selesai')->count();
+        $totalDiprosesCount = (clone $transferQuery)->where('status', 'diproses')->count();
+
+        $transferDanas = $transferQuery->paginate(15);
 
         $opds = $this->userOpds($user);
 
         return view('transfer-dana.index', compact(
             'transferDanas', 'totalTransfer', 'totalSelesai',
-            'totalDiproses', 'opds'
+            'totalDiproses', 'totalSelesaiCount', 'totalDiprosesCount', 'opds'
         ));
     }
 

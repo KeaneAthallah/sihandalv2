@@ -18,9 +18,12 @@ class BelanjaController extends Controller
         $kegiatan = $subKegiatan->kegiatan;
         $this->authorizeOpdRecord($kegiatan, $request->user());
 
-        $belanjas = $subKegiatan->belanjas()->with(['rekening', 'sumberDana'])->get();
-        $totalPagu = $belanjas->sum('pagu');
-        $totalRealisasi = $belanjas->sum('realisasi');
+        $belanjaQuery = $subKegiatan->belanjas()->with(['rekening', 'sumberDana']);
+
+        $belanjas = $belanjaQuery->paginate(15);
+        $totalPagu = (clone $belanjaQuery)->sum('pagu');
+        $totalRealisasi = (clone $belanjaQuery)->sum('realisasi');
+        $totalCommit = (clone $belanjaQuery)->sum('dana_di_commit');
 
         $opds = $this->userOpds($request->user());
         $rekenings = Rekening::orderBy('kode')->get();
@@ -28,7 +31,7 @@ class BelanjaController extends Controller
 
         return view('belanja.index', compact(
             'subKegiatan', 'kegiatan', 'belanjas', 'totalPagu',
-            'totalRealisasi', 'opds', 'rekenings', 'sumberDanas'
+            'totalRealisasi', 'totalCommit', 'opds', 'rekenings', 'sumberDanas'
         ));
     }
 

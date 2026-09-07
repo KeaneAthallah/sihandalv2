@@ -25,18 +25,25 @@ class ProgramKegiatanController extends Controller
             ->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id))
             ->latest('kegiatan.id');
 
-        $kegiatans = $kegiatanQuery->get();
+        $kegiatans = $kegiatanQuery->paginate(15);
         $programs = Program::withCount(['kegiatans'])
             ->with(['opd'])
             ->whereIn('id', $kegiatans->pluck('program_id')->unique())
             ->orderBy('kode_program')
             ->get();
         $grouped = $kegiatans->groupBy('program_id');
-        $totalPagu = $kegiatans->sum('pagu');
+
+        $totalKegiatan = (clone $kegiatanQuery)->count();
+        $totalPagu = (clone $kegiatanQuery)->sum('pagu');
+        $totalRealisasi = (clone $kegiatanQuery)->sum('realisasi');
+        $totalProgram = Program::whereIn('id', (clone $kegiatanQuery)->pluck('program_id')->unique())->count();
 
         $opds = $this->userOpds($user);
 
-        return view('program-kegiatan.index', compact('kegiatans', 'programs', 'grouped', 'totalPagu', 'opds'));
+        return view('program-kegiatan.index', compact(
+            'kegiatans', 'programs', 'grouped', 'totalKegiatan', 'totalProgram',
+            'totalPagu', 'totalRealisasi', 'opds'
+        ));
     }
 
     public function create()

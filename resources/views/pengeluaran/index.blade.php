@@ -126,7 +126,7 @@
         </div>
 
         <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $pengeluarans->count() }}</span> data pengeluaran</p>
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $pengeluarans->total() }}</span> data pengeluaran</p>
             @if(method_exists($pengeluarans, 'links'))
                 <div class="text-sm">
                     {{ $pengeluarans->withQueryString()->links() }}

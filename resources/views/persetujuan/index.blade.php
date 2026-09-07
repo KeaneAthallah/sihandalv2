@@ -147,8 +147,13 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100">
-            <p class="text-sm text-slate-500">Menampilkan {{ $permintaanDanas->count() }} permintaan menunggu persetujuan</p>
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> permintaan menunggu persetujuan</p>
+            @if(method_exists($permintaanDanas, 'links'))
+                <div class="text-sm">
+                    {{ $permintaanDanas->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 

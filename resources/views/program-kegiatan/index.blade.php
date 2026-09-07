@@ -12,12 +12,12 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-        <x-stat-card title="Total Program" value="{{ $programs->count() }}" color="primary">
+        <x-stat-card title="Total Program" value="{{ $totalProgram }}" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-list-bullet class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Total Kegiatan" value="{{ $kegiatans->count() }}" color="info">
+        <x-stat-card title="Total Kegiatan" value="{{ $totalKegiatan }}" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-clipboard-document-list class="w-6 h-6"/>
             </x-slot>
@@ -27,7 +27,7 @@
                 <x-heroicon-o-banknotes class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Realisasi" value="Rp {{ number_format($kegiatans->sum('realisasi') / 1000000000, 1, ',', '.') }} M" color="warning">
+        <x-stat-card title="Realisasi" value="Rp {{ number_format($totalRealisasi / 1000000000, 1, ',', '.') }} M" color="warning">
             <x-slot name="icon">
                 <x-heroicon-o-arrow-trending-up class="w-6 h-6"/>
             </x-slot>
@@ -131,8 +131,13 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $programs->count() }}</span> program / <span class="font-semibold text-slate-700">{{ $kegiatans->count() }}</span> kegiatan</p>
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $totalProgram }}</span> program / <span class="font-semibold text-slate-700">{{ $totalKegiatan }}</span> kegiatan</p>
+            @if(method_exists($kegiatans, 'links'))
+                <div class="text-sm">
+                    {{ $kegiatans->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 </x-app-layout>

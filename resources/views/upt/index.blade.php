@@ -15,7 +15,7 @@
     @endif
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-        <x-stat-card title="Total UPT" value="{{ $upts->count() }} Unit" color="primary">
+        <x-stat-card title="Total UPT" value="{{ $upts->total() }} Unit" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-building-office-2 class="w-5 h-5"/>
             </x-slot>
@@ -84,6 +84,15 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $upts->total() }}</span> UPT</p>
+            @if(method_exists($upts, 'links'))
+                <div class="text-sm">
+                    {{ $upts->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 </x-app-layout>

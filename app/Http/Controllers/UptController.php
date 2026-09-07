@@ -14,7 +14,7 @@ class UptController extends Controller
         $user = $request->user();
         $upts = $this->applyOpdScope(Upt::with('opd'), $user)
             ->orderBy('nama')
-            ->get();
+            ->paginate(15);
 
         $opds = $this->userOpds($user);
 

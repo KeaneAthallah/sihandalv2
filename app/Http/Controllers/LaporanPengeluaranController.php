@@ -29,11 +29,13 @@ class LaporanPengeluaranController extends Controller
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
 
-        $pengeluarans = $query->orderBy('tanggal', 'desc')->get();
-
-        $totalAnggaran = $pengeluarans->sum('anggaran');
-        $totalRealisasi = $pengeluarans->sum('realisasi');
+        $totalAnggaran = (clone $query)->sum('anggaran');
+        $totalRealisasi = (clone $query)->sum('realisasi');
         $persentase = $totalAnggaran > 0 ? round(($totalRealisasi / $totalAnggaran) * 100, 1) : 0;
+        $totalCount = (clone $query)->count();
+        $opdCount = (clone $query)->distinct()->count('opd_id');
+
+        $pengeluarans = $query->orderBy('tanggal', 'desc')->paginate(15);
 
         $opds = $this->userOpds($user);
         $kegiatans = Kegiatan::orderBy('kode_kegiatan')->get();
@@ -42,7 +44,7 @@ class LaporanPengeluaranController extends Controller
 
         return view('laporan-pengeluaran.index', compact(
             'pengeluarans', 'totalAnggaran', 'totalRealisasi', 'persentase',
-            'opds', 'kegiatans', 'sumberDanas', 'filters'
+            'totalCount', 'opdCount', 'opds', 'kegiatans', 'sumberDanas', 'filters'
         ));
     }
 

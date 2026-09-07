@@ -35,12 +35,12 @@
                 <x-heroicon-o-check-circle class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Menunggu Persetujuan" value="Rp {{ number_format($totalMenunggu / 1000000000, 1, ',', '.') }} M" change="{{ $permintaanDanas->where('status', 'menunggu')->count() }} permintaan" color="warning">
+        <x-stat-card title="Menunggu Persetujuan" value="Rp {{ number_format($totalMenunggu / 1000000000, 1, ',', '.') }} M" change="{{ $totalMenungguCount }} permintaan" color="warning">
             <x-slot name="icon">
                 <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Jumlah Permintaan" value="{{ $permintaanDanas->count() }}" change="semua status" color="info">
+        <x-stat-card title="Jumlah Permintaan" value="{{ $totalPermintaanCount }}" change="semua status" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-clipboard-document-list class="w-6 h-6"/>
             </x-slot>
@@ -173,7 +173,12 @@
         </div>
 
         <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->count() }}</span> permintaan dana</p>
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> permintaan dana</p>
+            @if(method_exists($permintaanDanas, 'links'))
+                <div class="text-sm">
+                    {{ $permintaanDanas->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 

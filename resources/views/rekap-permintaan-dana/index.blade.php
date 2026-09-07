@@ -23,33 +23,33 @@
             </span>
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-building-office-2 class="w-3.5 h-3.5"/>
-                {{ $permintaanDanas->pluck('opd_id')->unique()->count() }} OPD
+                {{ $opdCount }} OPD
             </span>
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-document-text class="w-3.5 h-3.5"/>
-                {{ $permintaanDanas->count() }} Total Permintaan
+                {{ $totalPermintaanCount }} Total Permintaan
             </span>
         </div>
     </div>
 
     {{-- Stat Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <x-stat-card title="Total Permintaan" value="{{ $permintaanDanas->count() }}" change="Semua permintaan" changeType="up" color="primary">
+        <x-stat-card title="Total Permintaan" value="{{ $totalPermintaanCount }}" change="Semua permintaan" changeType="up" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Disetujui" value="{{ $permintaanDanas->where('status', 'disetujui')->count() }}" change="Rp {{ number_format($totalDisetujui / 1000000000, 1, ',', '.') }} M" changeType="up" color="success">
+        <x-stat-card title="Disetujui" value="{{ $statusCounts['disetujui'] }}" change="Rp {{ number_format($totalDisetujui / 1000000000, 1, ',', '.') }} M" changeType="up" color="success">
             <x-slot name="icon">
                 <x-heroicon-o-check-circle class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Ditolak" value="{{ $permintaanDanas->where('status', 'ditolak')->count() }}" change="Rp {{ number_format($totalDitolak / 1000000000, 1, ',', '.') }} M" changeType="down" color="danger">
+        <x-stat-card title="Ditolak" value="{{ $statusCounts['ditolak'] }}" change="Rp {{ number_format($totalDitolak / 1000000000, 1, ',', '.') }} M" changeType="down" color="danger">
             <x-slot name="icon">
                 <x-heroicon-o-x-circle class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Menunggu" value="{{ $permintaanDanas->where('status', 'menunggu')->count() }}" change="Rp {{ number_format($totalMenunggu / 1000000000, 1, ',', '.') }} M" changeType="up" color="warning">
+        <x-stat-card title="Menunggu" value="{{ $statusCounts['menunggu'] }}" change="Rp {{ number_format($totalMenunggu / 1000000000, 1, ',', '.') }} M" changeType="up" color="warning">
             <x-slot name="icon">
                 <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
@@ -58,7 +58,7 @@
 
     {{-- Summary Breakdown --}}
     @php
-        $total = $permintaanDanas->count() ?: 1;
+        $total = $totalPermintaanCount ?: 1;
         $statusCounts = [
             'disetujui' => $permintaanDanas->where('status', 'disetujui')->count(),
             'ditolak' => $permintaanDanas->where('status', 'ditolak')->count(),
@@ -156,7 +156,12 @@
         </div>
 
         <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan {{ $permintaanDanas->count() }} data permintaan dana</p>
+            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> data permintaan dana</p>
+            @if(method_exists($permintaanDanas, 'links'))
+                <div class="text-sm">
+                    {{ $permintaanDanas->withQueryString()->links() }}
+                </div>
+            @endif
             <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>

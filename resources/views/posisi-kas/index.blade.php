@@ -42,7 +42,7 @@
             <h3 class="card-title">Detail Posisi Kas</h3>
         </div>
 
-        @if($posisiKas->count() > 0)
+        @if($posisiKas->total() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
@@ -95,8 +95,13 @@
                 </table>
             </div>
 
-            <div class="px-5 py-3 border-t border-slate-100">
-                <p class="text-sm text-slate-500">Menampilkan {{ $posisiKas->count() }} data posisi kas</p>
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $posisiKas->total() }}</span> data posisi kas</p>
+                @if(method_exists($posisiKas, 'links'))
+                    <div class="text-sm">
+                        {{ $posisiKas->withQueryString()->links() }}
+                    </div>
+                @endif
             </div>
         @else
             <div class="px-5 py-14 text-center">

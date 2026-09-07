@@ -11,20 +11,23 @@ class LaporanPosisiKasController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $posisiKas = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user)
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $query = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user);
 
-        $totalSaldoAwal = $posisiKas->sum('saldo_awal');
-        $totalPenerimaan = $posisiKas->sum('penerimaan');
-        $totalPengeluaran = $posisiKas->sum('pengeluaran');
-        $totalSaldoAkhir = $posisiKas->sum('saldo_akhir');
+        $totalSaldoAwal = (clone $query)->sum('saldo_awal');
+        $totalPenerimaan = (clone $query)->sum('penerimaan');
+        $totalPengeluaran = (clone $query)->sum('pengeluaran');
+        $totalSaldoAkhir = (clone $query)->sum('saldo_akhir');
+        $totalCount = (clone $query)->count();
+        $opdCount = (clone $query)->distinct()->count('opd_id');
+
+        $posisiKas = $query->orderBy('tanggal', 'desc')->paginate(15);
 
         $opds = $this->userOpds($user);
 
         return view('laporan-posisi-kas.index', compact(
             'posisiKas', 'totalSaldoAwal', 'totalPenerimaan',
-            'totalPengeluaran', 'totalSaldoAkhir', 'opds'
+            'totalPengeluaran', 'totalSaldoAkhir', 'totalCount',
+            'opdCount', 'opds'
         ));
     }
 

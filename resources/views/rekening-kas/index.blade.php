@@ -12,7 +12,7 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-        <x-stat-card title="Total Rekening" value="{{ $rekenings->count() }}" color="primary">
+        <x-stat-card title="Total Rekening" value="{{ $rekenings->total() }}" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-wallet class="w-6 h-6"/>
             </x-slot>
@@ -114,8 +114,13 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $rekenings->count() }}</span> rekening</p>
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $rekenings->total() }}</span> rekening</p>
+            @if(method_exists($rekenings, 'links'))
+                <div class="text-sm">
+                    {{ $rekenings->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 </x-app-layout>

@@ -117,9 +117,12 @@
             </table>
         </div>
 
-        @if($opds->count() > 0)
-            <div class="px-5 py-3 border-t border-slate-100">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $opds->count() }}</span> OPD</p>
+        @if($opds->total() > 0)
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $opds->total() }}</span> OPD</p>
+                <div class="text-sm">
+                    {{ $opds->withQueryString()->links() }}
+                </div>
             </div>
         @endif
     </x-card>

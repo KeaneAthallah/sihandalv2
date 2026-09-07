@@ -124,6 +124,15 @@
                 </tbody>
             </table>
         </div>
+
+        @if($tahunAnggarans->total() > 0)
+            <div class="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $tahunAnggarans->total() }}</span> tahun anggaran</p>
+                <div class="text-sm">
+                    {{ $tahunAnggarans->withQueryString()->links() }}
+                </div>
+            </div>
+        @endif
     </x-card>
 
     <x-modal name="add-tahun-anggaran" max-width="md">

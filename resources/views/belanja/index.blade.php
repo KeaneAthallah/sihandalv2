@@ -15,8 +15,7 @@
     @endif
 
     @php
-        $totalCommit = (float) $belanjas->sum('dana_di_commit');
-        $sisaPagu = (float) $totalPagu - $totalCommit - (float) $totalRealisasi;
+        $sisaPagu = (float) $totalPagu - (float) $totalCommit - (float) $totalRealisasi;
     @endphp
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
@@ -114,5 +113,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if($belanjas->total() > 0)
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $belanjas->total() }}</span> belanja</p>
+                <div class="text-sm">
+                    {{ $belanjas->withQueryString()->links() }}
+                </div>
+            </div>
+        @endif
     </x-card>
 </x-app-layout>

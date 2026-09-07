@@ -27,19 +27,29 @@ class RekapPermintaanDanaController extends Controller
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
 
-        $permintaanDanas = $query->orderBy('created_at', 'desc')->get();
+        $totalPermintaan = (clone $query)->sum('jumlah');
+        $totalDisetujui = (clone $query)->where('status', 'disetujui')->sum('jumlah');
+        $totalDitolak = (clone $query)->where('status', 'ditolak')->sum('jumlah');
+        $totalMenunggu = (clone $query)->where('status', 'menunggu')->sum('jumlah');
 
-        $totalPermintaan = $permintaanDanas->sum('jumlah');
-        $totalDisetujui = $permintaanDanas->where('status', 'disetujui')->sum('jumlah');
-        $totalDitolak = $permintaanDanas->where('status', 'ditolak')->sum('jumlah');
-        $totalMenunggu = $permintaanDanas->where('status', 'menunggu')->sum('jumlah');
+        $totalPermintaanCount = (clone $query)->count();
+        $opdCount = (clone $query)->distinct()->count('opd_id');
+        $statusCounts = [
+            'disetujui' => (clone $query)->where('status', 'disetujui')->count(),
+            'ditolak' => (clone $query)->where('status', 'ditolak')->count(),
+            'menunggu' => (clone $query)->where('status', 'menunggu')->count(),
+            'draft' => (clone $query)->where('status', 'draft')->count(),
+        ];
+
+        $permintaanDanas = $query->orderBy('created_at', 'desc')->paginate(15);
 
         $opds = $this->userOpds($user);
         $filters = $request->only(['opd_id', 'status', 'sumber_dana_id', 'tanggal_dari', 'tanggal_sampai']);
 
         return view('rekap-permintaan-dana.index', compact(
             'permintaanDanas', 'totalPermintaan', 'totalDisetujui',
-            'totalDitolak', 'totalMenunggu', 'opds', 'filters'
+            'totalDitolak', 'totalMenunggu', 'totalPermintaanCount',
+            'opdCount', 'statusCounts', 'opds', 'filters'
         ));
     }
 

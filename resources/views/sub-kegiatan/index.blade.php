@@ -14,12 +14,6 @@
         <x-alert type="success" :dismissible="true">{{ session('success') }}</x-alert>
     @endif
 
-    @php
-        $totalPagu = (float) $subKegiatans->sum('pagu');
-        $totalRealisasi = (float) $subKegiatans->sum('realisasi');
-        $persentase = $totalPagu > 0 ? round($totalRealisasi / $totalPagu * 100, 2) : 0;
-    @endphp
-
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         <x-stat-card title="Total Pagu" value="Rp {{ number_format($totalPagu, 0, ',', '.') }}" color="primary">
             <x-slot name="icon">
@@ -31,7 +25,7 @@
                 <x-heroicon-o-arrow-trending-up class="w-5 h-5"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Persentase" value="{{ number_format($persentase, 2, ',', '.') }}%" change="{{ count($subKegiatans) }} sub kegiatan" color="info">
+        <x-stat-card title="Persentase" value="{{ number_format($persentase, 2, ',', '.') }}%" change="{{ $subKegiatans->total() }} sub kegiatan" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-chart-pie class="w-5 h-5"/>
             </x-slot>
@@ -101,5 +95,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if($subKegiatans->total() > 0)
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $subKegiatans->total() }}</span> sub kegiatan</p>
+                <div class="text-sm">
+                    {{ $subKegiatans->withQueryString()->links() }}
+                </div>
+            </div>
+        @endif
     </x-card>
 </x-app-layout>

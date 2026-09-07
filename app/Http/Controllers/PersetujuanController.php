@@ -14,13 +14,14 @@ class PersetujuanController extends Controller
 {
     public function index(Request $request)
     {
-        $permintaanDanas = $this->applyOpdScope(PermintaanDana::with(['opd', 'persetujuans', 'sumberDana']), $request->user())
+        $permintaanQuery = $this->applyOpdScope(PermintaanDana::with(['opd', 'persetujuans', 'sumberDana']), $request->user())
             ->where('status', 'menunggu')
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderBy('created_at', 'desc');
 
-        $totalMenunggu = $permintaanDanas->count();
-        $totalMenungguNilai = $permintaanDanas->sum('jumlah');
+        $totalMenungguNilai = (clone $permintaanQuery)->sum('jumlah');
+        $permintaanDanas = $permintaanQuery->paginate(15);
+
+        $totalMenunggu = $permintaanDanas->total();
 
         return view('persetujuan.index', compact(
             'permintaanDanas', 'totalMenunggu', 'totalMenungguNilai'

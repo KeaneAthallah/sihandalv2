@@ -23,11 +23,11 @@
             </span>
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-building-office-2 class="w-3.5 h-3.5"/>
-                {{ $penerimaans->pluck('opd_id')->unique()->count() }} OPD
+                {{ $opdCount }} OPD
             </span>
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-document-text class="w-3.5 h-3.5"/>
-                {{ $penerimaans->count() }} Data
+                {{ $totalCount }} Data
             </span>
         </div>
     </div>
@@ -154,7 +154,12 @@
         </div>
 
         <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan {{ $penerimaans->count() }} laporan penerimaan</p>
+            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $penerimaans->total() }}</span> laporan penerimaan</p>
+            @if(method_exists($penerimaans, 'links'))
+                <div class="text-sm">
+                    {{ $penerimaans->withQueryString()->links() }}
+                </div>
+            @endif
             <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>

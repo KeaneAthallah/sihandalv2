@@ -13,14 +13,15 @@ class PosisiKasController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $posisiKas = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user)
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $posisiQuery = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user)
+            ->orderBy('tanggal', 'desc');
 
-        $totalSaldoAwal = $posisiKas->sum('saldo_awal');
-        $totalPenerimaan = $posisiKas->sum('penerimaan');
-        $totalPengeluaran = $posisiKas->sum('pengeluaran');
-        $totalSaldoAkhir = $posisiKas->sum('saldo_akhir');
+        $totalSaldoAwal = (clone $posisiQuery)->sum('saldo_awal');
+        $totalPenerimaan = (clone $posisiQuery)->sum('penerimaan');
+        $totalPengeluaran = (clone $posisiQuery)->sum('pengeluaran');
+        $totalSaldoAkhir = (clone $posisiQuery)->sum('saldo_akhir');
+
+        $posisiKas = $posisiQuery->paginate(15);
 
         $rekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
 

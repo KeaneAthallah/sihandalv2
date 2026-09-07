@@ -29,7 +29,7 @@
                 <x-heroicon-o-arrow-down-left class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Jumlah Transaksi" value="{{ $transaksis->count() }}" change="Transaksi Penerimaan aktif" changeType="up" color="info">
+        <x-stat-card title="Jumlah Transaksi" value="{{ $transaksis->total() }}" change="Transaksi Penerimaan aktif" changeType="up" color="info">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
             </x-slot>
@@ -138,6 +138,15 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $transaksis->total() }}</span> transaksi penerimaan</p>
+            @if(method_exists($transaksis, 'links'))
+                <div class="text-sm">
+                    {{ $transaksis->withQueryString()->links() }}
+                </div>
+            @endif
         </div>
     </x-card>
 

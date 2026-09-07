@@ -141,7 +141,7 @@
         </div>
 
         <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $penerimaans->count() }}</span> data penerimaan</p>
+            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $penerimaans->total() }}</span> data penerimaan</p>
             @if(method_exists($penerimaans, 'links'))
                 <div class="text-sm">
                     {{ $penerimaans->withQueryString()->links() }}

@@ -40,13 +40,15 @@ class PenerimaanController extends Controller
             fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai')))
         );
 
-        $penerimaans = $query->orderBy('target', 'desc')->get();
-
         // Computed totals come from the transaction relationship (accessors),
         // so the in-memory collection sum works on imported masters too.
-        $totalTarget = $penerimaans->sum('target');
-        $totalRealisasi = $penerimaans->sum('realisasi');
+        $allPenerimaans = (clone $query)->orderBy('target', 'desc')->get();
+        $totalTarget = $allPenerimaans->sum('target');
+        $totalRealisasi = $allPenerimaans->sum('realisasi');
         $persentase = $totalTarget > 0 ? round(($totalRealisasi / $totalTarget) * 100, 1) : 0;
+
+        $penerimaans = $query->orderBy('target', 'desc')->paginate(15);
+        unset($allPenerimaans);
 
         $opds = $this->userOpds($user);
         $rekenings = Rekening::orderBy('kode')->get();
