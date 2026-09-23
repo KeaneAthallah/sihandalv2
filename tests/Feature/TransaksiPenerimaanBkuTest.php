@@ -32,7 +32,7 @@ test('admin can create transaksi with 1 bku', function () {
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -46,8 +46,7 @@ test('admin can create transaksi with 1 bku', function () {
 
     $bku = $tx->bkus()->first();
     expect($bku->nomor_bku)->toBe('BKU-001')
-        ->and((float) $bku->nilai)->toBe(500000.0)
-        ->and($bku->rekening_id)->toBe($this->rekening->id);
+        ->and((float) $bku->nilai)->toBe(500000.0);
 });
 
 test('admin can create transaksi with 2 bku', function () {
@@ -58,8 +57,8 @@ test('admin can create transaksi with 2 bku', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000, 'rekening_id' => $this->rekening->id],
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -75,7 +74,6 @@ test('admin can create transaksi with 5 bku', function () {
         'nomor_bku' => 'BKU-'.($i + 1),
         'tanggal_bku' => now()->format('Y-m-d'),
         'nilai' => $v,
-        'rekening_id' => $this->rekening->id,
     ])->toArray();
 
     $this->actingAs($this->admin)
@@ -101,7 +99,7 @@ test('transaksi fails when total bku does not equal realisasi', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000],
             ],
         ])
         ->assertSessionHasErrors('bkus');
@@ -184,33 +182,14 @@ test('transaksi fails when bku has missing required fields', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => '', 'tanggal_bku' => '', 'nilai' => '', 'rekening_id' => ''],
+                ['nomor_bku' => '', 'tanggal_bku' => '', 'nilai' => ''],
             ],
         ])
         ->assertSessionHasErrors([
             'bkus.0.nomor_bku',
             'bkus.0.tanggal_bku',
             'bkus.0.nilai',
-            'bkus.0.rekening_id',
         ]);
-
-    expect(TransaksiPenerimaan::count())->toBe(0);
-});
-
-test('transaksi fails when bku rekening is not pendapatan type', function () {
-    $rekeningBelanja = Rekening::create(['kode' => '5.1.1', 'nama' => 'Belanja', 'tipe' => 'belanja']);
-
-    $this->actingAs($this->admin)
-        ->post('/transaksi-penerimaan', [
-            'penerimaan_id' => $this->penerimaan->id,
-            'nomor_registrasi' => 'REG-BAD-REK',
-            'realisasi' => 1000000,
-            'tanggal' => now()->format('Y-m-d'),
-            'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 1000000, 'rekening_id' => $rekeningBelanja->id],
-            ],
-        ])
-        ->assertSessionHasErrors('bkus.0.rekening_id');
 
     expect(TransaksiPenerimaan::count())->toBe(0);
 });
@@ -222,7 +201,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -233,7 +212,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -257,7 +236,6 @@ test('admin can update transaksi and add new bku', function () {
         'nomor_bku' => 'BKU-001',
         'tanggal_bku' => now(),
         'nilai' => 500000,
-        'rekening_id' => $this->rekening->id,
     ]);
 
     $this->actingAs($this->admin)
@@ -267,8 +245,8 @@ test('admin can update transaksi and add new bku', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000, 'rekening_id' => $this->rekening->id],
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000, 'rekening_id' => $this->rekening->id],
+                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -288,8 +266,8 @@ test('admin can update transaksi and delete bku', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $bku1 = $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000, 'rekening_id' => $this->rekening->id]);
-    $bku2 = $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000, 'rekening_id' => $this->rekening->id]);
+    $bku1 = $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000]);
+    $bku2 = $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000]);
 
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
@@ -298,7 +276,7 @@ test('admin can update transaksi and delete bku', function () {
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000, 'rekening_id' => $this->rekening->id],
+                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -314,8 +292,8 @@ test('admin can update transaksi to remove all bku', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000, 'rekening_id' => $this->rekening->id]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000]);
 
     // Remove all BKU: no bkus key submitted at all.
     $this->actingAs($this->admin)
@@ -338,7 +316,7 @@ test('admin can update transaksi to remove all bku with explicit empty array', f
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000]);
 
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
@@ -376,8 +354,8 @@ test('admin can add bku later to a transaction that started without bku', functi
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 4000000, 'rekening_id' => $this->rekening->id],
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 6000000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 4000000],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 6000000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -420,8 +398,8 @@ test('deleting transaksi cascades to delete all bku', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 250000, 'rekening_id' => $this->rekening->id]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 250000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 250000]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 250000]);
 
     expect(TransaksiPenerimaanBku::count())->toBe(2);
 
@@ -440,7 +418,7 @@ test('master penerimaan realisasi reflects sum of transactions', function () {
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 300000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -454,7 +432,7 @@ test('master penerimaan realisasi reflects sum of transactions', function () {
             'realisasi' => 200000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 200000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 200000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -470,8 +448,8 @@ test('bku does not cause double counting of realisasi', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000, 'rekening_id' => $this->rekening->id],
-                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000],
+                ['nomor_bku' => 'BKU-002', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 600000],
             ],
         ]);
 
@@ -488,7 +466,7 @@ test('opd user can create transaksi for own opd', function () {
             'realisasi' => 750000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 750000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 750000],
             ],
         ])
         ->assertSessionHasNoErrors();
@@ -510,7 +488,7 @@ test('opd user cannot create transaksi against another opd penerimaan', function
             'realisasi' => 100000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 100000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 100000],
             ],
         ])
         ->assertSessionHasErrors('penerimaan_id');
@@ -525,7 +503,7 @@ test('opd user cannot access other opd transaksi edit', function () {
         'realisasi' => 100000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 100000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 100000]);
 
     $penerimaanB = Penerimaan::create([
         'opd_id' => $this->opdB->id,
@@ -538,7 +516,7 @@ test('opd user cannot access other opd transaksi edit', function () {
         'realisasi' => 200000,
         'tanggal' => now(),
     ]);
-    $txB->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000, 'rekening_id' => $this->rekening->id]);
+    $txB->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000]);
 
     $this->actingAs($this->user)
         ->get("/transaksi-penerimaan/{$txB->id}/edit")
@@ -557,7 +535,7 @@ test('opd user cannot delete other opd transaksi', function () {
         'realisasi' => 200000,
         'tanggal' => now(),
     ]);
-    $txB->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000, 'rekening_id' => $this->rekening->id]);
+    $txB->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000]);
 
     $this->actingAs($this->user)
         ->delete("/transaksi-penerimaan/{$txB->id}")
@@ -573,8 +551,8 @@ test('admin can view all transaksi and their bku on index', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000, 'rekening_id' => $this->rekening->id]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 300000]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 200000]);
 
     $this->actingAs($this->admin)
         ->get('/transaksi-penerimaan')
@@ -591,8 +569,8 @@ test('index page shows correct jumlah bku count', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 250000, 'rekening_id' => $this->rekening->id]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 250000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 250000]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-002', 'tanggal_bku' => now(), 'nilai' => 250000]);
 
     $this->actingAs($this->admin)
         ->get('/transaksi-penerimaan')
@@ -600,13 +578,14 @@ test('index page shows correct jumlah bku count', function () {
         ->assertSeeInOrder(['Nomor Registrasi', 'REG-CNT']);
 });
 
-test('create page renders with rekening dropdown', function () {
+test('create page renders with rekening bank dropdown', function () {
     $this->actingAs($this->admin)
         ->get('/transaksi-penerimaan/create')
         ->assertSuccessful()
         ->assertSee('Nomor Registrasi')
         ->assertSee('Tambah BKU')
-        ->assertSee('4.1.1');
+        ->assertSee('Tambah Bank')
+        ->assertSee('Rekening Bank');
 });
 
 test('edit page loads with existing bku data', function () {
@@ -616,7 +595,7 @@ test('edit page loads with existing bku data', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000, 'rekening_id' => $this->rekening->id]);
+    $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000]);
 
     $this->actingAs($this->admin)
         ->get("/transaksi-penerimaan/{$tx->id}/edit")
@@ -632,7 +611,7 @@ test('update fails when total bku does not equal new realisasi', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    $bku1 = $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000, 'rekening_id' => $this->rekening->id]);
+    $bku1 = $tx->bkus()->create(['nomor_bku' => 'BKU-001', 'tanggal_bku' => now(), 'nilai' => 500000]);
 
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
@@ -641,7 +620,7 @@ test('update fails when total bku does not equal new realisasi', function () {
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000, 'rekening_id' => $this->rekening->id],
+                ['id' => $bku1->id, 'nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 500000],
             ],
         ])
         ->assertSessionHasErrors('bkus');
@@ -657,7 +636,7 @@ test('rekening balance reflects transaksi bku through master penerimaan', functi
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
-                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 1000000, 'rekening_id' => $this->rekening->id],
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 1000000],
             ],
         ])
         ->assertSessionHasNoErrors();

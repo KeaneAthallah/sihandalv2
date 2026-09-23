@@ -11,7 +11,8 @@ class TransaksiPenerimaanBku extends Model
     use Auditable;
 
     protected $fillable = [
-        'transaksi_penerimaan_id', 'nomor_bku', 'tanggal_bku', 'nilai', 'rekening_id',
+        'transaksi_penerimaan_id', 'nomor_bku', 'tanggal_bku', 'nilai',
+        'rekening_bank_id',
     ];
 
     protected $casts = [
@@ -24,9 +25,13 @@ class TransaksiPenerimaanBku extends Model
         return $this->belongsTo(TransaksiPenerimaan::class);
     }
 
-    public function rekening(): BelongsTo
+    /**
+     * The Rekening Bank this BKU row is booked into. A transaction may span
+     * several physical bank accounts, one per BKU row.
+     */
+    public function rekeningBank(): BelongsTo
     {
-        return $this->belongsTo(Rekening::class);
+        return $this->belongsTo(RekeningBank::class, 'rekening_bank_id');
     }
 
     /**

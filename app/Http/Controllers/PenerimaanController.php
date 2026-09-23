@@ -19,6 +19,7 @@ class PenerimaanController extends Controller
 
         $query = Penerimaan::with([
             'opd', 'sumberDana', 'rekening', 'tahunAnggaran',
+            'details.sumberDana',
             'transaksiPenerimaans' => fn ($t) => $t
                 ->when(
                     $request->filled('tanggal_dari'),
@@ -87,6 +88,7 @@ class PenerimaanController extends Controller
     public function edit(Penerimaan $penerimaan)
     {
         $this->authorizeOpdRecord($penerimaan, request()->user());
+        $penerimaan->load(['details.sumberDana']);
         $opds = $this->userOpds(request()->user());
         $rekenings = Rekening::orderBy('kode')->get();
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
@@ -98,8 +100,10 @@ class PenerimaanController extends Controller
     public function store(StorePenerimaanRequest $request)
     {
         $data = $request->validated();
+        $details = $this->normalizeDetails($data['details'] ?? []);
+        unset($data['details']);
 
-        DB::transaction(function () use ($request, &$data) {
+        DB::transaction(function () use ($request, &$data, $details) {
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);
                 $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
@@ -109,7 +113,12 @@ class PenerimaanController extends Controller
                 $data['opd_id'] = $request->user()->opd_id;
             }
 
-            Penerimaan::create($data);
+            $penerimaan = Penerimaan::create($data);
+
+            foreach ($details as $detail) {
+                unset($detail['id']);
+                $penerimaan->details()->create($detail);
+            }
         });
 
         return back()->with('success', 'Penerimaan berhasil ditambahkan.');
@@ -119,9 +128,17 @@ class PenerimaanController extends Controller
     {
         $this->authorizeOpdRecord($penerimaan, $request->user());
 
-        DB::transaction(function () use ($request, $penerimaan) {
-            $data = $request->validated();
+        $data = $request->validated();
+        $details = $this->normalizeDetails($data['details'] ?? []);
+        unset($data['details']);
 
+        $submittedIds = collect($details)
+            ->pluck('id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        DB::transaction(function () use ($request, $penerimaan, $data, $details, $submittedIds) {
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);
                 $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
@@ -132,9 +149,40 @@ class PenerimaanController extends Controller
             }
 
             $penerimaan->update($data);
+
+            // Non-submitted existing details are removed.
+            $penerimaan->details()->whereNotIn('id', $submittedIds)->delete();
+
+            foreach ($details as $detail) {
+                $id = $detail['id'] ?? null;
+                unset($detail['id']);
+
+                if ($id !== null) {
+                    $existing = $penerimaan->details()->find($id);
+                    if ($existing) {
+                        $existing->update($detail);
+                    }
+
+                    continue;
+                }
+
+                $penerimaan->details()->create($detail);
+            }
         });
 
         return back()->with('success', 'Penerimaan berhasil diperbarui.');
+    }
+
+    /**
+     * Keep only filled detail rows; rows with an empty sumber dana are ignored
+     * so a freshly repeated UI row does not become a blank record.
+     */
+    private function normalizeDetails(array $details): array
+    {
+        return array_values(array_filter(
+            $details,
+            fn ($row) => ! empty($row['sumber_dana_id'])
+        ));
     }
 
     public function destroy(Penerimaan $penerimaan)

@@ -5,12 +5,14 @@ use App\Models\Dinas;
 use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Penerimaan;
+use App\Models\PenerimaanDetail;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
 use App\Models\PosisiKas;
 use App\Models\Program;
 use App\Models\Rekening;
+use App\Models\RekeningBank;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
@@ -76,7 +78,31 @@ function seedFullDataset(): array
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
 
     $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Kas Daerah', 'tipe' => 'kas']);
-    Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $pendapatanRekening = Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+
+    $kasInduk = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Umum', 'tipe' => 'kas']);
+    $kasDetail = Rekening::create(['kode' => '1.1.1.01', 'nama' => 'Kas Tunai', 'tipe' => 'kas', 'parent_id' => $kasInduk->id]);
+
+    $rekeningBank = RekeningBank::create([
+        'bank_name' => 'Bank BRI',
+        'account_number' => '0010-01-000123-7',
+        'account_name' => 'Dinas A',
+        'is_active' => true,
+    ]);
+
+    $rekeningBankB = RekeningBank::create([
+        'bank_name' => 'Bank Mandiri',
+        'account_number' => '1370-01-000456-8',
+        'account_name' => 'Dinas B',
+        'is_active' => true,
+    ]);
+
+    $inactiveRekeningBank = RekeningBank::create([
+        'bank_name' => 'Bank BNI',
+        'account_number' => '0091-01-000789-9',
+        'account_name' => 'Dinas A',
+        'is_active' => false,
+    ]);
 
     $program = Program::create([
         'kode_program' => '1.2',
@@ -129,8 +155,14 @@ function seedFullDataset(): array
         'target' => 1000000000,
     ]);
 
+    PenerimaanDetail::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+    ]);
+
     $transaksiPenerimaan = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
+        'penerimaan_detail_id' => $penerimaan->details->first()->id,
         'nomor_registrasi' => 'REG-001',
         'realisasi' => 400000000,
         'tanggal' => now(),
@@ -142,7 +174,7 @@ function seedFullDataset(): array
         'nomor_bku' => 'BKU-001',
         'tanggal_bku' => now(),
         'nilai' => 400000000,
-        'rekening_id' => $rekening->id,
+        'rekening_bank_id' => $rekeningBank->id,
     ]);
 
     Pengeluaran::create([
@@ -220,6 +252,7 @@ function seedFullDataset(): array
     return compact(
         'opd', 'opdB', 'admin', 'user', 'sumberDana', 'program', 'rekening',
         'permintaanDraft', 'permintaanMenunggu', 'kegiatan', 'subKegiatan',
-        'belanja', 'dinas', 'unit', 'upt'
+        'belanja', 'dinas', 'unit', 'upt', 'pendapatanRekening', 'kasInduk', 'kasDetail',
+        'rekeningBank', 'rekeningBankB', 'inactiveRekeningBank', 'penerimaan', 'transaksiPenerimaan'
     );
 }

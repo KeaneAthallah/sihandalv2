@@ -2,23 +2,44 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\DB;
 
 class Rekening extends Model
 {
-    protected $fillable = ['kode', 'nama', 'tipe', 'source_file', 'source_identifier'];
+    protected $fillable = ['kode', 'nama', 'tipe', 'parent_id', 'source_file', 'source_identifier'];
 
-    public function belanjas(): HasMany
+    public function parent(): BelongsTo
     {
-        return $this->hasMany(Belanja::class);
+        return $this->belongsTo(Rekening::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Rekening::class, 'parent_id');
+    }
+
+    /**
+     * Whether this rekening is a kas account in its own right, i.e. tipe 'kas'
+     * and not the parent of any detail account.
+     */
+    public function scopeKasLeaves(Builder $query): Builder
+    {
+        return $query->where('tipe', 'kas')->whereDoesntHave('children');
     }
 
     public function penerimaans(): HasMany
     {
         return $this->hasMany(Penerimaan::class);
+    }
+
+    public function belanjas(): HasMany
+    {
+        return $this->hasMany(Belanja::class);
     }
 
     public function pengeluarans(): HasMany

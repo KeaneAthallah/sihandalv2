@@ -497,7 +497,7 @@ class SihandalImportService
 
     private function wipe(): void
     {
-        foreach (['belanjas', 'transaksi_penerimaans', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
+        foreach (['belanjas', 'transaksi_penerimaans', 'penerimaan_details', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
             DB::table($table)->delete();
         }
 

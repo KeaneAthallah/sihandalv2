@@ -88,4 +88,13 @@ class Penerimaan extends Model
     {
         return $this->hasMany(TransaksiPenerimaan::class);
     }
+
+    /**
+     * Detail rows selecting a Rekening Bank + Sumber Dana at the detail level.
+     * The master keeps its legacy rekening_id / sumber_dana_id columns.
+     */
+    public function details(): HasMany
+    {
+        return $this->hasMany(PenerimaanDetail::class);
+    }
 }

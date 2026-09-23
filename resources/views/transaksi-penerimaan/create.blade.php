@@ -5,10 +5,6 @@
 
     @php
         $initialBkus = old('bkus', []);
-        $rekeningOptions = $rekenings->map(fn ($r) => [
-            'id' => (string) $r->id,
-            'label' => $r->kode.' - '.$r->nama,
-        ])->values()->all();
     @endphp
 
     <div class="max-w-3xl mx-auto">
@@ -20,7 +16,53 @@
                     x-data="{
                         realisasi: {{ json_encode((string) old('realisasi', '')) }},
                         bkus: {{ json_encode($initialBkus) }},
-                        rekenings: {{ json_encode($rekeningOptions) }},
+                        detailsByPenerimaan: {{ Js::from($detailsByPenerimaan) }},
+                        penerimaanId: {{ json_encode((string) old('penerimaan_id', '')) }},
+                        penerimaanDetailId: {{ json_encode((string) old('penerimaan_detail_id', '')) }},
+                        bankOptions: {{ Js::from($rekeningBanks->map(fn ($b) => ['id' => (string) $b->id, 'label' => $b->label])->values()) }},
+                        showBankModal: false,
+                        savingBank: false,
+                        bankForm: { bank_name: '', account_number: '', account_name: '' },
+                        bankErrors: {},
+                        async saveBank() {
+                            this.savingBank = true;
+                            this.bankErrors = {};
+                            try {
+                                const res = await fetch('{{ route('rekening-bank.store') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify(this.bankForm)
+                                });
+                                const data = await res.json();
+                                if (!res.ok) {
+                                    this.bankErrors = data.errors || {};
+                                    if (!Object.keys(this.bankErrors).length) {
+                                        this.bankErrors = { bank_name: [data.message || 'Gagal menyimpan rekening bank.'] };
+                                    }
+                                    return;
+                                }
+                                this.bankOptions.push({ id: String(data.id), label: data.label });
+                                if (this.bkus.length > 0) {
+                                    this.bkus[this.bkus.length - 1].rekening_bank_id = String(data.id);
+                                }
+                                this.bankForm = { bank_name: '', account_number: '', account_name: '' };
+                                this.showBankModal = false;
+                            } catch (e) {
+                                this.bankErrors = { bank_name: ['Gagal menyimpan rekening bank.'] };
+                            } finally {
+                                this.savingBank = false;
+                            }
+                        },
+                        get detailOptions() {
+                            return this.detailsByPenerimaan[this.penerimaanId] || [];
+                        },
+                        onPenerimaanChange() {
+                            this.penerimaanDetailId = '';
+                        },
                         get totalBku() {
                             return this.bkus.reduce((sum, b) => sum + (parseFloat(b.nilai) || 0), 0);
                         },
@@ -35,7 +77,7 @@
                             return 'Rp ' + n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
                         },
                         addBku() {
-                            this.bkus.push({ id: null, nomor_bku: '', tanggal_bku: '', nilai: '', rekening_id: '' });
+                            this.bkus.push({ id: null, nomor_bku: '', tanggal_bku: '', nilai: '', rekening_bank_id: '' });
                         },
                         removeBku(index) {
                             this.bkus.splice(index, 1);
@@ -64,15 +106,27 @@
 
                         <div>
                             <x-input-label value="Penerimaan" />
-                            <select name="penerimaan_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                            <select name="penerimaan_id" x-model="penerimaanId" @change="onPenerimaanChange()" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih Penerimaan</option>
                                 @foreach($penerimaans as $p)
-                                    <option value="{{ $p->id }}" {{ old('penerimaan_id') == $p->id ? 'selected' : '' }}>
+                                    <option value="{{ $p->id }}">
                                         {{ $p->sumberDana?->nama_sumber_dana ?? $p->nama_sumber_dana ?? '-' }} - {{ $p->opd?->nama ?? 'Provinsi' }}
                                     </option>
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('penerimaan_id')" />
+                        </div>
+
+                        <div x-show="detailOptions().length > 0" x-cloak class="rounded-lg border border-slate-200 p-4">
+                            <x-input-label value="Detail Sumber Dana (Opsional)" />
+                            <p class="mt-1 text-xs text-slate-400">Kaitkan transaksi dengan Sumber Dana dari Penerimaan yang dipilih.</p>
+                            <select name="penerimaan_detail_id" x-model="penerimaanDetailId" class="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                <option value="">Pilih Detail (Opsional)</option>
+                                <template x-for="d in detailOptions()" :key="String(d.id)">
+                                    <option :value="String(d.id)" x-text="d.label"></option>
+                                </template>
+                            </select>
+                            <x-input-error :messages="$errors->get('penerimaan_detail_id')" />
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -96,11 +150,20 @@
                     {{-- Detail BKU --}}
                     <div>
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
-                            <h3 class="text-sm font-semibold text-slate-800">Detail BKU</h3>
-                            <button type="button" @click="addBku()" class="btn-secondary !py-1.5 !px-3 text-xs">
-                                <x-heroicon-o-plus class="w-3.5 h-3.5 inline mr-1" />
-                                Tambah BKU
-                            </button>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-800">Detail BKU</h3>
+                                <p class="mt-0.5 text-xs text-slate-400">Setiap baris BKU dapat memakai rekening bank yang berbeda.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="showBankModal = true; bankErrors = {};" class="btn-secondary !py-1.5 !px-3 text-xs">
+                                    <x-heroicon-o-plus class="w-3.5 h-3.5 inline mr-1" />
+                                    Tambah Bank
+                                </button>
+                                <button type="button" @click="addBku()" class="btn-secondary !py-1.5 !px-3 text-xs">
+                                    <x-heroicon-o-plus class="w-3.5 h-3.5 inline mr-1" />
+                                    Tambah BKU
+                                </button>
+                            </div>
                         </div>
 
                         <x-input-error :messages="$errors->get('bkus')" class="mb-3" />
@@ -141,15 +204,16 @@
                                                     class="input pl-9" step="0.01" min="0" placeholder="0" required />
                                             </div>
                                         </div>
-                                        <div>
-                                            <x-input-label value="Nomor Rekening" class="text-xs" />
-                                            <select :name="'bkus[' + index + '][rekening_id]'" x-model="bku.rekening_id"
-                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
-                                                <option value="">Pilih Rekening</option>
-                                                <template x-for="rek in rekenings" :key="rek.id">
-                                                    <option :value="rek.id" x-text="rek.label"></option>
+                                        <div class="sm:col-span-2">
+                                            <x-input-label value="Rekening Bank" class="text-xs" />
+                                            <select :name="'bkus[' + index + '][rekening_bank_id]'" x-model="bku.rekening_bank_id"
+                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                                <option value="">Pilih Rekening Bank (Opsional)</option>
+                                                <template x-for="b in bankOptions" :key="b.id">
+                                                    <option :value="b.id" x-text="b.label"></option>
                                                 </template>
                                             </select>
+                                            <p class="mt-1 text-xs text-slate-400">Rekening bank fisik tempat BKU ini masuk. Belum ada datanya? Gunakan tombol <span class="font-medium">Tambah Bank</span> di atas.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -176,6 +240,7 @@
                             </div>
                         </div>
                     </div>
+                @include('transaksi-penerimaan._bank-modal')
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">

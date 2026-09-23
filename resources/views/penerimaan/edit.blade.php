@@ -9,6 +9,14 @@
                 @csrf
                 @method('PUT')
 
+                @php
+                    $existingDetails = $penerimaan->details->map(fn ($d) => [
+                        'id' => $d->id,
+                        'sumber_dana_id' => $d->sumber_dana_id,
+                    ])->toArray();
+                    $initialDetails = old('details', $existingDetails ?: [['sumber_dana_id' => '']]);
+                @endphp
+
                 <div class="space-y-4">
                     <div>
                         <x-input-label value="OPD" />
@@ -63,6 +71,61 @@
                         </div>
                         <x-input-error :messages="$errors->get('target')" />
                         <p class="mt-1 text-xs text-slate-400">Realisasi dicatat melalui Transaksi Penerimaan secara terpisah.</p>
+                    </div>
+
+                    <div
+                        x-data="{
+                            details: {{ Js::from($initialDetails) }},
+                            addDetail() {
+                                this.details.push({ id: null, sumber_dana_id: '' });
+                            },
+                            removeDetail(index) {
+                                this.details.splice(index, 1);
+                            }
+                        }"
+                        class="rounded-lg border border-slate-200 p-4"
+                    >
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <x-input-label value="Detail Sumber Dana (Opsional)" />
+                                <p class="mt-1 text-xs text-slate-400">Catat Sumber Dana pada level detail. Satu Penerimaan dapat memiliki beberapa detail.</p>
+                            </div>
+                            <button type="button" @click="addDetail()" class="text-sm font-medium text-primary hover:underline shrink-0">
+                                + Tambah Detail
+                            </button>
+                        </div>
+
+                        <div class="mt-3 space-y-2">
+                            <template x-for="(detail, index) in details" :key="index">
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
+                                    <input type="hidden" :name="`details[${index}][id]`" :value="detail.id ?? ''">
+                                    <div>
+                                        <select :name="`details[${index}][sumber_dana_id]`" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                            <option value="">Pilih Sumber Dana</option>
+                                            @foreach($sumberDanas as $sd)
+                                                <option value="{{ $sd->id }}" :selected="detail.sumber_dana_id == {{ $sd->id }}">{{ $sd->nama_sumber_dana }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="button" @click="removeDetail(index)" x-show="details.length > 1" class="px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition shrink-0">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        @php
+                            $detailErrors = collect($errors->toArray())->filter(fn ($value, $key) => str_starts_with($key, 'details.'));
+                        @endphp
+                        @if ($detailErrors->isNotEmpty())
+                            <div class="mt-2 space-y-1">
+                                @foreach ($detailErrors as $messages)
+                                    @foreach ($messages as $message)
+                                        <p class="text-sm text-red-600">{{ $message }}</p>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
 

@@ -58,7 +58,20 @@
                                 <span class="font-mono text-xs font-semibold text-slate-600">{{ $rek->kode }}</span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm font-medium text-slate-800">{{ $rek->nama }}</span>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-sm font-medium text-slate-800 {{ $rek->parent_id ? 'pl-4' : '' }}">
+                                        @if($rek->parent_id)
+                                            <span class="text-slate-300 select-none">↳</span>
+                                        @endif
+                                        {{ $rek->nama }}
+                                    </span>
+                                    @if($rek->parent)
+                                        <span class="text-xs text-slate-400">Detail dari: {{ $rek->parent->kode }} - {{ $rek->parent->nama }}</span>
+                                    @endif
+                                    @if($rek->children_count > 0)
+                                        <span class="text-xs font-medium text-blue-500">Induk dari {{ $rek->children_count }} detail</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-5 py-3.5">
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-lg inline-flex items-center gap-1.5

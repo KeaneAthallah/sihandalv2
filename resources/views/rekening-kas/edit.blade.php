@@ -5,7 +5,7 @@
 
     <div class="max-w-2xl mx-auto">
         <x-card title="Form Edit Rekening">
-            <form action="{{ route('rekening-kas.update', $rekening) }}" method="POST">
+            <form action="{{ route('rekening-kas.update', $rekening) }}" method="POST" x-data="{ tipe: '{{ old('tipe', $rekening->tipe) }}' }">
                 @csrf
                 @method('PUT')
                 <div class="space-y-4">
@@ -17,7 +17,7 @@
                         </div>
                         <div>
                             <x-input-label for="tipe" value="Tipe Rekening" />
-                            <select name="tipe" id="tipe" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <select name="tipe" id="tipe" x-model="tipe" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih tipe...</option>
                                 <option value="kas" {{ old('tipe', $rekening->tipe) === 'kas' ? 'selected' : '' }}>Kas</option>
                                 <option value="non-kas" {{ old('tipe', $rekening->tipe) === 'non-kas' ? 'selected' : '' }}>Non-Kas</option>
@@ -32,6 +32,18 @@
                         <x-input-label for="nama" value="Nama Rekening" />
                         <x-text-input type="text" name="nama" id="nama" value="{{ old('nama', $rekening->nama) }}" placeholder="Contoh: Kas Besar" required class="mt-1.5" />
                         <x-input-error :messages="$errors->get('nama')" class="mt-1" />
+                    </div>
+
+                    <div x-show="tipe === 'kas'" x-cloak class="rounded-lg bg-slate-50 border border-slate-200 p-4">
+                        <x-input-label for="parent_id" value="Rekening Induk (Opsional)" />
+                        <p class="mt-1 text-xs text-slate-400">Pilih rekening kas induk untuk menjadikan rekening ini sebagai rekening detail kas. Kosongkan untuk mengembalikannya menjadi rekening kas utama.</p>
+                        <select name="parent_id" id="parent_id" class="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Tanpa Induk (Rekening Kas Utama)</option>
+                            @foreach($kasRekenings as $kas)
+                                <option value="{{ $kas->id }}" {{ old('parent_id', $rekening->parent_id) == $kas->id ? 'selected' : '' }}>{{ $kas->kode }} - {{ $kas->nama }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('parent_id')" class="mt-1" />
                     </div>
                 </div>
 

@@ -23,7 +23,7 @@ class PosisiKasController extends Controller
 
         $posisiKas = $posisiQuery->paginate(15);
 
-        $rekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
+        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
 
         return view('posisi-kas.index', compact(
             'posisiKas', 'totalSaldoAwal', 'totalPenerimaan',
@@ -34,7 +34,7 @@ class PosisiKasController extends Controller
     public function create()
     {
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
+        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
 
         return view('posisi-kas.create', compact('opds', 'rekenings'));
     }
@@ -43,7 +43,7 @@ class PosisiKasController extends Controller
     {
         $this->authorizeOpdRecord($posisiKas, request()->user());
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
+        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
 
         return view('posisi-kas.edit', compact('posisiKas', 'opds', 'rekenings'));
     }

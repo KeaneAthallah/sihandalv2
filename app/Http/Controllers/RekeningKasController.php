@@ -15,7 +15,11 @@ class RekeningKasController extends Controller
         $user = $request->user();
         $opdId = $user->isAdmin() ? null : $user->opd_id;
 
-        $rekenings = Rekening::orderBy('kode')->paginate(15);
+        $rekenings = Rekening::with('parent')
+            ->withCount('children')
+            ->orderBy('kode')
+            ->orderBy('parent_id')
+            ->paginate(15);
 
         $penerimaanSums = DB::table('transaksi_penerimaans as t')
             ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
@@ -50,15 +54,24 @@ class RekeningKasController extends Controller
     public function create()
     {
         $this->authorizeAdmin();
+        $kasRekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
 
-        return view('rekening-kas.create');
+        return view('rekening-kas.create', compact('kasRekenings'));
     }
 
     public function edit(Rekening $rekening)
     {
         $this->authorizeAdmin();
 
-        return view('rekening-kas.edit', compact('rekening'));
+        // A rekening cannot be its own parent, nor the parent of its ancestor
+        // (that would loop). Exclude itself and every descendant from options.
+        $excludedIds = collect([$rekening->id])->merge($this->descendantIds($rekening))->all();
+        $kasRekenings = Rekening::where('tipe', 'kas')
+            ->whereNotIn('id', $excludedIds)
+            ->orderBy('kode')
+            ->get();
+
+        return view('rekening-kas.edit', compact('rekening', 'kasRekenings'));
     }
 
     public function store(StoreRekeningRequest $request)
@@ -80,9 +93,29 @@ class RekeningKasController extends Controller
     public function destroy(Rekening $rekening)
     {
         $this->authorizeAdmin();
+
+        if ($rekening->children()->exists()) {
+            return back()->withErrors(['rekening' => 'Rekening memiliki rekening detail sehingga tidak dapat dihapus.']);
+        }
+
         $rekening->delete();
 
         return back()->with('success', 'Rekening berhasil dihapus.');
+    }
+
+    private function descendantIds(Rekening $rekening): array
+    {
+        $ids = [];
+        $queue = [$rekening->id];
+
+        while ($queue !== []) {
+            $id = array_shift($queue);
+            $children = Rekening::where('parent_id', $id)->pluck('id')->all();
+            $ids = array_merge($ids, $children);
+            $queue = array_merge($queue, $children);
+        }
+
+        return $ids;
     }
 
     protected function authorizeAdmin(): void

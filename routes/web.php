@@ -14,6 +14,7 @@ use App\Http\Controllers\PosisiKasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgramKegiatanController;
 use App\Http\Controllers\RekapPermintaanDanaController;
+use App\Http\Controllers\RekeningBankController;
 use App\Http\Controllers\RekeningKasController;
 use App\Http\Controllers\SubKegiatanController;
 use App\Http\Controllers\SumberDanaController;
@@ -102,6 +103,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('upt', UptController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
     Route::resource('sumber-dana', SumberDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('/rekening-bank', [RekeningBankController::class, 'store'])->name('rekening-bank.store');
+    Route::put('/rekening-bank/{rekeningBank}', [RekeningBankController::class, 'update'])->name('rekening-bank.update');
     Route::resource('rekening-kas', RekeningKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'rekening-kas' => 'rekening',
     ]);

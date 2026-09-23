@@ -101,7 +101,7 @@
                                                 'nomor_bku' => $b->nomor_bku,
                                                 'tanggal_bku' => $b->tanggal_bku?->format('d-m-Y'),
                                                 'nilai' => (float) $b->nilai,
-                                                'rekening' => ($b->rekening?->kode ?? '').' '.($b->rekening?->nama ?? '-'),
+                                                'rekening_bank' => $b->rekeningBank?->label ?? '-',
                                             ])->values()->all()),
                                         }); $dispatch('open-modal', 'detail-bku')"
                                         class="icon-btn hover:text-blue-600 hover:bg-blue-50">
@@ -188,7 +188,7 @@
                             <th class="text-left px-4 py-2.5 table-head">Nomor BKU</th>
                             <th class="text-left px-4 py-2.5 table-head">Tanggal BKU</th>
                             <th class="text-right px-4 py-2.5 table-head">Nilai</th>
-                            <th class="text-left px-4 py-2.5 table-head">Rekening</th>
+                            <th class="text-left px-4 py-2.5 table-head">Rekening Bank</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -198,7 +198,7 @@
                                 <td class="px-4 py-2.5 font-medium text-slate-700 whitespace-nowrap" x-text="bku.nomor_bku"></td>
                                 <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap" x-text="bku.tanggal_bku || '-'"></td>
                                 <td class="px-4 py-2.5 text-right font-medium text-slate-700 whitespace-nowrap tabular-nums" x-text="formatRupiah(bku.nilai)"></td>
-                                <td class="px-4 py-2.5 text-slate-500" x-text="bku.rekening || '-'"></td>
+                                <td class="px-4 py-2.5 text-slate-500" x-text="bku.rekening_bank || '-'"></td>
                             </tr>
                         </template>
                         <tr x-show="(t.bkus || []).length === 0">

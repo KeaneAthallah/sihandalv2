@@ -29,7 +29,9 @@ app/
   Controllers/           MVC controllers; resource controllers per module
                          + read-only Laporan*/Rekap* report controllers
   Http/Requests/         Form Request classes; ALL input validation + the
-                         server-side business rules live here
+                         server-side business rules live here. The shared
+                         PenerimaanRequest / TransaksiPenerimaanRequest each
+                         service BOTH their create and update flows.
   Models/                Eloquent models; money logic lives on the models
   Services/
     SihandalImportService.php   CSV/XLSX budget+revenue importer
@@ -69,7 +71,20 @@ Key tables:
                           nomor_registrasi). Each master's realization is
                           computed as the SUM of its transactions.
   - transaksi_penerimaan_bkus: optional nested BKU detail rows (nomor_bku,
-                          tanggal_bku, nilai, rekening). 0..N per transaction.
+                          tanggal_bku, nilai, rekening_bank_id). 0..N per
+                          transaction; every row may book into a different
+physical bank account.
+   - rekening_banks:     GLOBAL master (shared by all OPDs) of physical bank
+                          accounts (bank_name, unique account_number,
+                          account_name, is_active). Distinct from the
+                          accounting `rekenings`; has NO sidebar pages — banks
+                          are created/edited through a pop-up modal on the
+                          transaksi-penerimaan create/edit form (store/update
+                          are JSON endpoints).
+   - penerimaan_details: Sumber Dana rows grouped under a Penerimaan master
+                          (penerimaan_id, sumber_dana_id); transactions may
+                          optionally point back to one via
+                          transaksi_penerimaans.penerimaan_detail_id.
   - pengeluarans:         expenditure rows, FK to kegiatan/sub/belanja
   - posisi_kas:           snapshot (saldo_awal +- changes)
   - permintaan_danas:     fund requests + status workflow
@@ -104,6 +119,13 @@ REKENG TYPE                    rekenings.tipe in (kas|pendapatan|belanja):
                                Penerimaan requires 'pendapatan', Pengeluaran
                                requires 'belanja', 'kas' is accepted nowhere.
                                Enforced in Form Requests on create AND update.
+REKENING KAS HIERARCHY         rekenings.parent_id models an induk/detail kas
+                               tree: ONLY a kas account may host details and
+                               any detail MUST itself be kas. Posisi Kas may
+                               only select a kas LEAF (KasLeaves scope /
+                               children-count check), an induk with details
+                               cannot change tipe or be deleted, and cycles
+                               (self / ancestor) are rejected on update.
 NOMOR REGISTRASI               unique per receipt; auto-generated (see #7).
 NESTED FK CHECKS               Pengeluaran must reference sub_kegiatan under the
                                chosen kegiatan, and belanja under that
@@ -131,6 +153,14 @@ TRANSFER PENERIMAAN
   (see #7), inserts the transaksi + optional BKU rows inside one
   DB::transaction. update() may freely add/remove BKU rows but never touches
   nomor_registrasi (immutable after creation).
+  PENERIMAAN MASTER: create/update accept a nested `details` editor — Sumber
+  Dana rows, optionally carrying a detail id for updates; unsaved rows are
+  removed, blank rows are dropped, and a repeated sumber dana is rejected.
+  BKU rows book into Rekening Bank accounts (rekening_bank_id): one
+  transaction may span several banks (each row its own), banks are validated
+  as active, and a bank can be moved between rows on update. Realization and
+  per-detail/sumber-dana breakdowns are always recomputed from transactions —
+  nothing is persisted on the master.
 
 7. AUTO-GENERATED DOCUMENT NUMBERS
 ----------------------------------
@@ -172,14 +202,20 @@ nomor_bku on the nested BKU rows remains MANUAL (per user decision).
    saldo_akhir are persisted on write for cheap display.
 5) OPD multi-tenancy through base Controller helpers
    (Controller.php: applyOpdScope, userOpds, authorizeOpdRecord): OPD users
-   only ever see/affect their own rows; admins see everything.
+   only ever see/affect their own rows; admins see everything. Exception to
+   the scope: Rekening Bank is intentionally global to all OPDs.
 6) Separate read-only report controllers (LaporanPenerimaanController,
    LaporanPengeluaranController, LaporanPosisiKasController,
    RekapPermintaanDanaController) with streaming CSV export.
-7) Shared validation via traits and one TransaksiPenerimaanRequest servicing
-   both store and update paths.
+7) Shared validation via shared Form Requests servicing both create and
+   update (TransaksiPenerimaanRequest; PenerimaanRequest for the master), and
+   self-referencing rekening hierarchy guards (cycle detection, kas-leaf-only
+   Posisi Kas) living in withValidator().
 8) Auditable trait -> audit_logs diff snapshots on model writes.
 9) In-app notifications via Laravel's database channel.
+10) Nested-subresource management: penerimaan details and per-BKU Rekening
+    Bank selects are flattened forms (Alpine.js rows) sync/removed on every
+    save, never separate endpoints.
 
 9. IMPORT PIPELINE
 ------------------
@@ -192,7 +228,7 @@ hierarchy and reconciles totals; it is idempotent so db:seed can run it safely.
 
 10. TESTING
 -----------
-php artisan test --compact                      full suite (~164 tests)
+php artisan test --compact                      full suite (~196 tests)
 php artisan test --compact --filter=Name        single file/filter
 vendor/bin/pint --dirty --format agent          code style
 
@@ -202,6 +238,9 @@ fixture data. Reference suites:
   TransaksiPenerimaanNomorRegistrasiTest (auto numbers: 5-digit minimum,
   sequential, reset per fiscal year, submitted value ignored, immutable on edit)
   TransaksiPenerimaanBkuTest (BKU totals, immutability, OPD scoping)
+  RekeningBankTest (bank CRUD, global uniqueness, inactive rejection)
+  PenerimaanDetailTest (sumber dana detail rows + per-BKU Rekening Bank)
+  RekeningKasDetailTest (kas induk/detail hierarchy rules)
   RekeningTipeValidationTest, HierarchyTest, OpdScopingTest, ModuleWorkflowTest,
   PageSmokeTest, UserManagementTest, SihandalImportTest, ExportAndNotificationTest
 

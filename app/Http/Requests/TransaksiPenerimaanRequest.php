@@ -3,19 +3,22 @@
 namespace App\Http\Requests;
 
 use App\Models\Penerimaan;
-use App\Models\Rekening;
+use App\Models\PenerimaanDetail;
+use App\Models\RekeningBank;
 use Illuminate\Foundation\Http\FormRequest;
 
 abstract class TransaksiPenerimaanRequest extends FormRequest
 {
     /**
      * Rules shared by create and update of a transaksi penerimaan transaction,
-     * including the nested BKU details.
+     * including the nested BKU details. Each BKU row carries its own Rekening
+     * Bank, because one transaction can be received across several accounts.
      */
     public function rules(): array
     {
         return [
             'penerimaan_id' => ['required', 'exists:penerimaans,id'],
+            'penerimaan_detail_id' => ['nullable', 'integer', 'exists:penerimaan_details,id'],
             'realisasi' => ['required', 'numeric', 'min:0'],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:255'],
@@ -24,7 +27,7 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
             'bkus.*.nomor_bku' => ['required', 'string', 'max:100'],
             'bkus.*.tanggal_bku' => ['required', 'date'],
             'bkus.*.nilai' => ['required', 'numeric', 'min:0'],
-            'bkus.*.rekening_id' => ['required', 'integer', 'exists:rekenings,id'],
+            'bkus.*.rekening_bank_id' => ['nullable', 'integer', 'exists:rekening_banks,id'],
         ];
     }
 
@@ -57,16 +60,17 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
                 $validator->errors()->add('penerimaan_id', 'Anda hanya dapat mengelola transaksi untuk Penerimaan OPD Anda sendiri.');
             }
 
-            $this->validatePendapatanRekening($validator);
+            $this->validateDetailBelongsToPenerimaan($validator);
+            $this->validateActiveRekeningBanks($validator);
             $this->validateBkuSumEqualsRealisasi($validator);
         });
     }
 
     /**
-     * BKU rekening must reference a valid "pendapatan" rekening, matching the
-     * business rule used on the Penerimaan master.
+     * A booked Rekening Bank on any BKU row must be active, so revenue is never
+     * parked into a deactivated account.
      */
-    private function validatePendapatanRekening($validator): void
+    private function validateActiveRekeningBanks($validator): void
     {
         $bkus = $this->input('bkus');
 
@@ -75,23 +79,35 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
         }
 
         foreach ($bkus as $index => $bku) {
-            $rekeningId = $bku['rekening_id'] ?? null;
+            $bankId = $bku['rekening_bank_id'] ?? null;
 
-            if ($rekeningId === null) {
+            if ($bankId === null) {
                 continue;
             }
 
-            $rekening = Rekening::find($rekeningId);
-            if ($rekening === null) {
-                continue;
-            }
+            $bank = RekeningBank::find($bankId);
 
-            if ($rekening->tipe !== 'pendapatan') {
-                $validator->errors()->add(
-                    "bkus.{$index}.rekening_id",
-                    'Rekening BKU harus bertipe pendapatan.'
-                );
+            if ($bank !== null && ! $bank->is_active) {
+                $validator->errors()->add("bkus.{$index}.rekening_bank_id", 'Rekening bank tidak aktif dan tidak dapat digunakan.');
             }
+        }
+    }
+
+    /**
+     * An optional penerimaan_detail_id must belong to the selected master.
+     */
+    private function validateDetailBelongsToPenerimaan($validator): void
+    {
+        $detailId = $this->input('penerimaan_detail_id');
+        $penerimaanId = $this->input('penerimaan_id');
+
+        if ($detailId === null || $penerimaanId === null) {
+            return;
+        }
+
+        $detail = PenerimaanDetail::find($detailId);
+        if ($detail === null || (int) $detail->penerimaan_id !== (int) $penerimaanId) {
+            $validator->errors()->add('penerimaan_detail_id', 'Detail tidak sesuai dengan Penerimaan yang dipilih.');
         }
     }
 

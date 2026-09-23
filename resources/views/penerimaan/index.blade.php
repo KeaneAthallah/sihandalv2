@@ -86,9 +86,18 @@
                         <tr class="table-row">
                             <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
-                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
-                                </span>
+                                <div class="space-y-1.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
+                                        {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
+                                    </span>
+                                    @foreach($item->details as $detail)
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <span class="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-600 whitespace-nowrap">
+                                                {{ $detail->sumberDana?->nama_sumber_dana ?? '-' }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </td>
                             <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
                             <td class="px-5 py-3.5 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">

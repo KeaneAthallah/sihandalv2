@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTransaksiPenerimaanRequest;
 use App\Http\Requests\UpdateTransaksiPenerimaanRequest;
 use App\Models\Penerimaan;
-use App\Models\Rekening;
+use App\Models\RekeningBank;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use App\Services\DocumentNumberService;
@@ -23,7 +23,7 @@ class TransaksiPenerimaanController extends Controller
             'penerimaan.opd',
             'penerimaan.rekening',
             'penerimaan.sumberDana',
-            'bkus.rekening',
+            'bkus.rekeningBank',
         ])
             ->whereHas('penerimaan', function ($p) use ($user) {
                 if (! $user->isAdmin()) {
@@ -49,19 +49,32 @@ class TransaksiPenerimaanController extends Controller
     public function create()
     {
         $penerimaans = $this->authorizedMasters(request()->user());
-        $rekenings = $this->pendapatanRekenings();
+        $rekeningBanks = $this->activeRekeningBanks();
+        $detailsByPenerimaan = $this->detailsByPenerimaan($penerimaans);
 
-        return view('transaksi-penerimaan.create', compact('penerimaans', 'rekenings'));
+        return view('transaksi-penerimaan.create', compact('penerimaans', 'rekeningBanks', 'detailsByPenerimaan'));
     }
 
     public function edit(TransaksiPenerimaan $transaksiPenerimaan)
     {
         $this->authorizeTransaction($transaksiPenerimaan, request()->user());
-        $transaksiPenerimaan->load(['bkus.rekening', 'penerimaan.opd']);
+        $transaksiPenerimaan->load(['bkus.rekeningBank', 'penerimaan.opd']);
         $penerimaans = $this->authorizedMasters(request()->user());
-        $rekenings = $this->pendapatanRekenings();
+        $rekeningBanks = $this->activeRekeningBanks();
 
-        return view('transaksi-penerimaan.edit', compact('transaksiPenerimaan', 'penerimaans', 'rekenings'));
+        // Existing BKU rows may still reference a now-inactive bank; keep those
+        // options visible so the select renders the current value.
+        foreach ($transaksiPenerimaan->bkus as $bku) {
+            $bank = $bku->rekeningBank;
+
+            if ($bank && ! $rekeningBanks->contains('id', $bank->id)) {
+                $rekeningBanks = $rekeningBanks->push($bank);
+            }
+        }
+
+        $detailsByPenerimaan = $this->detailsByPenerimaan($penerimaans);
+
+        return view('transaksi-penerimaan.edit', compact('transaksiPenerimaan', 'penerimaans', 'rekeningBanks', 'detailsByPenerimaan'));
     }
 
     public function store(StoreTransaksiPenerimaanRequest $request, DocumentNumberService $numbers)
@@ -143,7 +156,7 @@ class TransaksiPenerimaanController extends Controller
 
     private function authorizedMasters($user)
     {
-        $query = Penerimaan::with(['opd', 'sumberDana']);
+        $query = Penerimaan::with(['opd', 'sumberDana', 'details.sumberDana']);
 
         if (! $user->isAdmin()) {
             $query->where('opd_id', $user->opd_id);
@@ -152,9 +165,33 @@ class TransaksiPenerimaanController extends Controller
         return $query->orderBy('nama_sumber_dana')->get();
     }
 
-    private function pendapatanRekenings()
+    /**
+     * Global active Rekening Banks available for booking on the transaksi form.
+     */
+    private function activeRekeningBanks()
     {
-        return Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
+        return RekeningBank::where('is_active', true)
+            ->orderBy('bank_name')
+            ->orderBy('account_number')
+            ->get();
+    }
+
+    /**
+     * Penerimaan id => list of its detail records, used by the form's
+     * dependant dropdown so a transaction can optionally link to a detail.
+     *
+     * @return array<int, array<int, array{id: int, label: string}>>
+     */
+    private function detailsByPenerimaan($penerimaans): array
+    {
+        return $penerimaans->mapWithKeys(function (Penerimaan $penerimaan) {
+            $options = $penerimaan->details->map(fn ($d) => [
+                'id' => $d->id,
+                'label' => $d->sumberDana?->nama_sumber_dana ?? 'Tanpa Sumber Dana',
+            ])->values()->all();
+
+            return [$penerimaan->id => $options];
+        })->all();
     }
 
     private function authorizeTransaction(TransaksiPenerimaan $transaksi, ?User $user): void
