@@ -12,12 +12,15 @@ through an approval workflow managed by admins.
 
 The app is a classic server-rendered Laravel application, not an SPA. Pages are
 Blade views enhanced with Alpine.js; styling is Tailwind CSS v4. There is no
-separate frontend framework and no public JSON API.
+separate frontend framework. On top of the Blade app there is a versioned REST
+API (see section 3b) that serves the same domain through Sanctum bearer tokens.
 
 2. TECH STACK
 -------------
 - PHP 8.5, Laravel 13.x
 - Laravel Breeze 2.x (auth scaffolding)
+- Laravel Sanctum 4.x (API bearer tokens)
+- dedoc/scramble (auto OpenAPI docs for /api/v1)
 - MySQL (production) / SQLite in-memory (tests)
 - Tailwind CSS 4.x via @tailwindcss/vite, Alpine.js 3.x, ApexCharts 5.x
 - Pest 4 (PHPUnit 12 underneath)
@@ -28,10 +31,16 @@ separate frontend framework and no public JSON API.
 app/
   Controllers/           MVC controllers; resource controllers per module
                          + read-only Laporan*/Rekap* report controllers
+  Controllers/Api/       API base ApiController (envelope helpers, OPD auth,
+    V1/                    per-page cap) + one thin controller per module
   Http/Requests/         Form Request classes; ALL input validation + the
                          server-side business rules live here. The shared
                          PenerimaanRequest / TransaksiPenerimaanRequest each
                          service BOTH their create and update flows.
+  Http/Requests/Api/     API-specific Form Requests (mirror web rules)
+  Http/Resources/        25 API resources + ApiEnvelope; the whitelisted
+                         JSON representation of every model (no password /
+                         remember_token ever serialized)
   Models/                Eloquent models; money logic lives on the models
   Services/
     SihandalImportService.php   CSV/XLSX budget+revenue importer
@@ -46,9 +55,63 @@ resources/views/
   layouts/               app shell (navbar, sidebar, modals)
   <module>/              one folder per module
 routes/web.php           all web routes (named, resource style)
+routes/api.php           /api/v1 REST routes (Sanctum, throttle, admin)
+docs/                    API.md + API_ENDPOINTS.md + Postman collection
 tests/
+  Feature/Api/           API feature suite (auth, scoping, CRUD, workflow)
+  Feature/               web feature tests, RefreshDatabase per test
   Feature/               feature tests, RefreshDatabase per test
   Pest.php               global helpers + shared test data creation
+
+3b. REST API (NEW)
+------------------
+A versioned JSON API lives at /api/v1 alongside the Blade app. It is NOT a
+duplicate of the domain: API controllers are thin and call the same models,
+Form-Request rules, services, transactions and invariants as the web app.
+
+Docs: docs/API.md (architecture + invariants), docs/API_ENDPOINTS.md
+(full request/response examples), docs/SIHANDAL-V1.postman_collection.json.
+Interactive OpenAPI (Scramble/Stoplight Elements): /docs/api (alias
+/api/documentation) and /docs/api.json (alias /api/openapi.json).
+
+AUTH        Sanctum bearer tokens. POST /api/v1/auth/login -> {token, user},
+            logout, me, refresh. Tokens are hashed; login throttled 5/min/IP.
+ENVELOPE    Every response is {success, message, data, meta} or, on failure,
+            {success, message, errors}. Built by app/Http/Resources/ApiEnvelope
+            + ApiController helpers (success/paginated/withMeta/businessError).
+PAGINATION  ?page & ?per_page (default 20, max 100); ?all=1 returns the full
+            (still OPD-scoped) collection.
+ERRORS      bootstrap/app.php maps exceptions to JSON for api/* only:
+            Validation->422, Auth->401, Forbidden->403, NotFound->404,
+            business RuntimeException->422 (domain message preserved),
+            Throttle->429, unexpected->500 (never leaks internals in prod).
+AUTHZ       Same OPD multi-tenancy as web (OPD users see/edit only their OPD;
+            admin bypasses; RekeningBank global). Admin-only: approve/reject,
+            tahun-anggaran writes, audit-logs. Sanctum ability/middleware:
+            'auth:sanctum' + 'admin' alias.
+THROTTLE    Rate limiters in AppServiceProvider: api-auth 5/min per IP (login),
+            api-financial 10/min per user (submit/approve/reject),
+            api-read 120/min per user (AI summaries).
+ROUTES      routes/api.php. IMPORTANT: every resource uses ->names('api.*')
+            (e.g. api.pengeluaran.index) so API route names can never shadow
+            the web route names Blade views depend on — a real 500 bug this
+            naming prevents.
+ENDPOINTS   auth, health (public), opds (read-only), programs, kegiatan,
+            sub-kegiatan, rekenings, sumber-dana, rekening-banks (+ -active),
+            tahun-anggaran (+/activate, -active), belanja CRUD +
+            commit|release|realize, penerimaan CRUD, penerimaan-details
+            (read-only), transaksi-penerimaan CRUD + nested bkus
+            (store/update/destroy), pengeluaran, posisi-kas, permintaan-dana
+            CRUD + submit/approve/reject + persetujuan history, transfer-dana,
+            dashboard (8 reads), reports (4 + 4 CSV exports), ai (7 summary
+            reads), notifications (index/unread/read/read-all), audit-logs.
+SHARED      app/Services/PermintaanDanaService.php owns submit/approve/reject
+SERVICES    for BOTH web and API (row-locked, transactional);
+            app/Services/FinancialSummaryService.php holds the SQL aggregates
+            behind dashboard/reports/AI endpoints.
+TESTS       tests/Feature/Api/* (79 tests): ApiAuthTest, ApiMasterDataTest,
+            ApiOpdScopingTest, ApiPenerimaanTest, ApiBelanjaFinancialTest,
+            ApiPermintaanDanaWorkflowTest, ApiDashboardReportTest.
 
 4. DATA MODEL OVERVIEW
 ----------------------
@@ -95,6 +158,7 @@ physical bank account.
   - audit_logs:           Auditable trait snapshots
   - notifications:        in-app database notifications
   - tahun_anggarans:      fiscal years (only one active at a time)
+  - personal_access_tokens: Sanctum tokens backing the REST API bearer auth
 
 Recurring master rows keep denormalized text columns (e.g. nama_sumber_dana)
 for legacy data display/backfill; FKs are the source of truth.
@@ -192,6 +256,11 @@ nomor_bku on the nested BKU rows remains MANUAL (per user decision).
 ------------------------
 1) Standard MVC: Form Request -> Controller -> Eloquent model -> Blade view;
    Alpine.js on top. All flows go through named routes.
+1b) API mirror: API Form Request -> thin Api/V1 controller -> same domain ->
+   API Resource -> JSON envelope. Business logic is never duplicated; workflow
+   services (PermintaanDanaService) and aggregates (FinancialSummaryService)
+   are shared with the web side. API route names are api.*-prefixed so they
+   can never shadow web route names.
 2) Money invariants as domain methods on Belanja (commit/releaseCommit/realize)
    instead of scattered controller arithmetic.
 3) Transactional multi-step writes (submit/approve/reject/import/build) inside
@@ -228,7 +297,8 @@ hierarchy and reconciles totals; it is idempotent so db:seed can run it safely.
 
 10. TESTING
 -----------
-php artisan test --compact                      full suite (~196 tests)
+php artisan test --compact                      full suite (~275 tests)
+php artisan test --compact tests/Feature/Api    API suite only (79 tests)
 php artisan test --compact --filter=Name        single file/filter
 vendor/bin/pint --dirty --format agent          code style
 
@@ -243,6 +313,9 @@ fixture data. Reference suites:
   RekeningKasDetailTest (kas induk/detail hierarchy rules)
   RekeningTipeValidationTest, HierarchyTest, OpdScopingTest, ModuleWorkflowTest,
   PageSmokeTest, UserManagementTest, SihandalImportTest, ExportAndNotificationTest
+  Feature/Api: ApiAuthTest, ApiMasterDataTest, ApiOpdScopingTest,
+  ApiPenerimaanTest, ApiBelanjaFinancialTest, ApiPermintaanDanaWorkflowTest,
+  ApiDashboardReportTest (REST API: auth, scoping, CRUD, invariants, workflow)
 
 11. KNOWN/DEFERRED ITEMS
 ------------------------

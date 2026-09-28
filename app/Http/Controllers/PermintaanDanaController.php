@@ -4,19 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePermintaanDanaRequest;
 use App\Http\Requests\UpdatePermintaanDanaRequest;
-use App\Models\Belanja;
 use App\Models\Kegiatan;
 use App\Models\PermintaanDana;
 use App\Models\Rekening;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
-use App\Models\User;
-use App\Notifications\PermintaanDanaNotification;
+use App\Services\PermintaanDanaService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PermintaanDanaController extends Controller
 {
+    public function __construct(private readonly PermintaanDanaService $workflow) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -66,7 +65,7 @@ class PermintaanDanaController extends Controller
         }
 
         $data['sumber_dana'] = $sumberDana->nama_sumber_dana;
-        $data['nomor_permintaan'] = $this->generateNomorPermintaan();
+        $data['nomor_permintaan'] = $this->workflow->nextNomorPermintaan();
         $data['status'] = 'draft';
         $data['tahun_anggaran_id'] = TahunAnggaran::currentActive()?->id;
 
@@ -127,92 +126,11 @@ class PermintaanDanaController extends Controller
         $this->authorizeOpdRecord($permintaanDana, request()->user());
 
         try {
-            DB::transaction(function () use ($permintaanDana) {
-                $permintaanDana = PermintaanDana::whereKey($permintaanDana->id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
-                if ($permintaanDana->status !== 'draft') {
-                    throw new \RuntimeException('Hanya permintaan draft yang dapat diajukan.');
-                }
-
-                $this->commitFunds($permintaanDana);
-
-                $permintaanDana->update([
-                    'status' => 'menunggu',
-                    'tanggal' => $permintaanDana->tanggal ?? now(),
-                ]);
-            });
+            $this->workflow->submit($permintaanDana);
         } catch (\RuntimeException $e) {
             return back()->withErrors(['jumlah' => $e->getMessage()]);
         }
 
-        $admins = User::where('role', 'admin')->get();
-        $nomor = $permintaanDana->fresh()->nomor_permintaan;
-        $namaOpd = $permintaanDana->opd->nama ?? 'OPD';
-
-        foreach ($admins as $admin) {
-            $admin->notify(new PermintaanDanaNotification(
-                $permintaanDana->fresh(),
-                'Permintaan Dana Baru',
-                "Permintaan dana {$nomor} dari {$namaOpd} menunggu persetujuan.",
-                route('persetujuan.index'),
-            ));
-        }
-
         return back()->with('success', 'Permintaan dana berhasil diajukan dan menunggu persetujuan.');
-    }
-
-    protected function commitFunds(PermintaanDana $permintaanDana): void
-    {
-        if (! $permintaanDana->belanja_id) {
-            return;
-        }
-
-        $belanja = Belanja::whereKey($permintaanDana->belanja_id)->lockForUpdate()->first();
-
-        if ($belanja === null) {
-            throw new \RuntimeException('Belanja terkait tidak ditemukan.');
-        }
-
-        if ($belanja->opd_id !== $permintaanDana->opd_id) {
-            throw new \RuntimeException('Belanja tidak sesuai dengan OPD permintaan.');
-        }
-
-        $jumlah = (float) $permintaanDana->jumlah;
-
-        if ($belanja->availablePagu() < $jumlah) {
-            throw new \RuntimeException('Jumlah permintaan melebihi pagu belanja yang tersedia.');
-        }
-
-        $belanja->commit($jumlah);
-    }
-
-    protected function releaseFunds(PermintaanDana $permintaanDana): void
-    {
-        if ($permintaanDana->belanja_id) {
-            $belanja = Belanja::find($permintaanDana->belanja_id);
-            if ($belanja) {
-                $belanja->releaseCommit((float) $permintaanDana->jumlah);
-            }
-        }
-    }
-
-    protected function generateNomorPermintaan(): string
-    {
-        $year = now()->format('Y');
-
-        $lastNumber = PermintaanDana::query()
-            ->where('nomor_permintaan', 'like', "PD-%/{$year}")
-            ->get(['nomor_permintaan'])
-            ->map(function (PermintaanDana $permintaan) {
-                preg_match('/^PD-(\d+)\//', $permintaan->nomor_permintaan, $matches);
-
-                return $matches[1] ?? null;
-            })
-            ->filter()
-            ->max() ?? 0;
-
-        return 'PD-'.str_pad((int) $lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }

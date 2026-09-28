@@ -1,0 +1,772 @@
+{
+    "info": {
+        "_postman_id": "b7e3c2a1-4f5d-4e6a-9c8b-1a2b3c4d5e6f",
+        "name": "SIHANDAL API v1",
+        "description": "SIHANDAL V2 (Sistem Informasi Keuangan Daerah) REST API. Uses environment variables {{base_url}} and {{token}}. Login first; the Tests script stores the token automatically.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000"
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "email",
+            "value": "admin@example.com"
+        },
+        {
+            "key": "password",
+            "value": "password"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const data = pm.response.json();",
+                                    "if (data.success && data.data.token) {",
+                                    "    pm.collectionVariables.set('token', data.data.token);",
+                                    "    pm.test('token saved', () => pm.expect(data.data.token).to.be.a('string'));",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"device_name\": \"postman\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "login"]
+                        },
+                        "description": "Issue a Sanctum bearer token. 5 requests/minute per IP."
+                    }
+                },
+                {
+                    "name": "Me",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/me",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "me"]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/refresh",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "refresh"]
+                        },
+                        "description": "Revokes the current token and returns a new one."
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/logout",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "logout"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "System",
+            "item": [
+                {
+                    "name": "Health",
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/health",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "health"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Master Data",
+            "item": [
+                {
+                    "name": "OPDs",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/opds",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "opds"]
+                        }
+                    }
+                },
+                {
+                    "name": "Programs",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/programs",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "programs"]
+                        }
+                    }
+                },
+                {
+                    "name": "Kegiatan",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/kegiatan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "kegiatan"]
+                        }
+                    }
+                },
+                {
+                    "name": "Sub Kegiatan",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/sub-kegiatan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "sub-kegiatan"]
+                        }
+                    }
+                },
+                {
+                    "name": "Rekening",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/rekenings",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "rekenings"]
+                        }
+                    }
+                },
+                {
+                    "name": "Rekening Bank (active)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/rekening-banks-active",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "rekening-banks-active"]
+                        }
+                    }
+                },
+                {
+                    "name": "Sumber Dana",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/sumber-dana",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "sumber-dana"]
+                        }
+                    }
+                },
+                {
+                    "name": "Tahun Anggaran",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/tahun-anggaran",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "tahun-anggaran"]
+                        }
+                    }
+                },
+                {
+                    "name": "Tahun Anggaran Aktif",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/tahun-anggaran-active",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "tahun-anggaran-active"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Budget",
+            "item": [
+                {
+                    "name": "Belanja List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/belanja",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "belanja"]
+                        }
+                    }
+                },
+                {
+                    "name": "Belanja Commit",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 100000\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/belanja/:id/commit",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "belanja", ":id", "commit"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        },
+                        "description": "Moves available pagu into dana_di_commit. Enforces realisasi + commit <= pagu."
+                    }
+                },
+                {
+                    "name": "Belanja Release",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 100000\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/belanja/:id/release",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "belanja", ":id", "release"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Belanja Realize",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 100000\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/belanja/:id/realize",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "belanja", ":id", "realize"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Revenue",
+            "item": [
+                {
+                    "name": "Penerimaan List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/penerimaan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "penerimaan"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Transaksi Penerimaan",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"penerimaan_id\": 1,\n  \"realisasi\": 500000,\n  \"tanggal\": \"2026-01-31\",\n  \"keterangan\": \"Setoran\",\n  \"bkus\": [\n    { \"nomor_bku\": \"BKU-001\", \"tanggal_bku\": \"2026-01-31\", \"nilai\": 500000, \"rekening_bank_id\": 1 }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transaksi-penerimaan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transaksi-penerimaan"]
+                        },
+                        "description": "nomor_registrasi is generated server-side. BKU rows must sum to realisasi; banks must be active."
+                    }
+                },
+                {
+                    "name": "Transaksi Penerimaan List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transaksi-penerimaan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transaksi-penerimaan"]
+                        }
+                    }
+                },
+                {
+                    "name": "Add BKU to Transaction",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nomor_bku\": \"BKU-002\",\n  \"tanggal_bku\": \"2026-01-31\",\n  \"nilai\": 250000,\n  \"rekening_bank_id\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transaksi-penerimaan/:id/bkus",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transaksi-penerimaan", ":id", "bkus"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Expenditure",
+            "item": [
+                {
+                    "name": "Pengeluaran List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/pengeluaran",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "pengeluaran"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Pengeluaran",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"opd_id\": 1,\n  \"sumber_dana_id\": 1,\n  \"anggaran\": 1000000,\n  \"realisasi\": 250000,\n  \"nama_kegiatan\": \"Rapat Koordinasi\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/pengeluaran",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "pengeluaran"]
+                        }
+                    }
+                },
+                {
+                    "name": "Posisi Kas List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/posisi-kas",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "posisi-kas"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fund Requests",
+            "item": [
+                {
+                    "name": "Permintaan Dana List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana?status=menunggu",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana"],
+                            "query": [
+                                { "key": "status", "value": "menunggu" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Permintaan Dana (draft)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"opd_id\": 1,\n  \"sumber_dana_id\": 1,\n  \"jumlah\": 400000,\n  \"keperluan\": \"Operasional kantor\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana"]
+                        }
+                    }
+                },
+                {
+                    "name": "Submit Permintaan Dana",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana/:id/submit",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana", ":id", "submit"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        },
+                        "description": "draft -> menunggu. Commits funds on the linked Belanja. Rate-limited 10/min."
+                    }
+                },
+                {
+                    "name": "Approve Permintaan Dana (admin)",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana/:id/approve",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana", ":id", "approve"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Reject Permintaan Dana (admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"catatan\": \"Anggaran tidak mencukupi\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana/:id/reject",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana", ":id", "reject"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Approval History",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/permintaan-dana/:id/persetujuan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "permintaan-dana", ":id", "persetujuan"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Transfers",
+            "item": [
+                {
+                    "name": "Transfer Dana List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transfer-dana",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transfer-dana"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Transfer Dana",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"opd_id\": 1,\n  \"jumlah\": 500000,\n  \"sumber_dana\": \"DAU\",\n  \"keterangan\": \"Transfer operasional\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transfer-dana",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transfer-dana"]
+                        }
+                    }
+                },
+                {
+                    "name": "Mark Transfer Selesai",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"opd_id\": 1,\n  \"jumlah\": 500000,\n  \"sumber_dana\": \"DAU\",\n  \"status\": \"selesai\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/transfer-dana/:id",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "transfer-dana", ":id"],
+                            "variable": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        },
+                        "description": "Sets tanggal_selesai automatically. selesai is final."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "item": [
+                {
+                    "name": "Dashboard Overview",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/dashboard",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "dashboard"]
+                        }
+                    }
+                },
+                {
+                    "name": "Budget",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/dashboard/budget",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "dashboard", "budget"]
+                        }
+                    }
+                },
+                {
+                    "name": "Cash",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/dashboard/cash",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "dashboard", "cash"]
+                        }
+                    }
+                },
+                {
+                    "name": "Programs",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/dashboard/programs",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "dashboard", "programs"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reports",
+            "item": [
+                {
+                    "name": "Penerimaan",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/reports/penerimaan",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "reports", "penerimaan"]
+                        }
+                    }
+                },
+                {
+                    "name": "Pengeluaran",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/reports/pengeluaran",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "reports", "pengeluaran"]
+                        }
+                    }
+                },
+                {
+                    "name": "Posisi Kas",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/reports/posisi-kas",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "reports", "posisi-kas"]
+                        }
+                    }
+                },
+                {
+                    "name": "Permintaan Dana",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/reports/permintaan-dana",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "reports", "permintaan-dana"]
+                        }
+                    }
+                },
+                {
+                    "name": "Export Penerimaan (CSV)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/reports/penerimaan/export",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "reports", "penerimaan", "export"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AI",
+            "item": [
+                {
+                    "name": "Summary",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/ai/summary",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "ai", "summary"]
+                        }
+                    }
+                },
+                {
+                    "name": "Financial Alerts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/ai/financial-alerts",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "ai", "financial-alerts"]
+                        }
+                    }
+                },
+                {
+                    "name": "Budget Summary",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/ai/budget-summary",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "ai", "budget-summary"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/notifications",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "notifications"]
+                        }
+                    }
+                },
+                {
+                    "name": "Mark All Read",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/notifications/read-all",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "notifications", "read-all"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Audit Logs (admin)",
+            "item": [
+                {
+                    "name": "List",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/audit-logs",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "audit-logs"]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTransferDanaRequest;
 use App\Http\Requests\UpdateTransferDanaRequest;
 use App\Models\TransferDana;
+use App\Services\PermintaanDanaService;
 use Illuminate\Http\Request;
 
 class TransferDanaController extends Controller
 {
+    public function __construct(private readonly PermintaanDanaService $workflow) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -46,7 +49,7 @@ class TransferDanaController extends Controller
             $data['opd_id'] = $request->user()->opd_id;
         }
 
-        $data['nomor_transfer'] = $this->generateNomorTransfer();
+        $data['nomor_transfer'] = $this->workflow->nextNomorTransfer();
         $data['status'] = 'draft';
 
         TransferDana::create($data);
@@ -96,23 +99,5 @@ class TransferDanaController extends Controller
         $transferDana->delete();
 
         return back()->with('success', 'Transfer dana berhasil dihapus.');
-    }
-
-    protected function generateNomorTransfer(): string
-    {
-        $year = now()->format('Y');
-
-        $lastNumber = TransferDana::query()
-            ->where('nomor_transfer', 'like', "TF-%/{$year}")
-            ->get(['nomor_transfer'])
-            ->map(function (TransferDana $transfer) {
-                preg_match('/^TF-(\d+)\//', $transfer->nomor_transfer, $matches);
-
-                return $matches[1] ?? null;
-            })
-            ->filter()
-            ->max() ?? 0;
-
-        return 'TF-'.str_pad((int) $lastNumber + 1, 4, '0', STR_PAD_LEFT).'/'.$year;
     }
 }
