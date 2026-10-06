@@ -122,7 +122,7 @@ class FinancialSummaryService
             $query->whereDate('tanggal', '<=', $dateTo);
         }
 
-        return (float) $query->sum('realisasi');
+        return (float) $query->sum('jumlah');
     }
 
     /**
@@ -145,7 +145,7 @@ class FinancialSummaryService
             ->join('rekenings as r', 'r.id', '=', 'pengeluarans.rekening_id')
             ->when($opdId !== null, fn ($q) => $q->where('pengeluarans.opd_id', $opdId))
             ->where('r.tipe', 'kas')
-            ->sum('pengeluarans.realisasi');
+            ->sum('pengeluarans.jumlah');
 
         return [
             'kas_penerimaan' => $kasPenerimaan,

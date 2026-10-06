@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\StorePenerimaanApiRequest;
 use App\Http\Resources\PenerimaanResource;
 use App\Models\Penerimaan;
-use App\Models\SumberDana;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,8 +18,8 @@ class PenerimaanController extends ApiController
         $user = $request->user();
 
         $query = Penerimaan::query()
-            ->with(['opd', 'sumberDana', 'rekening', 'tahunAnggaran'])
-            ->withCount(['details', 'transaksiPenerimaans']);
+            ->with(['opd', 'rekening', 'subRekening', 'tahunAnggaran'])
+            ->withCount(['transaksiPenerimaans']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query->where(fn ($q) => $user->isAdmin()
@@ -32,14 +31,14 @@ class PenerimaanController extends ApiController
             $query->where('opd_id', $request->input('opd_id'));
         }
 
-        $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
+        $query->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
+            ->when($request->filled('sub_rekening_id'), fn ($q) => $q->where('sub_rekening_id', $request->input('sub_rekening_id')))
             ->when($request->filled('tahun_anggaran_id'), fn ($q) => $q->where('tahun_anggaran_id', $request->input('tahun_anggaran_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))))
             ->when($request->filled('search'), function ($q) use ($request): void {
                 $term = '%'.$request->string('search').'%';
-                $q->where(fn ($w) => $w->where('nama_sumber_dana', 'like', $term)->orWhere('kode_sumber_dana', 'like', $term));
+                $q->where(fn ($w) => $w->whereHas('rekening', fn ($r) => $r->where('nama', 'like', $term)->orWhere('kode', 'like', $term)));
             });
 
         $perPage = $this->perPage($request);
@@ -61,36 +60,23 @@ class PenerimaanController extends ApiController
     public function store(StorePenerimaanApiRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $details = $this->normalizeDetails($data['details'] ?? []);
-        unset($data['details']);
 
-        $penerimaan = DB::transaction(function () use ($request, &$data, $details): Penerimaan {
-            if (($data['sumber_dana_id'] ?? null) !== null) {
-                $data['nama_sumber_dana'] = SumberDana::find($data['sumber_dana_id'])?->nama_sumber_dana;
-            }
-
+        $penerimaan = DB::transaction(function () use ($request, &$data): Penerimaan {
             if (! $request->user()->isAdmin()) {
                 $data['opd_id'] = $request->user()->opd_id;
             }
 
-            $penerimaan = Penerimaan::create($data);
-
-            foreach ($details as $detail) {
-                unset($detail['id']);
-                $penerimaan->details()->create($detail);
-            }
-
-            return $penerimaan;
+            return Penerimaan::create($data);
         });
 
-        return $this->success(new PenerimaanResource($penerimaan->fresh(['opd', 'sumberDana', 'rekening'])), 'Penerimaan berhasil ditambahkan.', 201);
+        return $this->success(new PenerimaanResource($penerimaan->fresh(['opd', 'rekening', 'subRekening', 'tahunAnggaran'])), 'Penerimaan berhasil ditambahkan.', 201);
     }
 
     public function show(Request $request, Penerimaan $penerimaan): JsonResponse
     {
         $this->authorizePenerimaan($request->user(), $penerimaan);
 
-        $penerimaan->load(['opd', 'sumberDana', 'rekening', 'tahunAnggaran', 'details.sumberDana']);
+        $penerimaan->load(['opd', 'rekening', 'subRekening', 'tahunAnggaran']);
 
         return $this->success(new PenerimaanResource($penerimaan), 'Data penerimaan berhasil diambil.');
     }
@@ -100,42 +86,16 @@ class PenerimaanController extends ApiController
         $this->authorizePenerimaan($request->user(), $penerimaan);
 
         $data = $request->validated();
-        $details = $this->normalizeDetails($data['details'] ?? []);
-        unset($data['details']);
 
-        $submittedIds = collect($details)->pluck('id')->filter()->map(fn ($id) => (int) $id)->all();
-
-        DB::transaction(function () use ($request, $penerimaan, &$data, $details, $submittedIds): void {
-            if (($data['sumber_dana_id'] ?? null) !== null) {
-                $data['nama_sumber_dana'] = SumberDana::find($data['sumber_dana_id'])?->nama_sumber_dana;
-            }
-
+        DB::transaction(function () use ($request, $penerimaan, &$data): void {
             if (! $request->user()->isAdmin()) {
                 $data['opd_id'] = $request->user()->opd_id;
             }
 
             $penerimaan->update($data);
-
-            $penerimaan->details()->whereNotIn('id', $submittedIds)->delete();
-
-            foreach ($details as $detail) {
-                $id = $detail['id'] ?? null;
-                unset($detail['id']);
-
-                if ($id !== null) {
-                    $existing = $penerimaan->details()->find($id);
-                    if ($existing) {
-                        $existing->update($detail);
-
-                        continue;
-                    }
-                }
-
-                $penerimaan->details()->create($detail);
-            }
         });
 
-        return $this->success(new PenerimaanResource($penerimaan->fresh(['opd', 'sumberDana', 'rekening'])), 'Penerimaan berhasil diperbarui.');
+        return $this->success(new PenerimaanResource($penerimaan->fresh(['opd', 'rekening', 'subRekening', 'tahunAnggaran'])), 'Penerimaan berhasil diperbarui.');
     }
 
     public function destroy(Request $request, Penerimaan $penerimaan): JsonResponse
@@ -166,19 +126,5 @@ class PenerimaanController extends ApiController
         if ($penerimaan->opd_id === null || (int) $penerimaan->opd_id !== (int) $user->opd_id) {
             abort(403, 'Unauthorized');
         }
-    }
-
-    /**
-     * Keep only filled detail rows (matching the web controller behavior).
-     *
-     * @param  array<int, mixed>  $details
-     * @return array<int, mixed>
-     */
-    private function normalizeDetails(array $details): array
-    {
-        return array_values(array_filter(
-            $details,
-            fn ($row) => ! empty($row['sumber_dana_id'])
-        ));
     }
 }

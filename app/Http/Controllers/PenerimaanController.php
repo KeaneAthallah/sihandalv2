@@ -6,7 +6,6 @@ use App\Http\Requests\StorePenerimaanRequest;
 use App\Http\Requests\UpdatePenerimaanRequest;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
-use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,16 +17,15 @@ class PenerimaanController extends Controller
         $user = $request->user();
 
         $query = Penerimaan::with([
-            'opd', 'sumberDana', 'rekening', 'tahunAnggaran',
-            'details.sumberDana',
+            'opd', 'rekening', 'subRekening', 'tahunAnggaran',
             'transaksiPenerimaans' => fn ($t) => $t
                 ->when(
                     $request->filled('tanggal_dari'),
-                    fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari'))
+                    fn ($q) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))
                 )
                 ->when(
                     $request->filled('tanggal_sampai'),
-                    fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))
+                    fn ($q) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))
                 ),
         ]);
 
@@ -40,12 +38,12 @@ class PenerimaanController extends Controller
         }
 
         $query
-            ->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')));
+            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
+            ->when($request->filled('sub_rekening_id'), fn ($q) => $q->where('sub_rekening_id', $request->input('sub_rekening_id')));
 
         // Tanggal filters apply to the realization transactions, not the master.
-        // The eager load above is constrained by the same window so the in-memory
-        // realisasi/persentase sums only count transactions inside the period.
+        // The eager load above is constrained by the same window so the
+        // in-memory realisasi/persentase sums only count transactions inside the period.
         $query->when(
             $request->filled('tanggal_dari'),
             fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
@@ -66,12 +64,11 @@ class PenerimaanController extends Controller
 
         $opds = $this->userOpds($user);
         $rekenings = Rekening::orderBy('kode')->get();
-        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
-        $filters = $request->only(['opd_id', 'sumber_dana_id', 'rekening_id', 'tanggal_dari', 'tanggal_sampai']);
+        $filters = $request->only(['opd_id', 'rekening_id', 'sub_rekening_id', 'tanggal_dari', 'tanggal_sampai']);
 
         return view('penerimaan.index', compact(
             'penerimaans', 'totalTarget', 'totalRealisasi', 'persentase',
-            'opds', 'rekenings', 'sumberDanas', 'filters'
+            'opds', 'rekenings', 'filters'
         ));
     }
 
@@ -79,46 +76,34 @@ class PenerimaanController extends Controller
     {
         $opds = $this->userOpds(request()->user());
         $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
-        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
+        $subRekeningsByParent = $this->subRekeningsByParent();
         $tahunAnggarans = TahunAnggaran::orderByDesc('tahun')->get();
 
-        return view('penerimaan.create', compact('opds', 'rekenings', 'sumberDanas', 'tahunAnggarans'));
+        return view('penerimaan.create', compact('opds', 'rekenings', 'subRekeningsByParent', 'tahunAnggarans'));
     }
 
     public function edit(Penerimaan $penerimaan)
     {
         $this->authorizeOpdRecord($penerimaan, request()->user());
-        $penerimaan->load(['details.sumberDana']);
+        $penerimaan->load(['subRekening']);
         $opds = $this->userOpds(request()->user());
         $rekenings = Rekening::orderBy('kode')->get();
-        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
+        $subRekeningsByParent = $this->subRekeningsByParent();
         $tahunAnggarans = TahunAnggaran::orderByDesc('tahun')->get();
 
-        return view('penerimaan.edit', compact('penerimaan', 'opds', 'rekenings', 'sumberDanas', 'tahunAnggarans'));
+        return view('penerimaan.edit', compact('penerimaan', 'opds', 'rekenings', 'subRekeningsByParent', 'tahunAnggarans'));
     }
 
     public function store(StorePenerimaanRequest $request)
     {
         $data = $request->validated();
-        $details = $this->normalizeDetails($data['details'] ?? []);
-        unset($data['details']);
 
-        DB::transaction(function () use ($request, &$data, $details) {
-            if ($data['sumber_dana_id'] ?? null) {
-                $sumberDana = SumberDana::find($data['sumber_dana_id']);
-                $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
-            }
-
+        DB::transaction(function () use ($request, &$data) {
             if (! $request->user()->isAdmin()) {
                 $data['opd_id'] = $request->user()->opd_id;
             }
 
-            $penerimaan = Penerimaan::create($data);
-
-            foreach ($details as $detail) {
-                unset($detail['id']);
-                $penerimaan->details()->create($detail);
-            }
+            Penerimaan::create($data);
         });
 
         return back()->with('success', 'Penerimaan berhasil ditambahkan.');
@@ -129,60 +114,16 @@ class PenerimaanController extends Controller
         $this->authorizeOpdRecord($penerimaan, $request->user());
 
         $data = $request->validated();
-        $details = $this->normalizeDetails($data['details'] ?? []);
-        unset($data['details']);
 
-        $submittedIds = collect($details)
-            ->pluck('id')
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        DB::transaction(function () use ($request, $penerimaan, $data, $details, $submittedIds) {
-            if ($data['sumber_dana_id'] ?? null) {
-                $sumberDana = SumberDana::find($data['sumber_dana_id']);
-                $data['nama_sumber_dana'] = $sumberDana?->nama_sumber_dana;
-            }
-
+        DB::transaction(function () use ($request, $penerimaan, &$data) {
             if (! $request->user()->isAdmin()) {
                 $data['opd_id'] = $request->user()->opd_id;
             }
 
             $penerimaan->update($data);
-
-            // Non-submitted existing details are removed.
-            $penerimaan->details()->whereNotIn('id', $submittedIds)->delete();
-
-            foreach ($details as $detail) {
-                $id = $detail['id'] ?? null;
-                unset($detail['id']);
-
-                if ($id !== null) {
-                    $existing = $penerimaan->details()->find($id);
-                    if ($existing) {
-                        $existing->update($detail);
-                    }
-
-                    continue;
-                }
-
-                $penerimaan->details()->create($detail);
-            }
         });
 
         return back()->with('success', 'Penerimaan berhasil diperbarui.');
-    }
-
-    /**
-     * Keep only filled detail rows; rows with an empty sumber dana are ignored
-     * so a freshly repeated UI row does not become a blank record.
-     */
-    private function normalizeDetails(array $details): array
-    {
-        return array_values(array_filter(
-            $details,
-            fn ($row) => ! empty($row['sumber_dana_id'])
-        ));
     }
 
     public function destroy(Penerimaan $penerimaan)
@@ -196,5 +137,25 @@ class PenerimaanController extends Controller
         $penerimaan->delete();
 
         return back()->with('success', 'Penerimaan berhasil dihapus.');
+    }
+
+    /**
+     * Sub rekenings (details) grouped by their induk, for the
+     * rekening utama -> sub rekening cascade on the form.
+     *
+     * @return array<string, array<int, array{id: string, label: string}>>
+     */
+    private function subRekeningsByParent(): array
+    {
+        return Rekening::where('tipe', 'pendapatan')
+            ->whereNotNull('parent_id')
+            ->orderBy('kode')
+            ->get(['id', 'parent_id', 'kode', 'nama'])
+            ->groupBy('parent_id')
+            ->map(fn ($rows) => $rows->map(fn ($r) => [
+                'id' => (string) $r->id,
+                'label' => $r->kode.' - '.$r->nama,
+            ])->values())
+            ->all();
     }
 }

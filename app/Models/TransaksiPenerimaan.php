@@ -12,7 +12,7 @@ class TransaksiPenerimaan extends Model
     use Auditable;
 
     protected $fillable = [
-        'penerimaan_id', 'penerimaan_detail_id',
+        'penerimaan_id',
         'nomor_registrasi', 'realisasi', 'tanggal', 'keterangan',
         'source_file', 'source_row', 'source_identifier',
     ];
@@ -25,16 +25,6 @@ class TransaksiPenerimaan extends Model
     public function penerimaan(): BelongsTo
     {
         return $this->belongsTo(Penerimaan::class);
-    }
-
-    /**
-     * Optional reference to a PenerimaanDetail. Realization is always summed on
-     * the penerimaan master, never on the detail, so transactions may link to a
-     * detail without duplicating value.
-     */
-    public function detail(): BelongsTo
-    {
-        return $this->belongsTo(PenerimaanDetail::class, 'penerimaan_detail_id');
     }
 
     public function bkus(): HasMany

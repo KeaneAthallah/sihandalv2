@@ -125,8 +125,8 @@ test('admin can create pengeluaran with belanja rekening', function () {
             'opd_id' => $opd->id,
             'rekening_id' => $rekening->id,
             'sumber_dana_id' => $sumberDana->id,
-            'anggaran' => 500000,
-            'realisasi' => 200000,
+            'jumlah' => 500000,
+            'keperluan' => 'Pengadaan barang',
         ])
         ->assertSessionHasNoErrors('rekening_id');
 
@@ -350,8 +350,8 @@ test('nullable rekening_id is still allowed for pengeluaran', function () {
             'opd_id' => $opd->id,
             'rekening_id' => null,
             'sumber_dana_id' => $sumberDana->id,
-            'anggaran' => 500000,
-            'realisasi' => 200000,
+            'jumlah' => 500000,
+            'keperluan' => 'Pengadaan barang',
         ])
         ->assertSessionHasNoErrors('rekening_id');
 

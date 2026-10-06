@@ -30,7 +30,7 @@ class RekeningKasController extends Controller
 
         $pengeluaranSums = DB::table('pengeluarans')
             ->when($opdId, fn ($q) => $q->where('opd_id', $opdId))
-            ->selectRaw('rekening_id, sum(realisasi) as total')
+            ->selectRaw('rekening_id, sum(jumlah) as total')
             ->groupBy('rekening_id')
             ->pluck('total', 'rekening_id');
 
@@ -54,9 +54,9 @@ class RekeningKasController extends Controller
     public function create()
     {
         $this->authorizeAdmin();
-        $kasRekenings = Rekening::where('tipe', 'kas')->orderBy('kode')->get();
+        $rekenings = Rekening::orderBy('kode')->get();
 
-        return view('rekening-kas.create', compact('kasRekenings'));
+        return view('rekening-kas.create', compact('rekenings'));
     }
 
     public function edit(Rekening $rekening)
@@ -66,12 +66,11 @@ class RekeningKasController extends Controller
         // A rekening cannot be its own parent, nor the parent of its ancestor
         // (that would loop). Exclude itself and every descendant from options.
         $excludedIds = collect([$rekening->id])->merge($this->descendantIds($rekening))->all();
-        $kasRekenings = Rekening::where('tipe', 'kas')
-            ->whereNotIn('id', $excludedIds)
+        $rekenings = Rekening::whereNotIn('id', $excludedIds)
             ->orderBy('kode')
             ->get();
 
-        return view('rekening-kas.edit', compact('rekening', 'kasRekenings'));
+        return view('rekening-kas.edit', compact('rekening', 'rekenings'));
     }
 
     public function store(StoreRekeningRequest $request)

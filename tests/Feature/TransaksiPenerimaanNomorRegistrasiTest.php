@@ -3,7 +3,6 @@
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
-use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 
@@ -11,12 +10,9 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
     $this->opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $this->rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
-    $this->sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
     $this->penerimaan = Penerimaan::create([
         'opd_id' => $this->opd->id,
         'rekening_id' => $this->rekening->id,
-        'sumber_dana_id' => $this->sumberDana->id,
-        'nama_sumber_dana' => 'DAU',
         'target' => 100000000,
     ]);
 });

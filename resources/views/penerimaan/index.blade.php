@@ -56,10 +56,10 @@
                 <label class="text-sm text-slate-500 font-medium">Sampai</label>
                 <input type="date" value="{{ request('to', '2026-12-31') }}" class="input" />
             </div>
-            <select name="sumber_dana_id" class="input">
-                <option value="">Semua Sumber Dana</option>
-                @foreach($sumberDanas as $sd)
-                    <option value="{{ $sd->id }}" {{ $filters['sumber_dana_id'] ?? '' == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+            <select name="rekening_id" class="input">
+                <option value="">Semua Rekening</option>
+                @foreach($rekenings as $rek)
+                    <option value="{{ $rek->id }}" {{ ($filters['rekening_id'] ?? '') == $rek->id ? 'selected' : '' }}>{{ $rek->kode }} - {{ $rek->nama }}</option>
                 @endforeach
             </select>
             <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition">
@@ -73,7 +73,7 @@
                 <thead>
                     <tr class="border-b border-slate-100">
                         <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
-                        <th class="text-left px-5 py-3 table-head w-[150px]">Sumber Dana</th>
+                        <th class="text-left px-5 py-3 table-head w-[200px]">Rekening</th>
                         <th class="text-left px-5 py-3 table-head">OPD</th>
                         <th class="text-right px-5 py-3 table-head w-[160px]">Target</th>
                         <th class="text-right px-5 py-3 table-head w-[160px]">Realisasi</th>
@@ -88,15 +88,13 @@
                             <td class="px-5 py-3.5">
                                 <div class="space-y-1.5">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
-                                        {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
+                                        {{ $item->rekening ? $item->rekening->kode.' - '.$item->rekening->nama : ($item->nama_penerimaan ?? '-') }}
                                     </span>
-                                    @foreach($item->details as $detail)
-                                        <div class="flex flex-wrap items-center gap-1.5">
-                                            <span class="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-600 whitespace-nowrap">
-                                                {{ $detail->sumberDana?->nama_sumber_dana ?? '-' }}
-                                            </span>
-                                        </div>
-                                    @endforeach
+                                    @if($item->subRekening)
+                                        <span class="block px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-600 whitespace-nowrap">
+                                            ↳ {{ $item->subRekening->kode }} - {{ $item->subRekening->nama }}
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd?->nama ?? 'Provinsi' }}</td>

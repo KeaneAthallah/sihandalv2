@@ -21,7 +21,6 @@ trait ValidatesPermintaanDana
             'jumlah' => ['required', 'numeric', 'gt:0'],
             'keperluan' => ['required', 'string', 'max:255'],
             'tanggal' => ['nullable', 'date'],
-            'catatan' => ['nullable', 'string'],
         ];
     }
 

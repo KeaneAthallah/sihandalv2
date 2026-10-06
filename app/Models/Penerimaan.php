@@ -13,8 +13,7 @@ class Penerimaan extends Model
     use Auditable;
 
     protected $fillable = [
-        'opd_id', 'rekening_id', 'sumber_dana_id', 'tahun_anggaran_id',
-        'kode_sumber_dana', 'nama_sumber_dana',
+        'opd_id', 'rekening_id', 'sub_rekening_id', 'tahun_anggaran_id',
         'target',
         'source_file', 'source_identifier',
     ];
@@ -64,6 +63,23 @@ class Penerimaan extends Model
         return $date ? Carbon::parse($date) : null;
     }
 
+    /**
+     * A readable label for imported/legacy rows that carry no rekening.
+     * Falls back to the traceability identifier.
+     */
+    public function getNamaPenerimaanAttribute(): ?string
+    {
+        if ($this->subRekening) {
+            return $this->subRekening->kode.' - '.$this->subRekening->nama;
+        }
+
+        if ($this->rekening) {
+            return $this->rekening->kode.' - '.$this->rekening->nama;
+        }
+
+        return $this->source_identifier;
+    }
+
     public function opd(): BelongsTo
     {
         return $this->belongsTo(Opd::class);
@@ -74,9 +90,13 @@ class Penerimaan extends Model
         return $this->belongsTo(Rekening::class);
     }
 
-    public function sumberDana(): BelongsTo
+    /**
+     * The sub rekening (detail) this penerimaan belongs to, a child of
+     * rekening().
+     */
+    public function subRekening(): BelongsTo
     {
-        return $this->belongsTo(SumberDana::class);
+        return $this->belongsTo(Rekening::class, 'sub_rekening_id');
     }
 
     public function tahunAnggaran(): BelongsTo
@@ -87,14 +107,5 @@ class Penerimaan extends Model
     public function transaksiPenerimaans(): HasMany
     {
         return $this->hasMany(TransaksiPenerimaan::class);
-    }
-
-    /**
-     * Detail rows selecting a Rekening Bank + Sumber Dana at the detail level.
-     * The master keeps its legacy rekening_id / sumber_dana_id columns.
-     */
-    public function details(): HasMany
-    {
-        return $this->hasMany(PenerimaanDetail::class);
     }
 }

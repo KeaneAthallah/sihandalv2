@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransferDanaRequest;
 use App\Http\Requests\UpdateTransferDanaRequest;
+use App\Models\SumberDana;
 use App\Models\TransferDana;
 use App\Services\PermintaanDanaService;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class TransferDanaController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $transferQuery = $this->applyOpdScope(TransferDana::with('opd'), $user)
+        $transferQuery = $this->applyOpdScope(TransferDana::with(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima']), $user)
             ->orderBy('created_at', 'desc');
 
         $totalTransfer = (clone $transferQuery)->sum('jumlah');
@@ -37,8 +38,9 @@ class TransferDanaController extends Controller
     public function create()
     {
         $opds = $this->userOpds(request()->user());
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('transfer-dana.create', compact('opds'));
+        return view('transfer-dana.create', compact('opds', 'sumberDanas'));
     }
 
     public function store(StoreTransferDanaRequest $request)
@@ -61,8 +63,9 @@ class TransferDanaController extends Controller
     {
         $this->authorizeOpdRecord($transferDana, request()->user());
         $opds = $this->userOpds(request()->user());
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('transfer-dana.edit', compact('transferDana', 'opds'));
+        return view('transfer-dana.edit', compact('transferDana', 'opds', 'sumberDanas'));
     }
 
     public function update(UpdateTransferDanaRequest $request, TransferDana $transferDana)

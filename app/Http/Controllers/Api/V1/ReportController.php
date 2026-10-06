@@ -59,8 +59,7 @@ class ReportController extends ApiController
         $user = $request->user();
         $query = $this->pengeluaranQuery($request, $user);
 
-        $totalAnggaran = (float) (clone $query)->sum('anggaran');
-        $totalRealisasi = (float) (clone $query)->sum('realisasi');
+        $totalJumlah = (float) (clone $query)->sum('jumlah');
 
         $perPage = $this->perPage($request);
 
@@ -68,16 +67,12 @@ class ReportController extends ApiController
             $data = PengeluaranResource::collection($query->orderBy('tanggal', 'desc')->get())->resolve();
 
             return $this->withMeta($data, [
-                'total_anggaran' => $totalAnggaran,
-                'total_realisasi' => $totalRealisasi,
-                'persentase' => FinancialSummaryService::percentage($totalRealisasi, $totalAnggaran),
+                'total_jumlah' => $totalJumlah,
             ]);
         }
 
         $payload = $this->paginated($query->orderBy('tanggal', 'desc')->paginate($perPage), PengeluaranResource::class)->getData(true);
-        $payload['meta']['total_anggaran'] = $totalAnggaran;
-        $payload['meta']['total_realisasi'] = $totalRealisasi;
-        $payload['meta']['persentase'] = FinancialSummaryService::percentage($totalRealisasi, $totalAnggaran);
+        $payload['meta']['total_jumlah'] = $totalJumlah;
 
         return response()->json($payload);
     }
@@ -87,10 +82,7 @@ class ReportController extends ApiController
         $user = $request->user();
         $query = $this->posisiKasQuery($request, $user);
 
-        $totalSaldoAwal = (float) (clone $query)->sum('saldo_awal');
-        $totalPenerimaan = (float) (clone $query)->sum('penerimaan');
-        $totalPengeluaran = (float) (clone $query)->sum('pengeluaran');
-        $totalSaldoAkhir = (float) (clone $query)->sum('saldo_akhir');
+        $totalSaldo = (float) (clone $query)->sum('saldo');
 
         $perPage = $this->perPage($request);
 
@@ -98,18 +90,12 @@ class ReportController extends ApiController
             $data = PosisiKasResource::collection($query->orderBy('tanggal', 'desc')->get())->resolve();
 
             return $this->withMeta($data, [
-                'total_saldo_awal' => $totalSaldoAwal,
-                'total_penerimaan' => $totalPenerimaan,
-                'total_pengeluaran' => $totalPengeluaran,
-                'total_saldo_akhir' => $totalSaldoAkhir,
+                'total_saldo' => $totalSaldo,
             ]);
         }
 
         $payload = $this->paginated($query->orderBy('tanggal', 'desc')->paginate($perPage), PosisiKasResource::class)->getData(true);
-        $payload['meta']['total_saldo_awal'] = $totalSaldoAwal;
-        $payload['meta']['total_penerimaan'] = $totalPenerimaan;
-        $payload['meta']['total_pengeluaran'] = $totalPengeluaran;
-        $payload['meta']['total_saldo_akhir'] = $totalSaldoAkhir;
+        $payload['meta']['total_saldo'] = $totalSaldo;
 
         return response()->json($payload);
     }
@@ -155,12 +141,12 @@ class ReportController extends ApiController
         $rows = $this->penerimaanQuery($request, $request->user())->orderBy('target', 'desc')->get();
 
         return $this->streamCsv('laporan-penerimaan', function ($handle) use ($rows): void {
-            fputcsv($handle, ['No', 'OPD', 'Sumber Dana', 'Target', 'Realisasi', 'Persentase (%)', 'Selisih']);
+            fputcsv($handle, ['No', 'OPD', 'Rekening', 'Target', 'Realisasi', 'Persentase (%)', 'Selisih']);
             foreach ($rows as $idx => $item) {
                 fputcsv($handle, [
                     $idx + 1,
                     $item->opd?->nama ?? '-',
-                    $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-',
+                    $item->rekening?->nama ?? '-',
                     $item->target,
                     $item->realisasi,
                     $item->persentase,
@@ -175,16 +161,16 @@ class ReportController extends ApiController
         $rows = $this->pengeluaranQuery($request, $request->user())->orderBy('tanggal', 'desc')->get();
 
         return $this->streamCsv('laporan-pengeluaran', function ($handle) use ($rows): void {
-            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Kegiatan', 'Anggaran', 'Realisasi', 'Persentase (%)']);
+            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)']);
             foreach ($rows as $idx => $item) {
                 fputcsv($handle, [
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
                     $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-',
-                    $item->anggaran,
-                    $item->realisasi,
-                    $item->persentase,
+                    $item->keperluan ?? '-',
+                    $item->no_sp2d ?? '-',
+                    $item->jumlah,
                 ]);
             }
         });
@@ -195,17 +181,15 @@ class ReportController extends ApiController
         $rows = $this->posisiKasQuery($request, $request->user())->orderBy('tanggal', 'desc')->get();
 
         return $this->streamCsv('laporan-posisi-kas', function ($handle) use ($rows): void {
-            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Rekening', 'Saldo Awal', 'Penerimaan', 'Pengeluaran', 'Saldo Akhir']);
+            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Nama Rekening', 'Nomor Rekening', 'Saldo']);
             foreach ($rows as $idx => $item) {
                 fputcsv($handle, [
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
-                    $item->rekening->nama ?? '-',
-                    $item->saldo_awal,
-                    $item->penerimaan,
-                    $item->pengeluaran,
-                    $item->saldo_akhir,
+                    $item->nama_rekening,
+                    $item->nomor_rekening ?? '-',
+                    $item->saldo,
                 ]);
             }
         });
@@ -237,7 +221,7 @@ class ReportController extends ApiController
 
     private function penerimaanQuery(Request $request, $user): Builder
     {
-        $query = Penerimaan::query()->with(['opd', 'sumberDana', 'rekening']);
+        $query = Penerimaan::query()->with(['opd', 'rekening']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id));
@@ -248,7 +232,6 @@ class ReportController extends ApiController
         }
 
         return $query
-            ->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
     }
@@ -274,7 +257,7 @@ class ReportController extends ApiController
 
     private function posisiKasQuery(Request $request, $user): Builder
     {
-        $query = PosisiKas::query()->with(['opd', 'rekening']);
+        $query = PosisiKas::query()->with('opd');
 
         if (! $user->isAdmin()) {
             $query->where('opd_id', $user->opd_id);
@@ -283,7 +266,6 @@ class ReportController extends ApiController
         }
 
         return $query
-            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
     }

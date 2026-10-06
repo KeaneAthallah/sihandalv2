@@ -17,16 +17,6 @@ class SumberDana extends Model
         return $this->hasMany(Belanja::class);
     }
 
-    public function penerimaans(): HasMany
-    {
-        return $this->hasMany(Penerimaan::class);
-    }
-
-    public function penerimaanDetails(): HasMany
-    {
-        return $this->hasMany(PenerimaanDetail::class);
-    }
-
     public function pengeluarans(): HasMany
     {
         return $this->hasMany(Pengeluaran::class);

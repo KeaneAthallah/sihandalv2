@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Penerimaan;
-use App\Models\SumberDana;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -14,7 +13,7 @@ class LaporanPenerimaanController extends Controller
         $user = $request->user();
 
         $query = Penerimaan::with([
-            'opd', 'sumberDana', 'rekening',
+            'opd', 'rekening',
             'transaksiPenerimaans' => fn ($t) => $t
                 ->when(
                     $request->filled('tanggal_dari'),
@@ -34,8 +33,7 @@ class LaporanPenerimaanController extends Controller
             $query->where('opd_id', $request->input('opd_id'));
         }
 
-        $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
+        $query->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
 
         $allPenerimaans = (clone $query)->orderByDesc('target')->get();
@@ -49,12 +47,11 @@ class LaporanPenerimaanController extends Controller
         unset($allPenerimaans);
 
         $opds = $this->userOpds($user);
-        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
-        $filters = $request->only(['opd_id', 'sumber_dana_id', 'tanggal_dari', 'tanggal_sampai']);
+        $filters = $request->only(['opd_id', 'tanggal_dari', 'tanggal_sampai']);
 
         return view('laporan-penerimaan.index', compact(
             'penerimaans', 'totalTarget', 'totalRealisasi', 'persentase',
-            'totalCount', 'opdCount', 'opds', 'sumberDanas', 'filters'
+            'totalCount', 'opdCount', 'opds', 'filters'
         ));
     }
 
@@ -63,7 +60,7 @@ class LaporanPenerimaanController extends Controller
         $user = $request->user();
 
         $query = Penerimaan::with([
-            'opd', 'sumberDana', 'rekening',
+            'opd', 'rekening',
             'transaksiPenerimaans' => fn ($t) => $t
                 ->when(
                     $request->filled('tanggal_dari'),
@@ -83,8 +80,7 @@ class LaporanPenerimaanController extends Controller
             $query->where('opd_id', $request->input('opd_id'));
         }
 
-        $query->when($request->filled('sumber_dana_id'), fn ($q) => $q->where('sumber_dana_id', $request->input('sumber_dana_id')))
-            ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
+        $query->when($request->filled('tanggal_dari'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '>=', $request->input('tanggal_dari'))))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereHas('transaksiPenerimaans', fn ($t) => $t->whereDate('tanggal', '<=', $request->input('tanggal_sampai'))));
 
         $penerimaans = $query->orderByDesc('target')->get();
@@ -95,7 +91,7 @@ class LaporanPenerimaanController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'No', 'Tanggal', 'OPD', 'Sumber Dana', 'Target', 'Realisasi', 'Persentase (%)', 'Selisih',
+                'No', 'Tanggal', 'OPD', 'Rekening', 'Target', 'Realisasi', 'Persentase (%)', 'Selisih',
             ]);
 
             foreach ($penerimaans as $idx => $item) {
@@ -103,7 +99,7 @@ class LaporanPenerimaanController extends Controller
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd?->nama ?? '-',
-                    $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-',
+                    $item->rekening?->nama ?? '-',
                     $item->target,
                     $item->realisasi,
                     $item->persentase,

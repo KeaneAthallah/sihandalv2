@@ -22,13 +22,10 @@ class PosisiKasResource extends JsonResource
             'id' => $this->id,
             'opd_id' => $this->opd_id,
             'opd' => new OpdResource($this->whenLoaded('opd')),
-            'rekening_id' => $this->rekening_id,
-            'rekening' => new RekeningResource($this->whenLoaded('rekening')),
             'tanggal' => $this->tanggal?->toDateString(),
-            'saldo_awal' => (float) $this->saldo_awal,
-            'penerimaan' => (float) $this->penerimaan,
-            'pengeluaran' => (float) $this->pengeluaran,
-            'saldo_akhir' => (float) $this->saldo_akhir,
+            'nama_rekening' => $this->nama_rekening,
+            'nomor_rekening' => $this->nomor_rekening,
+            'saldo' => (float) $this->saldo,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

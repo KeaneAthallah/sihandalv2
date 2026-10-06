@@ -60,7 +60,7 @@ test('rekening bank used in transactions cannot be deleted, only deactivated', f
     ]);
 
     $penerimaan = Penerimaan::create([
-        'opd_id' => $opd->id, 'target' => 100000, 'nama_sumber_dana' => 'DAU',
+        'opd_id' => $opd->id, 'target' => 100000,
     ]);
 
     $transaksi = TransaksiPenerimaan::create([
@@ -136,42 +136,40 @@ test('rekening kas writes are admin only', function (): void {
         ->assertForbidden();
 });
 
-test('posisi kas rejects a kas parent with children', function (): void {
+test('posisi kas requires a named rekening and saldo', function (): void {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $admin = User::factory()->admin()->create();
 
-    $kasInduk = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Induk', 'tipe' => 'kas']);
-    Rekening::create(['kode' => '1.1.1.01', 'nama' => 'Kas Detail', 'tipe' => 'kas', 'parent_id' => $kasInduk->id]);
-
+    // Posisi kas is standalone: it no longer references a kas rekening,
+    // so nama_rekening and saldo are what identify the row.
     $this->actingAs($admin, 'sanctum')
         ->postJson('/api/v1/posisi-kas', [
             'opd_id' => $opd->id,
-            'rekening_id' => $kasInduk->id,
-            'saldo_awal' => 100000,
-            'penerimaan' => 0,
-            'pengeluaran' => 0,
         ])
         ->assertStatus(422)
-        ->assertJson(fn (AssertableJson $json) => $json->has('errors.rekening_id')->etc());
+        ->assertJson(fn (AssertableJson $json) => $json
+            ->has('errors.nama_rekening')
+            ->has('errors.saldo')
+            ->etc());
 });
 
-test('posisi kas computes saldo akhir server-side', function (): void {
+test('posisi kas stores the named rekening and saldo', function (): void {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $rekening = Rekening::create(['kode' => '1.1.2', 'nama' => 'Kas Tunai', 'tipe' => 'kas']);
     $admin = User::factory()->admin()->create();
 
     $data = $this->actingAs($admin, 'sanctum')
         ->postJson('/api/v1/posisi-kas', [
             'opd_id' => $opd->id,
-            'rekening_id' => $rekening->id,
-            'saldo_awal' => 1000000,
-            'penerimaan' => 500000,
-            'pengeluaran' => 200000,
+            'nama_rekening' => 'Kas Umum Daerah',
+            'nomor_rekening' => '001.01.000123.7',
+            'saldo' => 1300000,
         ])
         ->assertStatus(201)
         ->json('data');
 
-    expect((float) $data['saldo_akhir'])->toBe(1300000.0);
+    expect($data['nama_rekening'])->toBe('Kas Umum Daerah')
+        ->and($data['nomor_rekening'])->toBe('001.01.000123.7')
+        ->and((float) $data['saldo'])->toBe(1300000.0);
 });
 
 test('fiscal year activate ensures single active year', function (): void {

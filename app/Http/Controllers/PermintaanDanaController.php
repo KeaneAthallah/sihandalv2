@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ProvidesBudgetHierarchyCascade;
 use App\Http\Requests\StorePermintaanDanaRequest;
 use App\Http\Requests\UpdatePermintaanDanaRequest;
-use App\Models\Kegiatan;
 use App\Models\PermintaanDana;
 use App\Models\Rekening;
 use App\Models\SumberDana;
@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 
 class PermintaanDanaController extends Controller
 {
+    use ProvidesBudgetHierarchyCascade;
+
     public function __construct(private readonly PermintaanDanaService $workflow) {}
 
     public function index(Request $request)
@@ -43,16 +45,16 @@ class PermintaanDanaController extends Controller
         $user = request()->user();
         $opds = $this->userOpds($user);
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
+        $programsByOpd = $this->programsByOpd();
+        $kegiatansByProgram = $this->kegiatansByProgram($user);
+        $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
+        $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
+        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
 
-        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
-        if (! $user->isAdmin()) {
-            $kegiatanQuery->where('opd_id', $user->opd_id);
-        }
-        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
-
-        $rekenings = Rekening::orderBy('kode')->get();
-
-        return view('permintaan-dana.create', compact('opds', 'sumberDanas', 'kegiatans', 'rekenings'));
+        return view('permintaan-dana.create', compact(
+            'opds', 'sumberDanas', 'programsByOpd', 'kegiatansByProgram',
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan', 'rekenings'
+        ));
     }
 
     public function store(StorePermintaanDanaRequest $request)
@@ -80,16 +82,16 @@ class PermintaanDanaController extends Controller
         $user = request()->user();
         $opds = $this->userOpds($user);
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
+        $programsByOpd = $this->programsByOpd();
+        $kegiatansByProgram = $this->kegiatansByProgram($user);
+        $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
+        $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
+        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
 
-        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
-        if (! $user->isAdmin()) {
-            $kegiatanQuery->where('opd_id', $user->opd_id);
-        }
-        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
-
-        $rekenings = Rekening::orderBy('kode')->get();
-
-        return view('permintaan-dana.edit', compact('permintaanDana', 'opds', 'sumberDanas', 'kegiatans', 'rekenings'));
+        return view('permintaan-dana.edit', compact(
+            'permintaanDana', 'opds', 'sumberDanas', 'programsByOpd', 'kegiatansByProgram',
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan', 'rekenings'
+        ));
     }
 
     public function update(UpdatePermintaanDanaRequest $request, PermintaanDana $permintaanDana)

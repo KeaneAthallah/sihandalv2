@@ -242,14 +242,13 @@ class SihandalImportService
     private function createPenerimaan(array $cells, int $rowNumber): void
     {
         $sumberName = (string) ($cells[9] ?? ($cells[11] ?? ''));
-        $sumberDana = $sumberName !== '' ? $this->resolveSumberDana($sumberName) : null;
 
         $tanggal = isset($cells[3]) && is_string($cells[3]) ? $cells[3] : null;
         $keterangan = (string) ($cells[6] ?? '');
 
         $amount = (float) ($cells[7] ?? 0);
 
-        $master = $this->resolveRevenueMaster($sumberName, $sumberDana?->id, (string) ($cells[2] ?? null));
+        $master = $this->resolveRevenueMaster($sumberName, (string) ($cells[2] ?? null));
 
         TransaksiPenerimaan::create([
             'penerimaan_id' => $master->id,
@@ -264,10 +263,10 @@ class SihandalImportService
 
     /**
      * Resolve (or create) the province-wide master Penerimaan that groups
-     * transactions under a given Sumber Dana. Imported revenue masters are
-     * keyed by (source_file, nama_sumber_dana) so re-runs are idempotent.
+     * transactions under a given sumber dana name. Imported revenue masters
+     * are keyed by (source_file, source_identifier) so re-runs are idempotent.
      */
-    private function resolveRevenueMaster(string $sumberName, ?int $sumberDanaId, string $kodeSumberDana): Penerimaan
+    private function resolveRevenueMaster(string $sumberName, string $kodeSumberDana): Penerimaan
     {
         $key = $sumberName;
         if (isset($this->revenueMasters[$key])) {
@@ -277,14 +276,12 @@ class SihandalImportService
         $name = $sumberName !== '' ? $sumberName : ($kodeSumberDana !== '' ? $kodeSumberDana : 'Penerimaan');
 
         $master = Penerimaan::firstOrCreate(
-            ['source_file' => $this->revenueFile, 'nama_sumber_dana' => $name],
+            ['source_file' => $this->revenueFile, 'source_identifier' => $name],
             [
                 'opd_id' => null,
                 'rekening_id' => null,
-                'sumber_dana_id' => $sumberDanaId,
+                'sub_rekening_id' => null,
                 'tahun_anggaran_id' => $this->tahunAnggaran->id,
-                'kode_sumber_dana' => $kodeSumberDana,
-                'nama_sumber_dana' => $name,
                 'target' => 0,
                 'source_file' => $this->revenueFile,
                 'source_identifier' => $name,
@@ -497,7 +494,7 @@ class SihandalImportService
 
     private function wipe(): void
     {
-        foreach (['belanjas', 'transaksi_penerimaans', 'penerimaan_details', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
+        foreach (['belanjas', 'transaksi_penerimaans', 'penerimaans', 'sub_kegiatans', 'kegiatan', 'programs', 'rekenings', 'sumber_danas', 'tahun_anggarans', 'opds'] as $table) {
             DB::table($table)->delete();
         }
 

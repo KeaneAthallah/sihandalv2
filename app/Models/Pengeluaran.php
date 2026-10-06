@@ -13,16 +13,15 @@ class Pengeluaran extends Model
     protected $fillable = [
         'opd_id', 'rekening_id', 'kegiatan_id', 'sub_kegiatan_id', 'belanja_id',
         'sumber_dana_id', 'tahun_anggaran_id',
-        'kode_kegiatan', 'nama_kegiatan',
-        'sumber_dana', 'anggaran', 'realisasi', 'persentase',
-        'tanggal', 'keterangan',
+        'sumber_dana', 'jumlah', 'keperluan',
+        'no_sp2d', 'tanggal_sp2d',
+        'tanggal',
     ];
 
     protected $casts = [
-        'anggaran' => 'decimal:2',
-        'realisasi' => 'decimal:2',
-        'persentase' => 'decimal:2',
+        'jumlah' => 'decimal:2',
         'tanggal' => 'date',
+        'tanggal_sp2d' => 'date',
     ];
 
     public function opd(): BelongsTo

@@ -1,11 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Edit Rekening Kas" :breadcrumbs="['Rekening Kas', 'Edit']" />
+        <x-page-header title="Edit Rekening" :breadcrumbs="['Rekening Kas', 'Edit']" />
     </x-slot>
 
     <div class="max-w-2xl mx-auto">
         <x-card title="Form Edit Rekening">
-            <form action="{{ route('rekening-kas.update', $rekening) }}" method="POST" x-data="{ tipe: '{{ old('tipe', $rekening->tipe) }}' }">
+            <form action="{{ route('rekening-kas.update', $rekening) }}" method="POST"
+                  x-data="{
+                      tipe: {{ json_encode((string) old('tipe', $rekening->tipe)) }},
+                      parentId: {{ json_encode((string) old('parent_id', (string) ($rekening->parent_id ?? ''))) }},
+                      rekenings: {{ Js::from($rekenings->map(fn ($r) => ['id' => (string) $r->id, 'kode' => $r->kode, 'nama' => $r->nama, 'tipe' => $r->tipe])->values()) }},
+                      get indukOptions() {
+                          return this.tipe ? this.rekenings.filter(r => r.tipe === this.tipe) : [];
+                      }
+                  }">
                 @csrf
                 @method('PUT')
                 <div class="space-y-4">
@@ -19,10 +27,10 @@
                             <x-input-label for="tipe" value="Tipe Rekening" />
                             <select name="tipe" id="tipe" x-model="tipe" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih tipe...</option>
-                                <option value="kas" {{ old('tipe', $rekening->tipe) === 'kas' ? 'selected' : '' }}>Kas</option>
-                                <option value="non-kas" {{ old('tipe', $rekening->tipe) === 'non-kas' ? 'selected' : '' }}>Non-Kas</option>
-                                <option value="pendapatan" {{ old('tipe', $rekening->tipe) === 'pendapatan' ? 'selected' : '' }}>Pendapatan</option>
-                                <option value="belanja" {{ old('tipe', $rekening->tipe) === 'belanja' ? 'selected' : '' }}>Belanja</option>
+                                <option value="kas">Kas</option>
+                                <option value="non-kas">Non-Kas</option>
+                                <option value="pendapatan">Pendapatan</option>
+                                <option value="belanja">Belanja</option>
                             </select>
                             <x-input-error :messages="$errors->get('tipe')" class="mt-1" />
                         </div>
@@ -34,14 +42,14 @@
                         <x-input-error :messages="$errors->get('nama')" class="mt-1" />
                     </div>
 
-                    <div x-show="tipe === 'kas'" x-cloak class="rounded-lg bg-slate-50 border border-slate-200 p-4">
+                    <div x-show="tipe" x-cloak class="rounded-lg bg-slate-50 border border-slate-200 p-4">
                         <x-input-label for="parent_id" value="Rekening Induk (Opsional)" />
-                        <p class="mt-1 text-xs text-slate-400">Pilih rekening kas induk untuk menjadikan rekening ini sebagai rekening detail kas. Kosongkan untuk mengembalikannya menjadi rekening kas utama.</p>
-                        <select name="parent_id" id="parent_id" class="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
-                            <option value="">Tanpa Induk (Rekening Kas Utama)</option>
-                            @foreach($kasRekenings as $kas)
-                                <option value="{{ $kas->id }}" {{ old('parent_id', $rekening->parent_id) == $kas->id ? 'selected' : '' }}>{{ $kas->kode }} - {{ $kas->nama }}</option>
-                            @endforeach
+                        <p class="mt-1 text-xs text-slate-400">Pilih rekening induk untuk menjadikan rekening ini sebagai rekening detail (sub rekening). Kosongkan untuk mengembalikannya menjadi rekening utama. Induk harus bertipe sama.</p>
+                        <select name="parent_id" id="parent_id" x-model="parentId" class="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Tanpa Induk (Rekening Utama)</option>
+                            <template x-for="r in indukOptions" :key="r.id">
+                                <option :value="r.id" x-text="r.kode + ' - ' + r.nama"></option>
+                            </template>
                         </select>
                         <x-input-error :messages="$errors->get('parent_id')" class="mt-1" />
                     </div>

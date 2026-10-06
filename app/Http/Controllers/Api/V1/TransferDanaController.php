@@ -20,7 +20,7 @@ class TransferDanaController extends ApiController
         $user = $request->user();
 
         $query = TransferDana::query()
-            ->with(['opd'])
+            ->with(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])
             ->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id))
             ->when($request->filled('opd_id') && $user->isAdmin(), fn ($q) => $q->where('opd_id', $request->input('opd_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
@@ -52,14 +52,14 @@ class TransferDanaController extends ApiController
 
         $transfer = TransferDana::create($data);
 
-        return $this->success(new TransferDanaResource($transfer->load('opd')), 'Transfer dana berhasil dibuat.', 201);
+        return $this->success(new TransferDanaResource($transfer->load(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])), 'Transfer dana berhasil dibuat.', 201);
     }
 
     public function show(Request $request, TransferDana $transferDana): JsonResponse
     {
         $this->authorizeOpd($request, $transferDana->opd_id);
 
-        $transferDana->load('opd');
+        $transferDana->load(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima']);
 
         return $this->success(new TransferDanaResource($transferDana), 'Data transfer dana berhasil diambil.');
     }
@@ -86,7 +86,7 @@ class TransferDanaController extends ApiController
 
         $transferDana->update($data);
 
-        return $this->success(new TransferDanaResource($transferDana->fresh('opd')), 'Transfer dana berhasil diperbarui.');
+        return $this->success(new TransferDanaResource($transferDana->fresh(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])), 'Transfer dana berhasil diperbarui.');
     }
 
     public function destroy(Request $request, TransferDana $transferDana): JsonResponse

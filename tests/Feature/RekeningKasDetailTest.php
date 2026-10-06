@@ -37,7 +37,7 @@ test('cannot create a kas detail under a pendapatan rekening', function () {
             'parent_id' => $pendapatan->id,
         ])
         ->assertSessionHasErrors([
-            'parent_id' => 'Hanya rekening bertipe kas yang dapat memiliki rekening detail kas.',
+            'parent_id' => 'Rekening detail harus bertipe sama dengan rekening induknya.',
         ]);
 
     $this->assertDatabaseMissing('rekenings', ['kode' => '1.1.1.01']);
@@ -56,7 +56,7 @@ test('cannot create a non-kas child under a kas parent', function () {
             'parent_id' => $kasInduk->id,
         ])
         ->assertSessionHasErrors([
-            'tipe' => 'Rekening detail kas harus bertipe kas.',
+            'parent_id' => 'Rekening detail harus bertipe sama dengan rekening induknya.',
         ]);
 
     $this->assertDatabaseMissing('rekenings', ['kode' => '4.1.9']);
@@ -195,62 +195,43 @@ test('opd user cannot manage rekening kas', function () {
         ->assertForbidden();
 });
 
-test('posisi kas only accepts leaf-level kas accounts', function () {
+test('posisi kas stores a named rekening and its saldo', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $kasInduk = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Induk XYZ', 'tipe' => 'kas']);
-    $kasChild = Rekening::create(['kode' => '1.1.1.01', 'nama' => 'Kas Tunai XYZ', 'tipe' => 'kas', 'parent_id' => $kasInduk->id]);
-    $kasAlone = Rekening::create(['kode' => '1.1.2', 'nama' => 'Kas Kecil XYZ', 'tipe' => 'kas']);
-    $pendapatan = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan XYZ', 'tipe' => 'pendapatan']);
 
-    // An induk (parent with children) is not a valid Posisi Kas target.
+    // nama_rekening and saldo are required.
     $this->actingAs($admin)
         ->post('/posisi-kas', [
             'opd_id' => $opd->id,
-            'rekening_id' => $kasInduk->id,
-            'saldo_awal' => 1000000,
         ])
-        ->assertSessionHasErrors('rekening_id');
+        ->assertSessionHasErrors(['nama_rekening', 'saldo']);
 
-    // A leaf kas detail is valid.
     $this->actingAs($admin)
         ->post('/posisi-kas', [
             'opd_id' => $opd->id,
-            'rekening_id' => $kasChild->id,
-            'saldo_awal' => 1000000,
+            'nama_rekening' => 'Kas Umum Daerah',
+            'nomor_rekening' => '0010-01-000123-7',
+            'saldo' => 1000000,
         ])
         ->assertSessionHasNoErrors();
 
-    // A standalone kas (no children) remains valid.
-    $this->actingAs($admin)
-        ->post('/posisi-kas', [
-            'opd_id' => $opd->id,
-            'rekening_id' => $kasAlone->id,
-            'saldo_awal' => 500000,
-        ])
-        ->assertSessionHasNoErrors();
-
-    // Non-kas rekenings are never accepted.
-    $this->actingAs($admin)
-        ->post('/posisi-kas', [
-            'opd_id' => $opd->id,
-            'rekening_id' => $pendapatan->id,
-            'saldo_awal' => 500000,
-        ])
-        ->assertSessionHasErrors('rekening_id');
+    $this->assertDatabaseHas('posisi_kas', [
+        'opd_id' => $opd->id,
+        'nama_rekening' => 'Kas Umum Daerah',
+        'nomor_rekening' => '0010-01-000123-7',
+        'saldo' => 1000000,
+    ]);
 });
 
-test('kas detail rekenings are selectable while induk rekenings are not', function () {
+test('posisi kas form names the rekening directly', function () {
     $admin = User::factory()->admin()->create();
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $kasInduk = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Induk XYZ', 'tipe' => 'kas']);
-    $kasChild = Rekening::create(['kode' => '1.1.1.01', 'nama' => 'Kas Tunai XYZ', 'tipe' => 'kas', 'parent_id' => $kasInduk->id]);
 
     $this->actingAs($admin)
         ->get('/posisi-kas/create')
         ->assertSuccessful()
-        ->assertSee('Kas Tunai XYZ')
-        ->assertDontSee('Kas Induk XYZ');
+        ->assertSee('Nama Rekening')
+        ->assertSee('Nomor Rekening')
+        ->assertSee('Saldo');
 });
 
 test('rekening kas index shows the hierarchy', function () {

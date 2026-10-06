@@ -16,10 +16,9 @@ class PosisiKasController extends ApiController
         $user = $request->user();
 
         $query = PosisiKas::query()
-            ->with(['opd', 'rekening'])
+            ->with('opd')
             ->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id))
             ->when($request->filled('opd_id') && $user->isAdmin(), fn ($q) => $q->where('opd_id', $request->input('opd_id')))
-            ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')))
             ->orderBy('tanggal', 'desc');
@@ -37,23 +36,20 @@ class PosisiKasController extends ApiController
     {
         $data = $request->validated();
 
-        // saldo_akhir is always computed server-side.
-        $data['saldo_akhir'] = ($data['saldo_awal'] ?? 0) + ($data['penerimaan'] ?? 0) - ($data['pengeluaran'] ?? 0);
-
         if (! $request->user()->isAdmin()) {
             $data['opd_id'] = $request->user()->opd_id;
         }
 
         $posisiKas = PosisiKas::create($data);
 
-        return $this->success(new PosisiKasResource($posisiKas->load(['opd', 'rekening'])), 'Posisi kas berhasil ditambahkan.', 201);
+        return $this->success(new PosisiKasResource($posisiKas->load('opd')), 'Posisi kas berhasil ditambahkan.', 201);
     }
 
     public function show(Request $request, PosisiKas $posisiKas): JsonResponse
     {
         $this->authorizeOpd($request, $posisiKas->opd_id);
 
-        $posisiKas->load(['opd', 'rekening']);
+        $posisiKas->load('opd');
 
         return $this->success(new PosisiKasResource($posisiKas), 'Data posisi kas berhasil diambil.');
     }
@@ -62,11 +58,8 @@ class PosisiKasController extends ApiController
     {
         $this->authorizeOpd($request, $posisiKas->opd_id);
 
-        $data = $request->validated();
-        $data['saldo_akhir'] = ($data['saldo_awal'] ?? 0) + ($data['penerimaan'] ?? 0) - ($data['pengeluaran'] ?? 0);
+        $posisiKas->update($request->validated());
 
-        $posisiKas->update($data);
-
-        return $this->success(new PosisiKasResource($posisiKas->fresh(['opd', 'rekening'])), 'Posisi kas berhasil diperbarui.');
+        return $this->success(new PosisiKasResource($posisiKas->fresh('opd')), 'Posisi kas berhasil diperbarui.');
     }
 }

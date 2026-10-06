@@ -87,7 +87,7 @@
                         <th class="px-5 py-3 table-head text-center w-10">No</th>
                         <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
                         <th class="px-5 py-3 table-head text-left">OPD</th>
-                        <th class="px-5 py-3 table-head text-left w-40">Sumber Dana</th>
+                        <th class="px-5 py-3 table-head text-left w-40">Rekening</th>
                         <th class="px-5 py-3 table-head text-right w-36">Target (Rp)</th>
                         <th class="px-5 py-3 table-head text-right w-36">Realisasi (Rp)</th>
                         <th class="px-5 py-3 table-head text-center w-36">Persentase</th>
@@ -117,7 +117,7 @@
                             <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                                    {{ $item->sumberDana?->nama_sumber_dana ?? $item->nama_sumber_dana ?? '-' }}
+                                    {{ $item->rekening?->nama ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">

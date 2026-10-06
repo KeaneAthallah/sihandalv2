@@ -29,9 +29,7 @@ class LaporanPengeluaranController extends Controller
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')));
 
-        $totalAnggaran = (clone $query)->sum('anggaran');
-        $totalRealisasi = (clone $query)->sum('realisasi');
-        $persentase = $totalAnggaran > 0 ? round(($totalRealisasi / $totalAnggaran) * 100, 1) : 0;
+        $totalJumlah = (clone $query)->sum('jumlah');
         $totalCount = (clone $query)->count();
         $opdCount = (clone $query)->distinct()->count('opd_id');
 
@@ -43,7 +41,7 @@ class LaporanPengeluaranController extends Controller
         $filters = $request->only(['opd_id', 'kegiatan_id', 'sumber_dana_id', 'tanggal_dari', 'tanggal_sampai']);
 
         return view('laporan-pengeluaran.index', compact(
-            'pengeluarans', 'totalAnggaran', 'totalRealisasi', 'persentase',
+            'pengeluarans', 'totalJumlah',
             'totalCount', 'opdCount', 'opds', 'kegiatans', 'sumberDanas', 'filters'
         ));
     }
@@ -75,7 +73,7 @@ class LaporanPengeluaranController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'No', 'Tanggal', 'OPD', 'Kegiatan', 'Anggaran', 'Realisasi', 'Persentase (%)',
+                'No', 'Tanggal', 'OPD', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)',
             ]);
 
             foreach ($pengeluarans as $idx => $item) {
@@ -84,9 +82,9 @@ class LaporanPengeluaranController extends Controller
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
                     $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-',
-                    $item->anggaran,
-                    $item->realisasi,
-                    $item->persentase,
+                    $item->keperluan ?? '-',
+                    $item->no_sp2d ?? '-',
+                    $item->jumlah,
                 ]);
             }
 

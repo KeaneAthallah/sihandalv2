@@ -37,14 +37,9 @@ class StoreRekeningRequest extends FormRequest
                 return;
             }
 
-            // Only a kas account may act as an induk hosting detail kas accounts.
-            if ($parent->tipe !== 'kas') {
-                $validator->errors()->add('parent_id', 'Hanya rekening bertipe kas yang dapat memiliki rekening detail kas.');
-            }
-
-            // A child/detail account is always a kas account.
-            if ($tipe !== 'kas') {
-                $validator->errors()->add('tipe', 'Rekening detail kas harus bertipe kas.');
+            // A sub rekening (detail) must share its induk's tipe.
+            if ($parent->tipe !== $tipe) {
+                $validator->errors()->add('parent_id', 'Rekening detail harus bertipe sama dengan rekening induknya.');
             }
         });
     }

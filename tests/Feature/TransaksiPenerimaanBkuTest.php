@@ -3,7 +3,6 @@
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
-use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\TransaksiPenerimaanBku;
 use App\Models\User;
@@ -14,12 +13,9 @@ beforeEach(function () {
     $this->opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $this->user = User::factory()->create(['role' => 'opd', 'opd_id' => $this->opd->id]);
     $this->rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
-    $this->sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
     $this->penerimaan = Penerimaan::create([
         'opd_id' => $this->opd->id,
         'rekening_id' => $this->rekening->id,
-        'sumber_dana_id' => $this->sumberDana->id,
-        'nama_sumber_dana' => 'DAU',
         'target' => 100000000,
     ]);
 });
@@ -477,7 +473,6 @@ test('opd user can create transaksi for own opd', function () {
 test('opd user cannot create transaksi against another opd penerimaan', function () {
     $penerimaanB = Penerimaan::create([
         'opd_id' => $this->opdB->id,
-        'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
     ]);
 
@@ -507,7 +502,6 @@ test('opd user cannot access other opd transaksi edit', function () {
 
     $penerimaanB = Penerimaan::create([
         'opd_id' => $this->opdB->id,
-        'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
     ]);
     $txB = TransaksiPenerimaan::create([
@@ -526,7 +520,6 @@ test('opd user cannot access other opd transaksi edit', function () {
 test('opd user cannot delete other opd transaksi', function () {
     $penerimaanB = Penerimaan::create([
         'opd_id' => $this->opdB->id,
-        'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
     ]);
     $txB = TransaksiPenerimaan::create([

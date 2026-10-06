@@ -46,7 +46,7 @@ function apiReportFixture(): array
 
     $penerimaan = Penerimaan::create([
         'opd_id' => $opd->id, 'rekening_id' => $kasRekening->id,
-        'sumber_dana_id' => $sumberDana->id, 'target' => 800000, 'nama_sumber_dana' => 'DAU',
+        'target' => 800000,
     ]);
 
     TransaksiPenerimaan::create([
@@ -57,13 +57,13 @@ function apiReportFixture(): array
     Pengeluaran::create([
         'opd_id' => $opd->id, 'rekening_id' => $rekening->id,
         'sumber_dana_id' => $sumberDana->id, 'sumber_dana' => 'DAU',
-        'anggaran' => 500000, 'realisasi' => 200000, 'tanggal' => now(),
+        'jumlah' => 200000, 'keperluan' => 'Operasional', 'tanggal' => now(),
     ]);
 
     PosisiKas::create([
-        'opd_id' => $opd->id, 'rekening_id' => $kasRekening->id,
-        'tanggal' => now(), 'saldo_awal' => 100000,
-        'penerimaan' => 50000, 'pengeluaran' => 20000, 'saldo_akhir' => 130000,
+        'opd_id' => $opd->id, 'tanggal' => now(),
+        'nama_rekening' => 'Kas Umum', 'nomor_rekening' => '001-000-1',
+        'saldo' => 130000,
     ]);
 
     PermintaanDana::create([
@@ -72,9 +72,14 @@ function apiReportFixture(): array
         'jumlah' => 100000, 'keperluan' => 'Operasional', 'status' => 'menunggu',
     ]);
 
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
+
     TransferDana::create([
         'nomor_transfer' => 'TF-0001/'.now()->year, 'opd_id' => $opd->id,
-        'jumlah' => 50000, 'sumber_dana' => 'DAU', 'status' => 'diproses',
+        'jumlah' => 50000,
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
+        'status' => 'diproses',
     ]);
 
     return compact('opd', 'user', 'admin', 'belanja', 'penerimaan');
@@ -137,8 +142,7 @@ test('report pengeluaran returns rows with summary meta', function (): void {
         ->assertOk()
         ->json();
 
-    expect($payload['meta']['total_anggaran'])->toBe(500000)
-        ->and($payload['meta']['total_realisasi'])->toBe(200000);
+    expect($payload['meta']['total_jumlah'])->toBe(200000);
 });
 
 test('report permintaan dana returns status breakdown', function (): void {
@@ -161,7 +165,7 @@ test('report posisi kas returns totals', function (): void {
         ->assertOk()
         ->json();
 
-    expect($payload['meta']['total_saldo_akhir'])->toBe(130000);
+    expect($payload['meta']['total_saldo'])->toBe(130000);
 });
 
 test('csv export endpoints stream a download', function (): void {

@@ -128,7 +128,7 @@ test('revenue XLSX import stores province-wide transactions grouped by master', 
 
     $saldoAwal = TransaksiPenerimaan::where('keterangan', 'SALDO AWAL 2026')->first();
     expect($saldoAwal)->not->toBeNull()
-        ->and($saldoAwal->penerimaan->nama_sumber_dana)->toBe('SILPA');
+        ->and($saldoAwal->penerimaan->nama_penerimaan)->toBe('SILPA');
 });
 
 test('revenue total reconciles to the XLSX column H sum', function () {

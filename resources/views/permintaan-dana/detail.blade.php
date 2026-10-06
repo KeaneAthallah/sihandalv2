@@ -7,7 +7,6 @@
     'jumlah' => 0,
     'status' => 'draft',
     'tanggal' => null,
-    'catatan' => null,
     'created' => null,
     'currentStep' => 1,
 ])
@@ -20,7 +19,6 @@
     $jumlah = is_numeric($jumlah) ? $jumlah : ($permintaanDana->jumlah ?? 0);
     $status = $status ?? ($permintaanDana->status ?? 'draft');
     $tanggal = $tanggal ?? ($permintaanDana->tanggal ? $permintaanDana->tanggal->format('d M Y') : '-');
-    $catatan = $catatan ?? $permintaanDana->catatan ?? null;
     $created = $created ?? ($permintaanDana?->created_at?->format('d M Y H:i') ?? '-');
 
     $statusConfig = match($status) {
@@ -86,13 +84,6 @@
                             <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Keperluan</p>
                             <p class="text-sm text-slate-700 leading-relaxed">{{ $keperluan }}</p>
                         </div>
-
-                        @if($catatan && $catatan !== '-')
-                        <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Catatan</p>
-                            <p class="text-sm text-slate-600 italic leading-relaxed">{{ $catatan }}</p>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>

@@ -51,7 +51,7 @@
                             <th class="text-left px-5 py-3 table-head w-[110px]">Tanggal</th>
                             <th class="text-left px-5 py-3 table-head w-[140px]">No Transfer</th>
                             <th class="text-left px-5 py-3 table-head">OPD</th>
-                            <th class="text-left px-5 py-3 table-head w-[140px]">Sumber Dana</th>
+                            <th class="text-left px-5 py-3 table-head w-[240px]">Sumber Dana (Pengirim &rarr; Penerima)</th>
                             <th class="text-right px-5 py-3 table-head w-[130px]">Nilai</th>
                             <th class="text-center px-5 py-3 table-head w-[110px]">Status</th>
                             <th class="text-center px-5 py-3 table-head w-[80px]">Aksi</th>
@@ -68,7 +68,7 @@
                                 <td class="px-5 py-3.5 text-slate-700 max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
                                 <td class="px-5 py-3.5">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60 whitespace-nowrap">
-                                        {{ $item->sumber_dana }}
+                                        {{ $item->sumberDanaPengirim->nama_sumber_dana ?? '-' }} &rarr; {{ $item->sumberDanaPenerima->nama_sumber_dana ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5 text-right whitespace-nowrap">

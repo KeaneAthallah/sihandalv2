@@ -11,12 +11,9 @@ class LaporanPosisiKasController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user);
+        $query = $this->applyOpdScope(PosisiKas::with('opd'), $user);
 
-        $totalSaldoAwal = (clone $query)->sum('saldo_awal');
-        $totalPenerimaan = (clone $query)->sum('penerimaan');
-        $totalPengeluaran = (clone $query)->sum('pengeluaran');
-        $totalSaldoAkhir = (clone $query)->sum('saldo_akhir');
+        $totalSaldo = (clone $query)->sum('saldo');
         $totalCount = (clone $query)->count();
         $opdCount = (clone $query)->distinct()->count('opd_id');
 
@@ -25,8 +22,7 @@ class LaporanPosisiKasController extends Controller
         $opds = $this->userOpds($user);
 
         return view('laporan-posisi-kas.index', compact(
-            'posisiKas', 'totalSaldoAwal', 'totalPenerimaan',
-            'totalPengeluaran', 'totalSaldoAkhir', 'totalCount',
+            'posisiKas', 'totalSaldo', 'totalCount',
             'opdCount', 'opds'
         ));
     }
@@ -34,7 +30,7 @@ class LaporanPosisiKasController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $user = $request->user();
-        $posisiKas = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user)
+        $posisiKas = $this->applyOpdScope(PosisiKas::with('opd'), $user)
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -44,7 +40,7 @@ class LaporanPosisiKasController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'No', 'Tanggal', 'OPD', 'Rekening', 'Saldo Awal', 'Penerimaan', 'Pengeluaran', 'Saldo Akhir',
+                'No', 'Tanggal', 'OPD', 'Nama Rekening', 'Nomor Rekening', 'Saldo',
             ]);
 
             foreach ($posisiKas as $idx => $item) {
@@ -52,11 +48,9 @@ class LaporanPosisiKasController extends Controller
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
-                    $item->rekening->nama ?? '-',
-                    $item->saldo_awal,
-                    $item->penerimaan,
-                    $item->pengeluaran,
-                    $item->saldo_akhir,
+                    $item->nama_rekening,
+                    $item->nomor_rekening ?? '-',
+                    $item->saldo,
                 ]);
             }
 

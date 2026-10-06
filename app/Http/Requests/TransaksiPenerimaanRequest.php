@@ -3,30 +3,35 @@
 namespace App\Http\Requests;
 
 use App\Models\Penerimaan;
-use App\Models\PenerimaanDetail;
+use App\Models\Rekening;
 use App\Models\RekeningBank;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 abstract class TransaksiPenerimaanRequest extends FormRequest
 {
     /**
-     * Rules shared by create and update of a transaksi penerimaan transaction,
-     * including the nested BKU details. Each BKU row carries its own Rekening
-     * Bank, because one transaction can be received across several accounts.
+     * Rules shared by create and update of a transaksi penerimaan
+     * transaction, including the nested BKU details. Each BKU row
+     * carries its own OPD, accounting rekening (utama + optional sub)
+     * and Rekening Bank, because one transaction can be received
+     * across several accounts.
      */
     public function rules(): array
     {
         return [
             'penerimaan_id' => ['required', 'exists:penerimaans,id'],
-            'penerimaan_detail_id' => ['nullable', 'integer', 'exists:penerimaan_details,id'],
             'realisasi' => ['required', 'numeric', 'min:0'],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:255'],
             'bkus' => ['nullable', 'array'],
             'bkus.*.id' => ['sometimes', 'nullable', 'integer', 'exists:transaksi_penerimaan_bkus,id'],
+            'bkus.*.opd_id' => ['nullable', 'integer', 'exists:opds,id'],
             'bkus.*.nomor_bku' => ['required', 'string', 'max:100'],
             'bkus.*.tanggal_bku' => ['required', 'date'],
             'bkus.*.nilai' => ['required', 'numeric', 'min:0'],
+            'bkus.*.rekening_id' => ['nullable', 'integer', Rule::exists('rekenings', 'id')->where(fn ($q) => $q->where('tipe', 'pendapatan'))],
+            'bkus.*.sub_rekening_id' => ['nullable', 'integer', 'exists:rekenings,id'],
             'bkus.*.rekening_bank_id' => ['nullable', 'integer', 'exists:rekening_banks,id'],
         ];
     }
@@ -60,10 +65,51 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
                 $validator->errors()->add('penerimaan_id', 'Anda hanya dapat mengelola transaksi untuk Penerimaan OPD Anda sendiri.');
             }
 
-            $this->validateDetailBelongsToPenerimaan($validator);
+            $this->validateBkuRekenings($validator);
             $this->validateActiveRekeningBanks($validator);
             $this->validateBkuSumEqualsRealisasi($validator);
         });
+    }
+
+    /**
+     * A BKU row's rekening utama must be a pendapatan rekening, and a
+     * sub rekening must be a detail of that rekening utama.
+     */
+    private function validateBkuRekenings($validator): void
+    {
+        $bkus = $this->input('bkus');
+
+        if (! is_array($bkus)) {
+            return;
+        }
+
+        foreach ($bkus as $index => $bku) {
+            $rekeningId = $bku['rekening_id'] ?? null;
+            $subRekeningId = $bku['sub_rekening_id'] ?? null;
+
+            if ($rekeningId !== null) {
+                $rekening = Rekening::find($rekeningId);
+
+                if ($rekening !== null && $rekening->tipe !== 'pendapatan') {
+                    $validator->errors()->add("bkus.{$index}.rekening_id", 'Rekening utama pada BKU harus bertipe pendapatan.');
+                }
+            }
+
+            if ($subRekeningId === null) {
+                continue;
+            }
+
+            $sub = Rekening::find($subRekeningId);
+            if ($sub === null) {
+                continue;
+            }
+
+            if ($rekeningId === null) {
+                $validator->errors()->add("bkus.{$index}.sub_rekening_id", 'Pilih rekening utama terlebih dahulu sebelum memilih sub rekening.');
+            } elseif ((int) $sub->parent_id !== (int) $rekeningId) {
+                $validator->errors()->add("bkus.{$index}.sub_rekening_id", 'Sub rekening harus merupakan detail dari rekening utama pada BKU ini.');
+            }
+        }
     }
 
     /**
@@ -90,24 +136,6 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
             if ($bank !== null && ! $bank->is_active) {
                 $validator->errors()->add("bkus.{$index}.rekening_bank_id", 'Rekening bank tidak aktif dan tidak dapat digunakan.');
             }
-        }
-    }
-
-    /**
-     * An optional penerimaan_detail_id must belong to the selected master.
-     */
-    private function validateDetailBelongsToPenerimaan($validator): void
-    {
-        $detailId = $this->input('penerimaan_detail_id');
-        $penerimaanId = $this->input('penerimaan_id');
-
-        if ($detailId === null || $penerimaanId === null) {
-            return;
-        }
-
-        $detail = PenerimaanDetail::find($detailId);
-        if ($detail === null || (int) $detail->penerimaan_id !== (int) $penerimaanId) {
-            $validator->errors()->add('penerimaan_detail_id', 'Detail tidak sesuai dengan Penerimaan yang dipilih.');
         }
     }
 

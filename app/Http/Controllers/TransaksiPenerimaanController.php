@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransaksiPenerimaanRequest;
 use App\Http\Requests\UpdateTransaksiPenerimaanRequest;
+use App\Models\Opd;
 use App\Models\Penerimaan;
+use App\Models\Rekening;
 use App\Models\RekeningBank;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
@@ -22,8 +24,10 @@ class TransaksiPenerimaanController extends Controller
         $query = TransaksiPenerimaan::with([
             'penerimaan.opd',
             'penerimaan.rekening',
-            'penerimaan.sumberDana',
+            'penerimaan.subRekening',
             'bkus.rekeningBank',
+            'bkus.rekening',
+            'bkus.subRekening',
         ])
             ->whereHas('penerimaan', function ($p) use ($user) {
                 if (! $user->isAdmin()) {
@@ -50,15 +54,19 @@ class TransaksiPenerimaanController extends Controller
     {
         $penerimaans = $this->authorizedMasters(request()->user());
         $rekeningBanks = $this->activeRekeningBanks();
-        $detailsByPenerimaan = $this->detailsByPenerimaan($penerimaans);
+        $opds = Opd::orderBy('nama')->get();
+        $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
+        $subRekeningsByParent = $this->subRekeningsByParent();
 
-        return view('transaksi-penerimaan.create', compact('penerimaans', 'rekeningBanks', 'detailsByPenerimaan'));
+        return view('transaksi-penerimaan.create', compact(
+            'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'subRekeningsByParent'
+        ));
     }
 
     public function edit(TransaksiPenerimaan $transaksiPenerimaan)
     {
         $this->authorizeTransaction($transaksiPenerimaan, request()->user());
-        $transaksiPenerimaan->load(['bkus.rekeningBank', 'penerimaan.opd']);
+        $transaksiPenerimaan->load(['bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'penerimaan.opd']);
         $penerimaans = $this->authorizedMasters(request()->user());
         $rekeningBanks = $this->activeRekeningBanks();
 
@@ -72,9 +80,13 @@ class TransaksiPenerimaanController extends Controller
             }
         }
 
-        $detailsByPenerimaan = $this->detailsByPenerimaan($penerimaans);
+        $opds = Opd::orderBy('nama')->get();
+        $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
+        $subRekeningsByParent = $this->subRekeningsByParent();
 
-        return view('transaksi-penerimaan.edit', compact('transaksiPenerimaan', 'penerimaans', 'rekeningBanks', 'detailsByPenerimaan'));
+        return view('transaksi-penerimaan.edit', compact(
+            'transaksiPenerimaan', 'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'subRekeningsByParent'
+        ));
     }
 
     public function store(StoreTransaksiPenerimaanRequest $request, DocumentNumberService $numbers)
@@ -156,13 +168,13 @@ class TransaksiPenerimaanController extends Controller
 
     private function authorizedMasters($user)
     {
-        $query = Penerimaan::with(['opd', 'sumberDana', 'details.sumberDana']);
+        $query = Penerimaan::with(['opd', 'rekening', 'subRekening']);
 
         if (! $user->isAdmin()) {
             $query->where('opd_id', $user->opd_id);
         }
 
-        return $query->orderBy('nama_sumber_dana')->get();
+        return $query->orderBy('target', 'desc')->get();
     }
 
     /**
@@ -177,21 +189,23 @@ class TransaksiPenerimaanController extends Controller
     }
 
     /**
-     * Penerimaan id => list of its detail records, used by the form's
-     * dependant dropdown so a transaction can optionally link to a detail.
+     * Sub rekenings (details) grouped by their induk, for the
+     * rekening utama -> sub rekening cascade on each BKU row.
      *
-     * @return array<int, array<int, array{id: int, label: string}>>
+     * @return array<string, array<int, array{id: string, label: string}>>
      */
-    private function detailsByPenerimaan($penerimaans): array
+    private function subRekeningsByParent(): array
     {
-        return $penerimaans->mapWithKeys(function (Penerimaan $penerimaan) {
-            $options = $penerimaan->details->map(fn ($d) => [
-                'id' => $d->id,
-                'label' => $d->sumberDana?->nama_sumber_dana ?? 'Tanpa Sumber Dana',
-            ])->values()->all();
-
-            return [$penerimaan->id => $options];
-        })->all();
+        return Rekening::where('tipe', 'pendapatan')
+            ->whereNotNull('parent_id')
+            ->orderBy('kode')
+            ->get(['id', 'parent_id', 'kode', 'nama'])
+            ->groupBy('parent_id')
+            ->map(fn ($rows) => $rows->map(fn ($r) => [
+                'id' => (string) $r->id,
+                'label' => $r->kode.' - '.$r->nama,
+            ])->values())
+            ->all();
     }
 
     private function authorizeTransaction(TransaksiPenerimaan $transaksi, ?User $user): void

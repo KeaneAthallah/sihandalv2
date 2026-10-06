@@ -3,15 +3,15 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Penerimaan;
+use App\Models\Rekening;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * API variant of the Penerimaan master request, mirroring the web rules:
- *   - rekening must be tipe pendapatan
- *   - OPD ownership
- *   - nested details must reference the master and use unique sumber dana
+ * API variant of the Penerimaan master request, mirroring the web
+ * rules: rekening must be tipe pendapatan, OPD ownership, and a sub
+ * rekening must be a detail of the chosen rekening utama.
  */
 class StorePenerimaanApiRequest extends FormRequest
 {
@@ -25,13 +25,9 @@ class StorePenerimaanApiRequest extends FormRequest
         return [
             'opd_id' => ['required', 'exists:opds,id'],
             'rekening_id' => ['nullable', Rule::exists('rekenings', 'id')->where(fn (Builder $q) => $q->where('tipe', 'pendapatan'))],
-            'sumber_dana_id' => ['nullable', 'exists:sumber_danas,id'],
-            'kode_sumber_dana' => ['nullable', 'string', 'max:50'],
-            'nama_sumber_dana' => ['nullable', 'string', 'max:255'],
+            'sub_rekening_id' => ['nullable', 'integer', 'exists:rekenings,id'],
+            'tahun_anggaran_id' => ['nullable', 'exists:tahun_anggarans,id'],
             'target' => ['required', 'numeric', 'min:0'],
-            'details' => ['sometimes', 'array'],
-            'details.*.id' => ['sometimes', 'nullable', 'integer'],
-            'details.*.sumber_dana_id' => ['required_with:details', 'integer', 'exists:sumber_danas,id'],
         ];
     }
 
@@ -50,29 +46,30 @@ class StorePenerimaanApiRequest extends FormRequest
                 $validator->errors()->add('rekening_id', 'Rekening penerimaan harus bertipe pendapatan.');
             }
 
-            $penerimaan = $this->route('penerimaan') instanceof Penerimaan
-                ? $this->route('penerimaan')
-                : null;
+            $rekeningId = $this->input('rekening_id');
+            $subRekeningId = $this->input('sub_rekening_id');
 
-            $ownDetailIds = $penerimaan ? $penerimaan->details()->pluck('id')->all() : [];
+            if ($subRekeningId === null || $subRekeningId === '') {
+                return;
+            }
 
-            $seenSumber = [];
-            foreach ($this->input('details', []) as $index => $row) {
-                if (! empty($row['id'] ?? null) && ! in_array((int) $row['id'], $ownDetailIds, true)) {
-                    $validator->errors()->add("details.$index.id", 'Detail tidak sesuai dengan penerimaan yang dipilih.');
-                }
+            $sub = Rekening::find($subRekeningId);
+            if ($sub === null) {
+                return;
+            }
 
-                $sumberId = (int) ($row['sumber_dana_id'] ?? 0);
+            if ($rekeningId === null || $rekeningId === '') {
+                $validator->errors()->add('sub_rekening_id', 'Pilih rekening utama terlebih dahulu sebelum memilih sub rekening.');
 
-                if ($sumberId === 0) {
-                    continue;
-                }
+                return;
+            }
 
-                if (in_array($sumberId, $seenSumber, true)) {
-                    $validator->errors()->add("details.$index.sumber_dana_id", 'Kombinasi sumber dana ganda pada satu penerimaan tidak diperbolehkan.');
-                }
+            if ((int) $sub->parent_id !== (int) $rekeningId) {
+                $validator->errors()->add('sub_rekening_id', 'Sub rekening harus merupakan detail dari rekening utama yang dipilih.');
+            }
 
-                $seenSumber[] = $sumberId;
+            if ($sub->tipe !== 'pendapatan') {
+                $validator->errors()->add('sub_rekening_id', 'Sub rekening penerimaan harus bertipe pendapatan.');
             }
         });
     }

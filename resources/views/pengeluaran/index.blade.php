@@ -11,24 +11,14 @@
     </x-slot>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-        <x-stat-card title="Total Pengeluaran" value="Rp {{ number_format($totalRealisasi / 1000000000, 1, ',', '.') }} M" change="+8.2% dari bulan lalu" changeType="up" color="danger">
+        <x-stat-card title="Total Pengeluaran" value="Rp {{ number_format($totalJumlah / 1000000000, 1, ',', '.') }} M" change="Pengeluaran tercatat" changeType="up" color="danger">
             <x-slot name="icon">
                 <x-heroicon-o-arrow-up-right class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Total Anggaran" value="Rp {{ number_format($totalAnggaran / 1000000000, 1, ',', '.') }} M" change="+3.1% dari bulan lalu" changeType="up" color="primary">
-            <x-slot name="icon">
-                <x-heroicon-o-calendar class="w-6 h-6"/>
-            </x-slot>
-        </x-stat-card>
-        <x-stat-card title="Persentase Realisasi" value="{{ $persentase }}%" change="Dari total anggaran" changeType="up" color="success">
+        <x-stat-card title="Jumlah Data" value="{{ $pengeluarans->total() }}" change="Data pengeluaran" changeType="up" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
-            </x-slot>
-        </x-stat-card>
-        <x-stat-card title="Sisa Anggaran" value="Rp {{ number_format(($totalAnggaran - $totalRealisasi) / 1000000000, 1, ',', '.') }} M" change="Belum direalisasi" changeType="down" color="warning">
-            <x-slot name="icon">
-                <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
     </div>
@@ -68,8 +58,9 @@
                         <th class="text-left px-5 py-3 table-head">Kegiatan</th>
                         <th class="text-left px-5 py-3 table-head">OPD</th>
                         <th class="text-left px-5 py-3 table-head w-[120px]">Sumber Dana</th>
-                        <th class="text-right px-5 py-3 table-head w-[130px]">Anggaran</th>
-                        <th class="text-right px-5 py-3 table-head w-[130px]">Realisasi</th>
+                        <th class="text-left px-5 py-3 table-head">Keperluan</th>
+                        <th class="text-left px-5 py-3 table-head w-[140px]">No SP2D</th>
+                        <th class="text-right px-5 py-3 table-head w-[130px]">Jumlah</th>
                         <th class="text-center px-5 py-3 table-head w-[100px]">Aksi</th>
                     </tr>
                 </thead>
@@ -87,11 +78,10 @@
                                     {{ $item->sumberDana?->nama_sumber_dana ?? $item->sumber_dana ?? '-' }}
                                 </span>
                             </td>
+                            <td class="px-5 py-3.5 text-slate-600 max-w-[240px] truncate">{{ $item->keperluan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->no_sp2d ?? '-' }}</td>
                             <td class="px-5 py-3.5 font-medium text-slate-700 text-right whitespace-nowrap tabular-nums">
-                                Rp {{ number_format($item->anggaran / 1000000000, 1, ',', '.') }} M
-                            </td>
-                            <td class="px-5 py-3.5 font-medium text-red-500 text-right whitespace-nowrap tabular-nums">
-                                Rp {{ number_format($item->realisasi / 1000000000, 1, ',', '.') }} M
+                                Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
@@ -110,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-12 text-center">
+                            <td colspan="9" class="px-5 py-12 text-center">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-arrow-up-right class="w-7 h-7"/>

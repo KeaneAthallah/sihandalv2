@@ -29,8 +29,8 @@ class UpdateRekeningRequest extends FormRequest
             $parentId = $this->input('parent_id');
             $tipe = $this->input('tipe');
 
-            // An induk that already hosts detail accounts cannot lose its kas type.
-            if ($current && $current->children()->exists() && $tipe !== 'kas') {
+            // An induk that already hosts detail accounts cannot change tipe.
+            if ($current && $current->children()->exists() && $tipe !== $current->tipe) {
                 $validator->errors()->add('tipe', 'Rekening induk tidak dapat diubah tipenya karena masih memiliki detail.');
             }
 
@@ -49,12 +49,8 @@ class UpdateRekeningRequest extends FormRequest
                 return;
             }
 
-            if ($parent->tipe !== 'kas') {
-                $validator->errors()->add('parent_id', 'Hanya rekening bertipe kas yang dapat memiliki rekening detail kas.');
-            }
-
-            if ($tipe !== 'kas') {
-                $validator->errors()->add('tipe', 'Rekening detail kas harus bertipe kas.');
+            if ($parent->tipe !== $tipe) {
+                $validator->errors()->add('parent_id', 'Rekening detail harus bertipe sama dengan rekening induknya.');
             }
 
             if ($current) {

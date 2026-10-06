@@ -6,9 +6,9 @@ use App\Models\Rekening;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * API variant of the Rekening (kas/pendapatan/belanja master) request with the
- * same kas hierarchy rules as the web form: only kas accounts may host kas
- * detail accounts, and detail accounts are always kas.
+ * API variant of the Rekening (kas/pendapatan/belanja master) request.
+ * Any tipe may host sub rekenings, as long as the sub rekening shares
+ * its induk's tipe.
  */
 class StoreRekeningApiRequest extends FormRequest
 {
@@ -42,12 +42,8 @@ class StoreRekeningApiRequest extends FormRequest
                 return;
             }
 
-            if ($parent->tipe !== 'kas') {
-                $validator->errors()->add('parent_id', 'Hanya rekening bertipe kas yang dapat memiliki rekening detail kas.');
-            }
-
-            if ($tipe !== 'kas') {
-                $validator->errors()->add('tipe', 'Rekening detail kas harus bertipe kas.');
+            if ($parent->tipe !== $tipe) {
+                $validator->errors()->add('parent_id', 'Rekening detail harus bertipe sama dengan rekening induknya.');
             }
         });
     }

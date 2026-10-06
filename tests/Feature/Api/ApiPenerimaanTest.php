@@ -2,7 +2,6 @@
 
 use App\Models\Opd;
 use App\Models\Penerimaan;
-use App\Models\PenerimaanDetail;
 use App\Models\Rekening;
 use App\Models\RekeningBank;
 use App\Models\TransaksiPenerimaan;
@@ -34,15 +33,9 @@ function apiPenerimaanFixture(): array
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
         'target' => 1000000,
-        'nama_sumber_dana' => 'DAU',
     ]);
 
-    $detail = PenerimaanDetail::create([
-        'penerimaan_id' => $penerimaan->id,
-        'sumber_dana_id' => null,
-    ]);
-
-    return compact('opd', 'opdB', 'user', 'admin', 'rekening', 'kasRekening', 'bank', 'inactiveBank', 'penerimaan', 'detail');
+    return compact('opd', 'opdB', 'user', 'admin', 'rekening', 'kasRekening', 'bank', 'inactiveBank', 'penerimaan');
 }
 
 test('penerimaan realization is computed from transactions, never persisted', function (): void {
@@ -206,7 +199,6 @@ test('opd user cannot create transaksi against another opd penerimaan', function
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
         'target' => 500000,
-        'nama_sumber_dana' => 'DAK',
     ]);
 
     $this->actingAs($user, 'sanctum')
@@ -227,7 +219,6 @@ test('opd user cannot access another opd penerimaan', function (): void {
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
         'target' => 500000,
-        'nama_sumber_dana' => 'DAK',
     ]);
 
     $this->actingAs($user, 'sanctum')

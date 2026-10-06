@@ -35,10 +35,27 @@
                     </div>
                 </div>
 
-                <div>
-                    <x-input-label for="sumber_dana" value="Sumber Dana" />
-                    <input type="text" name="sumber_dana" id="sumber_dana" value="{{ old('sumber_dana') }}" placeholder="Masukkan sumber dana" required class="input">
-                    <x-input-error :messages="$errors->get('sumber_dana')" />
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label for="sumber_dana_pengirim_id" value="Sumber Dana Pengirim" />
+                        <select name="sumber_dana_pengirim_id" id="sumber_dana_pengirim_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Pilih Sumber Dana Pengirim</option>
+                            @foreach($sumberDanas as $sd)
+                                <option value="{{ $sd->id }}" {{ old('sumber_dana_pengirim_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('sumber_dana_pengirim_id')" />
+                    </div>
+                    <div>
+                        <x-input-label for="sumber_dana_penerima_id" value="Sumber Dana Penerima" />
+                        <select name="sumber_dana_penerima_id" id="sumber_dana_penerima_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <option value="">Pilih Sumber Dana Penerima</option>
+                            @foreach($sumberDanas as $sd)
+                                <option value="{{ $sd->id }}" {{ old('sumber_dana_penerima_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('sumber_dana_penerima_id')" />
+                    </div>
                 </div>
 
                 <div>

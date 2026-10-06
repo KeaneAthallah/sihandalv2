@@ -32,6 +32,31 @@ class Rekening extends Model
         return $query->where('tipe', 'kas')->whereDoesntHave('children');
     }
 
+    /**
+     * Any rekening (of any tipe) that does not host sub rekenings.
+     */
+    public function scopeLeaves(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('children');
+    }
+
+    /**
+     * Depth of this rekening in the induk/detail tree. A top-level
+     * rekening (no parent) sits at level 0. Computed for display only.
+     */
+    public function getLevelAttribute(): int
+    {
+        $level = 0;
+        $parent = $this->parent;
+
+        while ($parent !== null) {
+            $level++;
+            $parent = $parent->parent;
+        }
+
+        return $level;
+    }
+
     public function penerimaans(): HasMany
     {
         return $this->hasMany(Penerimaan::class);
@@ -80,7 +105,7 @@ class Rekening extends Model
         return (float) DB::table('pengeluarans')
             ->where('rekening_id', $this->id)
             ->when($opdId, fn ($q) => $q->where('opd_id', $opdId))
-            ->sum('realisasi');
+            ->sum('jumlah');
     }
 
     /**

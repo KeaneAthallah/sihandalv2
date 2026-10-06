@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePosisiKasRequest;
 use App\Http\Requests\UpdatePosisiKasRequest;
 use App\Models\PosisiKas;
-use App\Models\Rekening;
 use Illuminate\Http\Request;
 
 class PosisiKasController extends Controller
@@ -13,45 +12,37 @@ class PosisiKasController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $posisiQuery = $this->applyOpdScope(PosisiKas::with(['opd', 'rekening']), $user)
+        $posisiQuery = $this->applyOpdScope(PosisiKas::with('opd'), $user)
             ->orderBy('tanggal', 'desc');
 
-        $totalSaldoAwal = (clone $posisiQuery)->sum('saldo_awal');
-        $totalPenerimaan = (clone $posisiQuery)->sum('penerimaan');
-        $totalPengeluaran = (clone $posisiQuery)->sum('pengeluaran');
-        $totalSaldoAkhir = (clone $posisiQuery)->sum('saldo_akhir');
+        $totalSaldo = (clone $posisiQuery)->sum('saldo');
+        $totalCount = (clone $posisiQuery)->count();
 
         $posisiKas = $posisiQuery->paginate(15);
 
-        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
-
         return view('posisi-kas.index', compact(
-            'posisiKas', 'totalSaldoAwal', 'totalPenerimaan',
-            'totalPengeluaran', 'totalSaldoAkhir', 'rekenings'
+            'posisiKas', 'totalSaldo', 'totalCount'
         ));
     }
 
     public function create()
     {
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
 
-        return view('posisi-kas.create', compact('opds', 'rekenings'));
+        return view('posisi-kas.create', compact('opds'));
     }
 
     public function edit(PosisiKas $posisiKas)
     {
         $this->authorizeOpdRecord($posisiKas, request()->user());
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::kasLeaves()->orderBy('kode')->get();
 
-        return view('posisi-kas.edit', compact('posisiKas', 'opds', 'rekenings'));
+        return view('posisi-kas.edit', compact('posisiKas', 'opds'));
     }
 
     public function store(StorePosisiKasRequest $request)
     {
         $data = $request->validated();
-        $data['saldo_akhir'] = ($data['saldo_awal'] ?? 0) + ($data['penerimaan'] ?? 0) - ($data['pengeluaran'] ?? 0);
 
         if (! $request->user()->isAdmin()) {
             $data['opd_id'] = $request->user()->opd_id;
@@ -65,10 +56,8 @@ class PosisiKasController extends Controller
     public function update(UpdatePosisiKasRequest $request, PosisiKas $posisiKas)
     {
         $this->authorizeOpdRecord($posisiKas, $request->user());
-        $data = $request->validated();
-        $data['saldo_akhir'] = ($data['saldo_awal'] ?? 0) + ($data['penerimaan'] ?? 0) - ($data['pengeluaran'] ?? 0);
 
-        $posisiKas->update($data);
+        $posisiKas->update($request->validated());
 
         return back()->with('success', 'Posisi kas berhasil diperbarui.');
     }

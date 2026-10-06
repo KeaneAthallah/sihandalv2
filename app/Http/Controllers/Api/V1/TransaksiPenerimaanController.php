@@ -21,7 +21,7 @@ class TransaksiPenerimaanController extends ApiController
         $user = $request->user();
 
         $query = TransaksiPenerimaan::query()
-            ->with(['penerimaan.opd', 'penerimaan.rekening', 'penerimaan.sumberDana', 'bkus.rekeningBank'])
+            ->with(['penerimaan.opd', 'penerimaan.rekening', 'penerimaan.subRekening', 'bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening'])
             ->whereHas('penerimaan', function ($p) use ($user): void {
                 if (! $user->isAdmin()) {
                     $p->where('opd_id', $user->opd_id);
@@ -64,7 +64,7 @@ class TransaksiPenerimaanController extends ApiController
         });
 
         return $this->success(
-            new TransaksiPenerimaanResource($transaksi->fresh(['penerimaan.opd', 'bkus.rekeningBank'])),
+            new TransaksiPenerimaanResource($transaksi->fresh(['penerimaan.opd', 'bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'bkus.opd'])),
             'Transaksi Penerimaan berhasil ditambahkan.',
             201,
         );
@@ -74,7 +74,7 @@ class TransaksiPenerimaanController extends ApiController
     {
         $this->authorizeTransaction($transaksiPenerimaan, $request->user());
 
-        $transaksiPenerimaan->load(['penerimaan.opd', 'bkus.rekeningBank']);
+        $transaksiPenerimaan->load(['penerimaan.opd', 'bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'bkus.opd']);
 
         return $this->success(new TransaksiPenerimaanResource($transaksiPenerimaan), 'Data transaksi penerimaan berhasil diambil.');
     }
@@ -116,7 +116,7 @@ class TransaksiPenerimaanController extends ApiController
         });
 
         return $this->success(
-            new TransaksiPenerimaanResource($transaksiPenerimaan->fresh(['penerimaan.opd', 'bkus.rekeningBank'])),
+            new TransaksiPenerimaanResource($transaksiPenerimaan->fresh(['penerimaan.opd', 'bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'bkus.opd'])),
             'Transaksi Penerimaan berhasil diperbarui.',
         );
     }

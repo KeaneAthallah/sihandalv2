@@ -23,6 +23,7 @@ function apiScopeFixture(): array
     $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
     $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
     $kasRekening = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Umum', 'tipe' => 'kas']);
 
@@ -44,19 +45,21 @@ function apiScopeFixture(): array
 
     Penerimaan::create([
         'opd_id' => $opdA->id, 'rekening_id' => $kasRekening->id,
-        'target' => 500000, 'nama_sumber_dana' => 'DAU',
+        'target' => 500000,
     ]);
 
     Pengeluaran::create([
         'opd_id' => $opdA->id, 'rekening_id' => $rekening->id,
         'sumber_dana_id' => $sumberDana->id, 'sumber_dana' => 'DAU',
-        'anggaran' => 400000, 'realisasi' => 100000,
+        'jumlah' => 400000, 'keperluan' => 'Operasional',
     ]);
 
     PosisiKas::create([
-        'opd_id' => $opdA->id, 'rekening_id' => $kasRekening->id,
-        'tanggal' => now(), 'saldo_awal' => 100000,
-        'penerimaan' => 50000, 'pengeluaran' => 20000, 'saldo_akhir' => 130000,
+        'opd_id' => $opdA->id,
+        'tanggal' => now(),
+        'nama_rekening' => 'Kas Umum',
+        'nomor_rekening' => '001-000-1',
+        'saldo' => 130000,
     ]);
 
     PermintaanDana::create([
@@ -67,7 +70,10 @@ function apiScopeFixture(): array
 
     TransferDana::create([
         'nomor_transfer' => 'TF-0001/'.now()->year, 'opd_id' => $opdA->id,
-        'jumlah' => 50000, 'sumber_dana' => 'DAU', 'status' => 'draft',
+        'jumlah' => 50000,
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
+        'status' => 'draft',
     ]);
 
     RekeningBank::create([

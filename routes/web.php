@@ -48,7 +48,7 @@ Route::get('/dashboard', function () {
         ->join('penerimaans', 'penerimaans.id', '=', 'transaksi_penerimaans.penerimaan_id')
         ->when(! $isAdmin, fn ($q) => $q->where('penerimaans.opd_id', $user->opd_id))
         ->sum('transaksi_penerimaans.realisasi');
-    $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('realisasi');
+    $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('jumlah');
     $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
     $totalPagu = $totalAnggaran > 0 ? $totalAnggaran : 1;
     $kasPenerimaan = (float) DB::table('transaksi_penerimaans as t')
@@ -61,12 +61,12 @@ Route::get('/dashboard', function () {
         ->join('rekenings as r', 'r.id', '=', 'pengeluarans.rekening_id')
         ->when(! $isAdmin, fn ($q) => $q->where('pengeluarans.opd_id', $user->opd_id))
         ->where('r.tipe', 'kas')
-        ->sum('pengeluarans.realisasi');
+        ->sum('pengeluarans.jumlah');
     $sisaKas = $kasPenerimaan - $kasPengeluaran;
     $sisaKasMax = $totalPagu > 0 ? $totalPagu : 1;
 
     $topOpd = $opdScope(Opd::query(), 'id')
-        ->withSum('pengeluarans as total_realisasi_pengeluaran', 'realisasi')
+        ->withSum('pengeluarans as total_realisasi_pengeluaran', 'jumlah')
         ->orderByDesc('total_realisasi_pengeluaran')
         ->take(10)
         ->get();
@@ -81,18 +81,10 @@ Route::get('/dashboard', function () {
         ->groupBy('status')
         ->pluck('count', 'status');
 
-    $sumberDanaPenerimaan = DB::table('transaksi_penerimaans')
-        ->join('penerimaans', 'penerimaans.id', '=', 'transaksi_penerimaans.penerimaan_id')
-        ->leftJoin('sumber_danas as sd', 'sd.id', '=', 'penerimaans.sumber_dana_id')
-        ->selectRaw('COALESCE(sd.nama_sumber_dana, penerimaans.nama_sumber_dana) as sumber_dana, sum(transaksi_penerimaans.realisasi) as total')
-        ->when(! $isAdmin, fn ($q) => $q->where('penerimaans.opd_id', $user->opd_id))
-        ->groupBy('sumber_dana')
-        ->pluck('total', 'sumber_dana');
-
     return view('dashboard.index', compact(
         'totalAnggaran', 'totalPenerimaan', 'totalPengeluaran',
         'permintaanPending', 'sisaKas', 'sisaKasMax',
-        'topOpd', 'recentPermintaan', 'statusCounts', 'sumberDanaPenerimaan'
+        'topOpd', 'recentPermintaan', 'statusCounts'
     ));
 })->middleware(['auth', 'verified'])->name('dashboard');
 

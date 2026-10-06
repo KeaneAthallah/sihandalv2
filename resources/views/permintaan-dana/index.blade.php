@@ -107,11 +107,11 @@
                                                 nomor: @js($item->nomor_permintaan),
                                                 opd: @js($item->opd->nama ?? '-'),
                                                 sumber_dana: @js($item->sumber_dana),
+                                                kegiatan: @js($item->kegiatan->nama_kegiatan ?? ($item->kegiatan ? $item->kegiatan->kode_kegiatan : '-')),
                                                 keperluan: @js($item->keperluan),
                                                 jumlah: @js(number_format($item->jumlah, 0, ',', '.')),
                                                 status: @js($item->status),
                                                 tanggal: @js($item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('d M Y') : '-'),
-                                                catatan: @js($item->catatan ?? '-'),
                                                 created: @js($item->created_at->format('d M Y H:i'))
                                             });
                                             $dispatch('open-modal', 'view-permintaan-dana');
@@ -253,10 +253,10 @@
                     <p class="text-sm text-slate-700" x-text="viewData.keperluan"></p>
                 </div>
 
-                @if(isset($item) && $item->catatan)
-                <div x-show="viewData.catatan && viewData.catatan !== '-'">
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Catatan</p>
-                    <p class="text-sm text-slate-600 italic" x-text="viewData.catatan"></p>
+                @if(isset($item) && $item->kegiatan)
+                <div x-show="viewData.kegiatan && viewData.kegiatan !== '-'">
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Kegiatan</p>
+                    <p class="text-sm text-slate-600" x-text="viewData.kegiatan"></p>
                 </div>
                 @endif
 

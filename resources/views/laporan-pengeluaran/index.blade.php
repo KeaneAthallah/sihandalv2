@@ -34,24 +34,14 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <x-stat-card title="Total Realisasi" value="Rp {{ number_format($totalRealisasi / 1000000000, 1, ',', '.') }} M" change="Pengeluaran tercatat" changeType="up" color="danger">
+        <x-stat-card title="Total Jumlah" value="Rp {{ number_format($totalJumlah / 1000000000, 1, ',', '.') }} M" change="Pengeluaran tercatat" changeType="up" color="danger">
             <x-slot name="icon">
                 <x-heroicon-o-arrow-up-right class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
-        <x-stat-card title="Total Anggaran" value="Rp {{ number_format($totalAnggaran / 1000000000, 1, ',', '.') }} M" change="Anggaran tersedia" changeType="up" color="primary">
-            <x-slot name="icon">
-                <x-heroicon-o-calculator class="w-6 h-6"/>
-            </x-slot>
-        </x-stat-card>
-        <x-stat-card title="Persentase Realisasi" value="{{ $persentase }}%" change="dari anggaran" changeType="{{ $persentase >= 80 ? 'up' : 'down' }}" color="{{ $persentase >= 80 ? 'success' : 'warning' }}">
+        <x-stat-card title="Jumlah Data" value="{{ $totalCount }}" change="{{ $opdCount }} OPD" changeType="up" color="primary">
             <x-slot name="icon">
                 <x-heroicon-o-document-text class="w-6 h-6"/>
-            </x-slot>
-        </x-stat-card>
-        <x-stat-card title="Sisa Anggaran" value="Rp {{ number_format(($totalAnggaran - $totalRealisasi) / 1000000000, 1, ',', '.') }} M" change="Belum direalisasi" changeType="down" color="warning">
-            <x-slot name="icon">
-                <x-heroicon-o-clock class="w-6 h-6"/>
             </x-slot>
         </x-stat-card>
     </div>
@@ -88,45 +78,22 @@
                         <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
                         <th class="px-5 py-3 table-head text-left">OPD</th>
                         <th class="px-5 py-3 table-head text-left">Kegiatan</th>
-                        <th class="px-5 py-3 table-head text-right w-40">Anggaran (Rp)</th>
-                        <th class="px-5 py-3 table-head text-right w-40">Realisasi (Rp)</th>
-                        <th class="px-5 py-3 table-head text-center w-40">Persentase</th>
+                        <th class="px-5 py-3 table-head text-left">Keperluan</th>
+                        <th class="px-5 py-3 table-head text-left w-32">No SP2D</th>
+                        <th class="px-5 py-3 table-head text-right w-40">Jumlah (Rp)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($pengeluarans as $idx => $item)
-                        @php
-                            $barColor = match(true) {
-                                $item->persentase >= 95 => 'bg-emerald-500',
-                                $item->persentase >= 80 => 'bg-blue-500',
-                                $item->persentase >= 60 => 'bg-amber-500',
-                                default => 'bg-red-500',
-                            };
-                            $barTrackColor = match(true) {
-                                $item->persentase >= 95 => 'bg-emerald-100',
-                                $item->persentase >= 80 => 'bg-blue-100',
-                                $item->persentase >= 60 => 'bg-amber-100',
-                                default => 'bg-red-100',
-                            };
-                        @endphp
                         <tr class="table-row">
                             <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-slate-600">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">
-                                Rp {{ number_format($item->anggaran, 0, ',', '.') }}
-                            </td>
+                            <td class="px-5 py-3.5 text-slate-600">{{ $item->keperluan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->no_sp2d ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
-                                Rp {{ number_format($item->realisasi, 0, ',', '.') }}
-                            </td>
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 {{ $barTrackColor }} rounded-full h-2 min-w-[60px] max-w-[100px]">
-                                        <div class="{{ $barColor }} h-2 rounded-full transition-all duration-300" style="width: {{ min($item->persentase, 100) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-600 w-11 text-right tabular-nums">{{ $item->persentase }}%</span>
-                                </div>
+                                Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
                         </tr>
                     @empty
@@ -135,7 +102,7 @@
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon"><x-heroicon-o-inbox class="w-7 h-7"/></div>
                                     <p class="empty-title">Belum ada data pengeluaran</p>
-                                    <p class="empty-desc">Rekapitulasi pengeluaran dan realisasi anggaran akan tampil di sini setelah data tercatat.</p>
+                                    <p class="empty-desc">Rekapitulasi pengeluaran akan tampil di sini setelah data tercatat.</p>
                                 </div>
                             </td>
                         </tr>

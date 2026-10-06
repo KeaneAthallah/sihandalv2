@@ -2,110 +2,118 @@
 
 use App\Models\Opd;
 use App\Models\Penerimaan;
-use App\Models\PenerimaanDetail;
+use App\Models\Rekening;
 use App\Models\RekeningBank;
-use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\TransaksiPenerimaanBku;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 
-function makeSumberDana(string $name): SumberDana
-{
-    return SumberDana::create(['nama_sumber_dana' => $name]);
-}
-
-test('admin can create a penerimaan with detail sumber dana rows', function () {
+test('admin can create a penerimaan keyed to a rekening and sub rekening', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumberDana = makeSumberDana('DAU');
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $sub = Rekening::create(['kode' => '4.1.1.01', 'nama' => 'Pajak Daerah', 'tipe' => 'pendapatan', 'parent_id' => $utama->id]);
 
     $this->actingAs($admin)
         ->post('/master-data/penerimaan', [
             'opd_id' => $opd->id,
+            'rekening_id' => $utama->id,
+            'sub_rekening_id' => $sub->id,
             'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => $sumberDana->id],
-            ],
         ])
         ->assertSessionHasNoErrors();
 
-    $this->assertDatabaseHas('penerimaan_details', [
-        'sumber_dana_id' => $sumberDana->id,
+    $this->assertDatabaseHas('penerimaans', [
+        'opd_id' => $opd->id,
+        'rekening_id' => $utama->id,
+        'sub_rekening_id' => $sub->id,
+        'target' => 1000000,
     ]);
 });
 
-test('admin can create a penerimaan with multiple detail sumber dana rows', function () {
+test('penerimaan sub rekening must be a detail of the chosen rekening utama', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumber1 = makeSumberDana('DAU');
-    $sumber2 = makeSumberDana('DAK');
-
-    $this->actingAs($admin)
-        ->post('/master-data/penerimaan', [
-            'opd_id' => $opd->id,
-            'target' => 2000000,
-            'details' => [
-                ['sumber_dana_id' => $sumber1->id],
-                ['sumber_dana_id' => $sumber2->id],
-            ],
-        ])
-        ->assertSessionHasNoErrors();
-
-    $master = Penerimaan::where('opd_id', $opd->id)->first();
-    expect($master->details()->count())->toBe(2);
-});
-
-test('cannot create a detail with a nonexistent sumber dana', function () {
-    $admin = User::factory()->admin()->create();
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $other = Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Retribusi', 'tipe' => 'pendapatan']);
+    $orphan = Rekening::create(['kode' => '4.1.2.01', 'nama' => 'Retribusi Daerah', 'tipe' => 'pendapatan', 'parent_id' => $other->id]);
 
     $this->actingAs($admin)
         ->from('/master-data/penerimaan/create')
         ->post('/master-data/penerimaan', [
             'opd_id' => $opd->id,
+            'rekening_id' => $utama->id,
+            'sub_rekening_id' => $orphan->id,
             'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => 99999],
-            ],
         ])
-        ->assertSessionHasErrors('details.0.sumber_dana_id');
+        ->assertSessionHasErrors('sub_rekening_id');
 
-    $this->assertDatabaseCount('penerimaan_details', 0);
+    $this->assertDatabaseCount('penerimaans', 0);
 });
 
-test('blank detail rows are ignored', function () {
+test('penerimaan sub rekening must share the pendapatan tipe', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $kasSub = Rekening::create(['kode' => '1.1.1.01', 'nama' => 'Kas Tunai', 'tipe' => 'kas', 'parent_id' => $utama->id]);
 
     $this->actingAs($admin)
+        ->from('/master-data/penerimaan/create')
         ->post('/master-data/penerimaan', [
             'opd_id' => $opd->id,
+            'rekening_id' => $utama->id,
+            'sub_rekening_id' => $kasSub->id,
             'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => ''],
-            ],
         ])
-        ->assertSessionHasNoErrors();
+        ->assertSessionHasErrors('sub_rekening_id');
 
-    $master = Penerimaan::where('opd_id', $opd->id)->first();
-    expect($master)->not->toBeNull()
-        ->and($master->details()->count())->toBe(0);
+    $this->assertDatabaseCount('penerimaans', 0);
 });
 
-test('opd user can manage details of their own opd only', function () {
+test('penerimaan sub rekening requires a rekening utama first', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sub = Rekening::create(['kode' => '4.1.1.01', 'nama' => 'Pajak Daerah', 'tipe' => 'pendapatan']);
+
+    $this->actingAs($admin)
+        ->from('/master-data/penerimaan/create')
+        ->post('/master-data/penerimaan', [
+            'opd_id' => $opd->id,
+            'sub_rekening_id' => $sub->id,
+            'target' => 1000000,
+        ])
+        ->assertSessionHasErrors('sub_rekening_id');
+
+    $this->assertDatabaseCount('penerimaans', 0);
+});
+
+test('penerimaan rekening utama must be a pendapatan rekening', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $kas = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Umum', 'tipe' => 'kas']);
+
+    $this->actingAs($admin)
+        ->from('/master-data/penerimaan/create')
+        ->post('/master-data/penerimaan', [
+            'opd_id' => $opd->id,
+            'rekening_id' => $kas->id,
+            'target' => 1000000,
+        ])
+        ->assertSessionHasErrors('rekening_id');
+
+    $this->assertDatabaseCount('penerimaans', 0);
+});
+
+test('opd user can manage penerimaan of their own opd only', function () {
     $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
-    $sumberDana = makeSumberDana('DAU');
 
     $this->actingAs($userA)
         ->post('/master-data/penerimaan', [
             'opd_id' => $opdB->id,
             'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => $sumberDana->id],
-            ],
         ])
         ->assertSessionHasErrors('opd_id');
 
@@ -113,102 +121,38 @@ test('opd user can manage details of their own opd only', function () {
         ->post('/master-data/penerimaan', [
             'opd_id' => $opdA->id,
             'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => $sumberDana->id],
-            ],
         ])
         ->assertSessionHasNoErrors();
 
-    $master = Penerimaan::where('opd_id', $opdA->id)->first();
-    expect($master)->not->toBeNull()
-        ->and($master->details()->count())->toBe(1);
+    expect(Penerimaan::where('opd_id', $opdA->id)->count())->toBe(1)
+        ->and(Penerimaan::where('opd_id', $opdB->id)->count())->toBe(0);
 });
 
-test('duplicate sumber dana combinations are rejected within one penerimaan', function () {
+test('admin can update a penerimaan to retarget its sub rekening', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumberDana = makeSumberDana('DAU');
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $subA = Rekening::create(['kode' => '4.1.1.01', 'nama' => 'Pajak A', 'tipe' => 'pendapatan', 'parent_id' => $utama->id]);
+    $subB = Rekening::create(['kode' => '4.1.1.02', 'nama' => 'Pajak B', 'tipe' => 'pendapatan', 'parent_id' => $utama->id]);
 
-    $this->actingAs($admin)
-        ->from('/master-data/penerimaan/create')
-        ->post('/master-data/penerimaan', [
-            'opd_id' => $opd->id,
-            'target' => 1000000,
-            'details' => [
-                ['sumber_dana_id' => $sumberDana->id],
-                ['sumber_dana_id' => $sumberDana->id],
-            ],
-        ])
-        ->assertSessionHasErrors('details.1.sumber_dana_id');
-
-    $this->assertDatabaseCount('penerimaan_details', 0);
-});
-
-test('admin can update details to add, edit and remove rows', function () {
-    $admin = User::factory()->admin()->create();
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumber1 = makeSumberDana('DAU');
-    $sumber2 = makeSumberDana('DAK');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
-    $detail = PenerimaanDetail::create([
-        'penerimaan_id' => $master->id,
-        'sumber_dana_id' => $sumber1->id,
+    $master = Penerimaan::create([
+        'opd_id' => $opd->id,
+        'rekening_id' => $utama->id,
+        'sub_rekening_id' => $subA->id,
+        'target' => 1000000,
     ]);
 
     $this->actingAs($admin)
         ->from("/master-data/penerimaan/{$master->id}/edit")
         ->put("/master-data/penerimaan/{$master->id}", [
             'opd_id' => $opd->id,
+            'rekening_id' => $utama->id,
+            'sub_rekening_id' => $subB->id,
             'target' => 1500000,
-            'details' => [
-                ['id' => $detail->id, 'sumber_dana_id' => $sumber2->id],
-                ['sumber_dana_id' => $sumber1->id],
-            ],
         ])
         ->assertSessionHasNoErrors();
 
-    expect($detail->fresh()->sumber_dana_id)->toBe($sumber2->id)
-        ->and($master->details()->count())->toBe(2);
-
-    $this->actingAs($admin)
-        ->put("/master-data/penerimaan/{$master->id}", [
-            'opd_id' => $opd->id,
-            'target' => 1500000,
-            'details' => [
-                ['id' => $detail->id, 'sumber_dana_id' => $sumber2->id],
-            ],
-        ])
-        ->assertSessionHasNoErrors();
-
-    expect($master->details()->count())->toBe(1)
-        ->and($master->details()->where('sumber_dana_id', $sumber1->id)->exists())->toBeFalse();
-});
-
-test('detail not owned by the penerimaan is rejected on update', function () {
-    $admin = User::factory()->admin()->create();
-    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumberDana = makeSumberDana('DAU');
-
-    $masterA = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
-    $masterB = Penerimaan::create(['opd_id' => $opd->id, 'target' => 2000000]);
-    $detailOfB = PenerimaanDetail::create([
-        'penerimaan_id' => $masterB->id,
-        'sumber_dana_id' => $sumberDana->id,
-    ]);
-
-    $this->actingAs($admin)
-        ->from("/master-data/penerimaan/{$masterA->id}/edit")
-        ->put("/master-data/penerimaan/{$masterA->id}", [
-            'opd_id' => $opd->id,
-            'target' => 1000000,
-            'details' => [
-                ['id' => $detailOfB->id, 'sumber_dana_id' => $sumberDana->id],
-            ],
-        ])
-        ->assertSessionHasErrors('details.0.id');
-
-    expect($masterA->details()->count())->toBe(0);
+    expect($master->fresh()->sub_rekening_id)->toBe($subB->id);
 });
 
 test('transaksi penerimaan dapat membooking rekening bank pada baris BKU', function () {
@@ -221,9 +165,7 @@ test('transaksi penerimaan dapat membooking rekening bank pada baris BKU', funct
         'is_active' => true,
     ]);
 
-    $sumberDana = makeSumberDana('DAU');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'sumber_dana_id' => $sumberDana->id, 'target' => 1000000]);
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
@@ -243,8 +185,93 @@ test('transaksi penerimaan dapat membooking rekening bank pada baris BKU', funct
 
     // The bank lives on the BKU row, not on the transaction header.
     expect(Schema::hasColumn('transaksi_penerimaans', 'rekening_bank_id'))->toBeFalse()
-        ->and(Schema::hasColumn('transaksi_penerimaan_bkus', 'rekening_id'))->toBeFalse()
         ->and((float) $master->fresh()->realisasi)->toBe(400000.0);
+});
+
+test('baris BKU dapat membooking opd dan rekening akuntansi per baris', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $sub = Rekening::create(['kode' => '4.1.1.01', 'nama' => 'Pajak Daerah', 'tipe' => 'pendapatan', 'parent_id' => $utama->id]);
+
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
+
+    $this->actingAs($admin)
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $master->id,
+            'realisasi' => 400000,
+            'tanggal' => now()->format('Y-m-d'),
+            'bkus' => [
+                [
+                    'opd_id' => $opd->id,
+                    'nomor_bku' => 'BKU-001',
+                    'tanggal_bku' => now()->format('Y-m-d'),
+                    'nilai' => 400000,
+                    'rekening_id' => $utama->id,
+                    'sub_rekening_id' => $sub->id,
+                ],
+            ],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('transaksi_penerimaan_bkus', [
+        'nomor_bku' => 'BKU-001',
+        'opd_id' => $opd->id,
+        'rekening_id' => $utama->id,
+        'sub_rekening_id' => $sub->id,
+    ]);
+});
+
+test('baris BKU menolak rekening utama yang bukan pendapatan', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $kas = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Umum', 'tipe' => 'kas']);
+
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
+
+    $this->actingAs($admin)
+        ->from('/transaksi-penerimaan/create')
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $master->id,
+            'realisasi' => 400000,
+            'tanggal' => now()->format('Y-m-d'),
+            'bkus' => [
+                ['nomor_bku' => 'BKU-001', 'tanggal_bku' => now()->format('Y-m-d'), 'nilai' => 400000, 'rekening_id' => $kas->id],
+            ],
+        ])
+        ->assertSessionHasErrors('bkus.0.rekening_id');
+
+    expect(TransaksiPenerimaan::count())->toBe(0);
+});
+
+test('baris BKU menolak sub rekening yang bukan detail dari rekening utamanya', function () {
+    $admin = User::factory()->admin()->create();
+    $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $utama = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
+    $other = Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Retribusi', 'tipe' => 'pendapatan']);
+    $orphan = Rekening::create(['kode' => '4.1.2.01', 'nama' => 'Retribusi Daerah', 'tipe' => 'pendapatan', 'parent_id' => $other->id]);
+
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
+
+    $this->actingAs($admin)
+        ->from('/transaksi-penerimaan/create')
+        ->post('/transaksi-penerimaan', [
+            'penerimaan_id' => $master->id,
+            'realisasi' => 400000,
+            'tanggal' => now()->format('Y-m-d'),
+            'bkus' => [
+                [
+                    'nomor_bku' => 'BKU-001',
+                    'tanggal_bku' => now()->format('Y-m-d'),
+                    'nilai' => 400000,
+                    'rekening_id' => $utama->id,
+                    'sub_rekening_id' => $orphan->id,
+                ],
+            ],
+        ])
+        ->assertSessionHasErrors('bkus.0.sub_rekening_id');
+
+    expect(TransaksiPenerimaan::count())->toBe(0);
 });
 
 test('satu transaksi penerimaan dapat memakai rekening bank berbeda di tiap baris BKU', function () {
@@ -253,9 +280,7 @@ test('satu transaksi penerimaan dapat memakai rekening bank berbeda di tiap bari
     $bankA = RekeningBank::create(['bank_name' => 'Bank BPD', 'account_number' => '0010-01-000123-7', 'account_name' => 'A', 'is_active' => true]);
     $bankB = RekeningBank::create(['bank_name' => 'Bank BRI', 'account_number' => '1111-01-000999-9', 'account_name' => 'B', 'is_active' => true]);
 
-    $sumberDana = makeSumberDana('DAU');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'sumber_dana_id' => $sumberDana->id, 'target' => 1000000]);
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
@@ -285,9 +310,7 @@ test('transaksi penerimaan menolak rekening bank yang tidak aktif pada baris BKU
         'is_active' => false,
     ]);
 
-    $sumberDana = makeSumberDana('DAU');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'sumber_dana_id' => $sumberDana->id, 'target' => 1000000]);
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
 
     $this->actingAs($admin)
         ->from('/transaksi-penerimaan/create')
@@ -309,9 +332,7 @@ test('baris BKU dapat disimpan tanpa rekening bank', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
 
-    $sumberDana = makeSumberDana('DAU');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'sumber_dana_id' => $sumberDana->id, 'target' => 1000000]);
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
@@ -336,9 +357,7 @@ test('baris BKU dapat berpindah rekening bank saat transaksi diupdate', function
     $bankA = RekeningBank::create(['bank_name' => 'Bank BPD', 'account_number' => '0010-01-000123-7', 'account_name' => 'A', 'is_active' => true]);
     $bankB = RekeningBank::create(['bank_name' => 'Bank BRI', 'account_number' => '1111-01-000999-9', 'account_name' => 'B', 'is_active' => true]);
 
-    $sumberDana = makeSumberDana('DAU');
-
-    $master = Penerimaan::create(['opd_id' => $opd->id, 'sumber_dana_id' => $sumberDana->id, 'target' => 1000000]);
+    $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
     $transaksi = TransaksiPenerimaan::create([
         'penerimaan_id' => $master->id,
         'realisasi' => 250000,

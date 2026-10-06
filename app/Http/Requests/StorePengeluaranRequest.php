@@ -25,13 +25,12 @@ class StorePengeluaranRequest extends FormRequest
             'sub_kegiatan_id' => ['nullable', 'exists:sub_kegiatans,id'],
             'belanja_id' => ['nullable', 'exists:belanjas,id'],
             'sumber_dana_id' => ['required', 'exists:sumber_danas,id'],
-            'kode_kegiatan' => ['nullable', 'string', 'max:50'],
-            'nama_kegiatan' => ['nullable', 'string', 'max:255'],
             'sumber_dana' => ['nullable', 'string', 'max:255'],
-            'anggaran' => ['required', 'numeric', 'min:0'],
-            'realisasi' => ['nullable', 'numeric', 'min:0'],
+            'jumlah' => ['required', 'numeric', 'min:0'],
+            'keperluan' => ['nullable', 'string', 'max:255'],
+            'no_sp2d' => ['nullable', 'string', 'max:100'],
+            'tanggal_sp2d' => ['nullable', 'date'],
             'tanggal' => ['nullable', 'date'],
-            'keterangan' => ['nullable', 'string', 'max:255'],
         ];
     }
 

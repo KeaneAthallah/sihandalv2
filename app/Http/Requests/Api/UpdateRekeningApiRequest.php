@@ -36,7 +36,6 @@ class UpdateRekeningApiRequest extends FormRequest
 
                     return;
                 }
-
                 $excludedIds = collect([$rekening->id])->merge($this->descendantIds($rekening))->all();
 
                 if (in_array((int) $parentId, $excludedIds, true)) {
@@ -55,12 +54,8 @@ class UpdateRekeningApiRequest extends FormRequest
                 return;
             }
 
-            if ($parent->tipe !== 'kas') {
-                $validator->errors()->add('parent_id', 'Hanya rekening bertipe kas yang dapat memiliki rekening detail kas.');
-            }
-
-            if ($tipe !== 'kas') {
-                $validator->errors()->add('tipe', 'Rekening detail kas harus bertipe kas.');
+            if ($parent->tipe !== $tipe) {
+                $validator->errors()->add('parent_id', 'Rekening detail harus bertipe sama dengan rekening induknya.');
             }
         });
     }

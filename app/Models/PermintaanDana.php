@@ -15,7 +15,7 @@ class PermintaanDana extends Model
         'nomor_permintaan', 'opd_id', 'sumber_dana_id', 'kegiatan_id',
         'sub_kegiatan_id', 'belanja_id', 'rekening_id', 'tahun_anggaran_id',
         'jumlah', 'sumber_dana', 'keperluan', 'status',
-        'tanggal', 'tanggal_disetujui', 'catatan',
+        'tanggal', 'tanggal_disetujui',
     ];
 
     protected $casts = [

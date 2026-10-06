@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\TransaksiPenerimaanBkuResource;
+use App\Models\Rekening;
 use App\Models\RekeningBank;
 use App\Models\TransaksiPenerimaan;
 use App\Models\TransaksiPenerimaanBku;
@@ -12,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -86,11 +88,16 @@ class TransaksiPenerimaanBkuController extends ApiController
     private function validateBku(Request $request): array
     {
         $validated = Validator::make($request->all(), [
+            'opd_id' => ['nullable', 'integer', 'exists:opds,id'],
             'nomor_bku' => ['required', 'string', 'max:100'],
             'tanggal_bku' => ['required', 'date'],
             'nilai' => ['required', 'numeric', 'min:0'],
+            'rekening_id' => ['nullable', 'integer', Rule::exists('rekenings', 'id')->where(fn ($q) => $q->where('tipe', 'pendapatan'))],
+            'sub_rekening_id' => ['nullable', 'integer', 'exists:rekenings,id'],
             'rekening_bank_id' => ['nullable', 'integer', 'exists:rekening_banks,id'],
         ])->validate();
+
+        $this->validateBkuRekening($validated);
 
         if (($validated['rekening_bank_id'] ?? null) !== null) {
             $bank = RekeningBank::find($validated['rekening_bank_id']);
@@ -103,6 +110,50 @@ class TransaksiPenerimaanBkuController extends ApiController
         }
 
         return $validated;
+    }
+
+    /**
+     * A BKU's rekening utama must be tipe pendapatan and a sub
+     * rekening must be a detail of it.
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function validateBkuRekening(array $validated): void
+    {
+        $rekeningId = $validated['rekening_id'] ?? null;
+        $subRekeningId = $validated['sub_rekening_id'] ?? null;
+
+        if ($rekeningId !== null) {
+            $rekening = Rekening::find($rekeningId);
+
+            if ($rekening !== null && $rekening->tipe !== 'pendapatan') {
+                throw ValidationException::withMessages([
+                    'rekening_id' => ['Rekening utama pada BKU harus bertipe pendapatan.'],
+                ]);
+            }
+        }
+
+        if ($subRekeningId === null) {
+            return;
+        }
+
+        $sub = Rekening::find($subRekeningId);
+
+        if ($sub === null) {
+            return;
+        }
+
+        if ($rekeningId === null) {
+            throw ValidationException::withMessages([
+                'sub_rekening_id' => ['Pilih rekening utama terlebih dahulu sebelum memilih sub rekening.'],
+            ]);
+        }
+
+        if ((int) $sub->parent_id !== (int) $rekeningId) {
+            throw ValidationException::withMessages([
+                'sub_rekening_id' => ['Sub rekening harus merupakan detail dari rekening utama pada BKU ini.'],
+            ]);
+        }
     }
 
     private function authorizeTransaction(TransaksiPenerimaan $transaksi, User $user): void

@@ -90,13 +90,11 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-        <x-chart-card title="Distribusi Status" subtitle="Status permintaan dana saat ini" class="rounded-lg">
-            <div id="status-chart" class="w-full min-h-[300px]"></div>
-        </x-chart-card>
-
-        <x-chart-card title="Penerimaan per Sumber Dana" subtitle="Penerimaan kumulatif tahun anggaran" class="rounded-lg">
-            <div id="radial-chart" class="w-full min-h-[300px]"></div>
-        </x-chart-card>
+        <div class="lg:col-span-2">
+            <x-chart-card title="Distribusi Status" subtitle="Status permintaan dana saat ini" class="rounded-lg">
+                <div id="status-chart" class="w-full min-h-[300px]"></div>
+            </x-chart-card>
+        </div>
     </div>
 
     @if(isset($recentPermintaan) && $recentPermintaan->count())
@@ -162,11 +160,6 @@
             'ditolak' => '#ef4444',
             default => '#94a3b8',
         }, $statusLabels);
-
-        $sumberLabels = $sumberDanaPenerimaan->keys()->all();
-        $sumberData = $sumberDanaPenerimaan->map(fn($v) => round($v / 1000000000, 1))->values()->all();
-        $sumberColors = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4', '#f43f5e', '#f97316', '#14b8a6'];
-        $radialColors = array_slice($sumberColors, 0, max(count($sumberLabels), 1));
     @endphp
 
     @push('scripts')
@@ -200,21 +193,6 @@
                 legend: { position: 'bottom', fontSize: '12px', itemMargin: { horizontal: 8, vertical: 4 } },
                 dataLabels: { enabled: false },
                 stroke: { width: 0 }
-            }).render();
-
-            new ApexCharts(document.querySelector('#radial-chart'), {
-                series: @json($sumberData ?: [1]),
-                chart: { type: 'radialBar', height: 300, fontFamily: 'Instrument Sans, sans-serif' },
-                labels: @json($sumberLabels ?: ['Belum ada data']),
-                colors: @json($radialColors ?: ['#94a3b8']),
-                plotOptions: {
-                    radialBar: {
-                        hollow: { size: '45%' },
-                        dataLabels: { name: { fontSize: '12px' }, value: { fontSize: '14px', fontWeight: 600, formatter: (v) => 'Rp ' + v + ' M' } }
-                    }
-                },
-                legend: { position: 'bottom', fontSize: '12px', itemMargin: { horizontal: 8, vertical: 4 } },
-                stroke: { lineCap: 'round' }
             }).render();
         });
     </script>

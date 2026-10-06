@@ -145,11 +145,10 @@ test('admin can create penerimaan master and persentase reflects transactions', 
         ->post('/master-data/penerimaan', [
             'opd_id' => $opd->id,
             'rekening_id' => $rekening->id,
-            'nama_sumber_dana' => 'PAD',
             'target' => 1000000,
         ]);
 
-    $penerimaan = Penerimaan::where('nama_sumber_dana', 'PAD')->first();
+    $penerimaan = Penerimaan::where('rekening_id', $rekening->id)->first();
     expect($penerimaan)->not->toBeNull()
         ->and((float) $penerimaan->persentase)->toBe(0.0);
 
@@ -196,7 +195,6 @@ test('opd user cannot edit penerimaan from another opd', function () {
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
-        'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
     ]);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
@@ -211,7 +209,6 @@ test('opd user cannot create transaksi against another opd penerimaan', function
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
-        'nama_sumber_dana' => 'PAD B',
         'target' => 1000000,
     ]);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
@@ -227,7 +224,7 @@ test('opd user cannot create transaksi against another opd penerimaan', function
     expect(TransaksiPenerimaan::count())->toBe(0);
 });
 
-test('admin can create pengeluaran with persentase', function () {
+test('admin can create pengeluaran dengan jumlah dan keperluan', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
@@ -237,56 +234,56 @@ test('admin can create pengeluaran with persentase', function () {
             'opd_id' => $opd->id,
             'kegiatan_id' => null,
             'sumber_dana_id' => $sumberDana->id,
-            'nama_kegiatan' => 'Rapat',
             'sumber_dana' => 'DAU',
-            'anggaran' => 1000000,
-            'realisasi' => 400000,
+            'jumlah' => 400000,
+            'keperluan' => 'Rapat',
         ]);
 
-    $pengeluaran = Pengeluaran::where('nama_kegiatan', 'Rapat')->first();
+    $pengeluaran = Pengeluaran::where('keperluan', 'Rapat')->first();
     expect($pengeluaran)->not->toBeNull()
-        ->and((float) $pengeluaran->persentase)->toBe(40.0);
+        ->and((float) $pengeluaran->jumlah)->toBe(400000.0);
 });
 
-test('posisi kas computes saldo akhir on store and update', function () {
+test('posisi kas menyimpan saldo per rekening', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $rekening = Rekening::create(['kode' => '1.1.1', 'nama' => 'Kas Umum', 'tipe' => 'kas']);
 
     $this->actingAs($admin)
         ->post('/posisi-kas', [
             'opd_id' => $opd->id,
-            'rekening_id' => $rekening->id,
-            'saldo_awal' => 1000000,
-            'penerimaan' => 500000,
-            'pengeluaran' => 200000,
+            'nama_rekening' => 'Kas Umum',
+            'nomor_rekening' => '001-000-1',
+            'saldo' => 1300000,
         ]);
 
     $posisiKas = PosisiKas::where('opd_id', $opd->id)->first();
     expect($posisiKas)->not->toBeNull()
-        ->and((float) $posisiKas->saldo_akhir)->toBe(1300000.0);
+        ->and($posisiKas->nama_rekening)->toBe('Kas Umum')
+        ->and((float) $posisiKas->saldo)->toBe(1300000.0);
 
     $this->actingAs($admin)
         ->put("/posisi-kas/{$posisiKas->id}", [
             'opd_id' => $opd->id,
-            'rekening_id' => $rekening->id,
-            'saldo_awal' => 1000000,
-            'penerimaan' => 0,
-            'pengeluaran' => 100000,
+            'nama_rekening' => 'Kas Umum',
+            'nomor_rekening' => '001-000-1',
+            'saldo' => 900000,
         ]);
 
-    expect((float) $posisiKas->fresh()->saldo_akhir)->toBe(900000.0);
+    expect((float) $posisiKas->fresh()->saldo)->toBe(900000.0);
 });
 
 test('transfer dana gets auto number and draft status', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
 
     $this->actingAs($admin)
         ->post('/transfer-dana', [
             'opd_id' => $opd->id,
             'jumlah' => 500000,
-            'sumber_dana' => 'DAU',
+            'sumber_dana_pengirim_id' => $sumberDanaB->id,
+            'sumber_dana_penerima_id' => $sumberDana->id,
             'keterangan' => 'Transfer operasional',
         ]);
 
@@ -299,11 +296,14 @@ test('transfer dana gets auto number and draft status', function () {
 test('transfer dana sets tanggal_selesai when marked selesai', function () {
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
     $transfer = TransferDana::create([
         'nomor_transfer' => 'TF-0001/2026',
         'opd_id' => $opd->id,
         'jumlah' => 500000,
-        'sumber_dana' => 'DAU',
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
         'status' => 'diproses',
     ]);
 
@@ -311,7 +311,8 @@ test('transfer dana sets tanggal_selesai when marked selesai', function () {
         ->put("/transfer-dana/{$transfer->id}", [
             'opd_id' => $opd->id,
             'jumlah' => 500000,
-            'sumber_dana' => 'DAU',
+            'sumber_dana_pengirim_id' => $sumberDanaB->id,
+            'sumber_dana_penerima_id' => $sumberDana->id,
             'status' => 'selesai',
         ]);
 
@@ -336,8 +337,6 @@ test('rekening saldo is derived from transactions, never persisted', function ()
     $penerimaan = Penerimaan::create([
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
-        'sumber_dana_id' => $sumberDana->id,
-        'nama_sumber_dana' => 'DAU',
         'target' => 100000000,
     ]);
 
@@ -349,8 +348,8 @@ test('rekening saldo is derived from transactions, never persisted', function ()
         ]);
     }
 
-    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'realisasi' => 5000000, 'sumber_dana' => 'DAU']);
-    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'realisasi' => 10000000, 'sumber_dana' => 'DAU']);
+    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'jumlah' => 5000000, 'sumber_dana' => 'DAU']);
+    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'jumlah' => 10000000, 'sumber_dana' => 'DAU']);
 
     // 45.000.000 penerimaan - 15.000.000 pengeluaran = 30.000.000
     expect((float) $rekening->totalPenerimaan())->toBe(45000000.0)
@@ -359,7 +358,6 @@ test('rekening saldo is derived from transactions, never persisted', function ()
 
     // saldo is never a database column / persisted attribute
     expect($rekening->getAttributes())->not->toHaveKey('saldo');
-    $this->assertDatabaseMissing('rekenings', ['id' => $rekening->id, 'saldo' => 30000000.0]);
 });
 
 test('rekening balance is zero when there are no transactions', function () {
@@ -371,14 +369,11 @@ test('rekening balance is zero when there are no transactions', function () {
 
 test('rekening balance equals penerimaan when only penerimaan exists', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
-    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
     $rekening = Rekening::create(['kode' => '1.1.1', 'nama' => 'Bank BPD', 'tipe' => 'kas']);
 
     $penerimaan = Penerimaan::create([
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
-        'sumber_dana_id' => $sumberDana->id,
-        'nama_sumber_dana' => 'DAU',
         'target' => 100000,
     ]);
     TransaksiPenerimaan::create(['penerimaan_id' => $penerimaan->id, 'realisasi' => 40000, 'tanggal' => now()]);
@@ -390,7 +385,7 @@ test('rekening balance is negative pengeluaran when only pengeluaran exists', fu
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $rekening = Rekening::create(['kode' => '1.1.1', 'nama' => 'Bank BPD', 'tipe' => 'kas']);
 
-    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'realisasi' => 25000, 'sumber_dana' => 'DAU']);
+    Pengeluaran::create(['opd_id' => $opd->id, 'rekening_id' => $rekening->id, 'jumlah' => 25000, 'sumber_dana' => 'DAU']);
 
     expect((float) $rekening->saldo())->toBe(-25000.0);
 });
@@ -398,7 +393,6 @@ test('rekening balance is negative pengeluaran when only pengeluaran exists', fu
 test('rekening balance respects opd isolation', function () {
     $opdA = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
-    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
 
     $rekening = Rekening::create(['kode' => '1.1.1', 'nama' => 'Bank BPD', 'tipe' => 'kas']);
 
@@ -406,14 +400,12 @@ test('rekening balance respects opd isolation', function () {
     $pA = Penerimaan::create([
         'opd_id' => $opdA->id,
         'rekening_id' => $rekening->id,
-        'sumber_dana_id' => $sumberDana->id,
-        'nama_sumber_dana' => 'DAU',
         'target' => 100000000,
     ]);
     TransaksiPenerimaan::create(['penerimaan_id' => $pA->id, 'realisasi' => 30000000, 'tanggal' => now()]);
 
     // OPD B: 5.000.000 pengeluaran
-    Pengeluaran::create(['opd_id' => $opdB->id, 'rekening_id' => $rekening->id, 'realisasi' => 5000000, 'sumber_dana' => 'DAU']);
+    Pengeluaran::create(['opd_id' => $opdB->id, 'rekening_id' => $rekening->id, 'jumlah' => 5000000, 'sumber_dana' => 'DAU']);
 
     // Admin (global) sees the net across all OPDs.
     expect((float) $rekening->saldo())->toBe(25000000.0);

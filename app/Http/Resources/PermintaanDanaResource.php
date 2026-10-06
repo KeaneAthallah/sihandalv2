@@ -40,7 +40,6 @@ class PermintaanDanaResource extends JsonResource
             'status' => $this->status,
             'tanggal' => $this->tanggal?->toDateString(),
             'tanggal_disetujui' => $this->tanggal_disetujui?->toDateString(),
-            'catatan' => $this->catatan,
             'persetujuans' => PersetujuanResource::collection($this->whenLoaded('persetujuans')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

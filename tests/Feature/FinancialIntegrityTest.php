@@ -173,13 +173,16 @@ test('transfer dana requires amount greater than zero', function () {
 
 test('completed transfer dana cannot be edited', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $transfer = TransferDana::create([
         'nomor_transfer' => 'TF-0001/'.now()->year,
         'opd_id' => $opd->id,
         'jumlah' => 500000,
-        'sumber_dana' => 'DAU',
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
         'status' => 'selesai',
     ]);
 
@@ -188,7 +191,8 @@ test('completed transfer dana cannot be edited', function () {
         ->put("/transfer-dana/{$transfer->id}", [
             'opd_id' => $opd->id,
             'jumlah' => 750000,
-            'sumber_dana' => 'DAU',
+            'sumber_dana_pengirim_id' => $sumberDanaB->id,
+            'sumber_dana_penerima_id' => $sumberDana->id,
             'status' => 'draft',
         ])
         ->assertSessionHasErrors('status');
@@ -203,13 +207,16 @@ test('completed transfer dana cannot be edited', function () {
 test('opd user cannot reassign transfer to another opd', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $transfer = TransferDana::create([
         'nomor_transfer' => 'TF-0002/'.now()->year,
         'opd_id' => $opd->id,
         'jumlah' => 500000,
-        'sumber_dana' => 'DAU',
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
         'status' => 'draft',
     ]);
 
@@ -218,7 +225,8 @@ test('opd user cannot reassign transfer to another opd', function () {
         ->put("/transfer-dana/{$transfer->id}", [
             'opd_id' => $opdB->id,
             'jumlah' => 500000,
-            'sumber_dana' => 'DAU',
+            'sumber_dana_pengirim_id' => $sumberDanaB->id,
+            'sumber_dana_penerima_id' => $sumberDana->id,
         ]);
 
     $this->assertDatabaseHas('transfer_danas', [
@@ -229,13 +237,16 @@ test('opd user cannot reassign transfer to another opd', function () {
 
 test('completed transfer dana cannot be deleted', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $transfer = TransferDana::create([
         'nomor_transfer' => 'TF-0003/'.now()->year,
         'opd_id' => $opd->id,
         'jumlah' => 500000,
-        'sumber_dana' => 'DAU',
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
         'status' => 'selesai',
     ]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ProvidesBudgetHierarchyCascade;
 use App\Http\Requests\StorePengeluaranRequest;
 use App\Http\Requests\UpdatePengeluaranRequest;
 use App\Models\Kegiatan;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class PengeluaranController extends Controller
 {
+    use ProvidesBudgetHierarchyCascade;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -36,9 +39,7 @@ class PengeluaranController extends Controller
 
         $pengeluarans = $query->orderBy('tanggal', 'desc')->paginate(15);
 
-        $totalAnggaran = (clone $query)->sum('anggaran');
-        $totalRealisasi = (clone $query)->sum('realisasi');
-        $persentase = $totalAnggaran > 0 ? round(($totalRealisasi / $totalAnggaran) * 100, 1) : 0;
+        $totalJumlah = (clone $query)->sum('jumlah');
 
         $opds = $this->userOpds($user);
         $kegiatans = Kegiatan::with('program')->orderBy('kode_kegiatan')->get();
@@ -47,7 +48,7 @@ class PengeluaranController extends Controller
         $filters = $request->only(['opd_id', 'kegiatan_id', 'sumber_dana_id', 'rekening_id', 'tanggal_dari', 'tanggal_sampai']);
 
         return view('pengeluaran.index', compact(
-            'pengeluarans', 'totalAnggaran', 'totalRealisasi', 'persentase',
+            'pengeluarans', 'totalJumlah',
             'opds', 'kegiatans', 'sumberDanas', 'rekenings', 'filters'
         ));
     }
@@ -57,16 +58,18 @@ class PengeluaranController extends Controller
         $user = request()->user();
         $opds = $this->userOpds($user);
 
-        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
-        if (! $user->isAdmin()) {
-            $kegiatanQuery->where('opd_id', $user->opd_id);
-        }
-        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
-
+        $programsByOpd = $this->programsByOpd();
+        $kegiatansByProgram = $this->kegiatansByProgram($user);
+        $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
+        $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
         $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('pengeluaran.create', compact('opds', 'kegiatans', 'rekenings', 'sumberDanas'));
+        return view('pengeluaran.create', compact(
+            'opds', 'programsByOpd', 'kegiatansByProgram',
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan',
+            'rekenings', 'sumberDanas'
+        ));
     }
 
     public function edit(Pengeluaran $pengeluaran)
@@ -75,16 +78,18 @@ class PengeluaranController extends Controller
         $user = request()->user();
         $opds = $this->userOpds($user);
 
-        $kegiatanQuery = Kegiatan::with(['program', 'opd']);
-        if (! $user->isAdmin()) {
-            $kegiatanQuery->where('opd_id', $user->opd_id);
-        }
-        $kegiatans = $kegiatanQuery->orderBy('kode_kegiatan')->get();
-
-        $rekenings = Rekening::orderBy('kode')->get();
+        $programsByOpd = $this->programsByOpd();
+        $kegiatansByProgram = $this->kegiatansByProgram($user);
+        $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
+        $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
+        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
         $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
-        return view('pengeluaran.edit', compact('pengeluaran', 'opds', 'kegiatans', 'rekenings', 'sumberDanas'));
+        return view('pengeluaran.edit', compact(
+            'pengeluaran', 'opds', 'programsByOpd', 'kegiatansByProgram',
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan',
+            'rekenings', 'sumberDanas'
+        ));
     }
 
     public function store(StorePengeluaranRequest $request)
@@ -93,13 +98,6 @@ class PengeluaranController extends Controller
 
         DB::transaction(function () use ($request, &$data) {
             $data['tahun_anggaran_id'] = TahunAnggaran::currentActive()?->id;
-            $data['persentase'] = $data['anggaran'] > 0 ? round(($data['realisasi'] ?? 0) / $data['anggaran'] * 100, 2) : 0;
-
-            if ($data['kegiatan_id'] ?? null) {
-                $kegiatan = Kegiatan::find($data['kegiatan_id']);
-                $data['kode_kegiatan'] = $kegiatan?->kode_kegiatan;
-                $data['nama_kegiatan'] = $kegiatan?->nama_kegiatan;
-            }
 
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);
@@ -122,13 +120,6 @@ class PengeluaranController extends Controller
 
         DB::transaction(function () use ($request, $pengeluaran) {
             $data = $request->validated();
-            $data['persentase'] = $data['anggaran'] > 0 ? round(($data['realisasi'] ?? 0) / $data['anggaran'] * 100, 2) : 0;
-
-            if ($data['kegiatan_id'] ?? null) {
-                $kegiatan = Kegiatan::find($data['kegiatan_id']);
-                $data['kode_kegiatan'] = $kegiatan?->kode_kegiatan;
-                $data['nama_kegiatan'] = $kegiatan?->nama_kegiatan;
-            }
 
             if ($data['sumber_dana_id'] ?? null) {
                 $sumberDana = SumberDana::find($data['sumber_dana_id']);

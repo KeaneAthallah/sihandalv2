@@ -5,7 +5,6 @@ use App\Models\Dinas;
 use App\Models\Kegiatan;
 use App\Models\Opd;
 use App\Models\Penerimaan;
-use App\Models\PenerimaanDetail;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
@@ -76,6 +75,7 @@ function seedFullDataset(): array
     $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B', 'total_pagu' => 1000000000]);
 
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
+    $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Khusus (DAK)']);
 
     $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Kas Daerah', 'tipe' => 'kas']);
     $pendapatanRekening = Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan Pajak', 'tipe' => 'pendapatan']);
@@ -149,20 +149,12 @@ function seedFullDataset(): array
     $penerimaan = Penerimaan::create([
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
-        'sumber_dana_id' => $sumberDana->id,
-        'kode_sumber_dana' => 'DAU',
-        'nama_sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'sub_rekening_id' => $kasDetail->id,
         'target' => 1000000000,
-    ]);
-
-    PenerimaanDetail::create([
-        'penerimaan_id' => $penerimaan->id,
-        'sumber_dana_id' => $sumberDana->id,
     ]);
 
     $transaksiPenerimaan = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
-        'penerimaan_detail_id' => $penerimaan->details->first()->id,
         'nomor_registrasi' => 'REG-001',
         'realisasi' => 400000000,
         'tanggal' => now(),
@@ -180,23 +172,19 @@ function seedFullDataset(): array
     Pengeluaran::create([
         'opd_id' => $opd->id,
         'rekening_id' => $rekening->id,
-        'kode_kegiatan' => '1.2.3',
-        'nama_kegiatan' => 'Penyelenggaraan Kegiatan',
+        'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'Dana Alokasi Umum (DAU)',
-        'anggaran' => 500000000,
-        'realisasi' => 100000000,
-        'persentase' => 20,
+        'jumlah' => 100000000,
+        'keperluan' => 'Penyelenggaraan Kegiatan',
         'tanggal' => now(),
     ]);
 
     PosisiKas::create([
         'opd_id' => $opd->id,
-        'rekening_id' => $rekening->id,
         'tanggal' => now(),
-        'saldo_awal' => 100000000,
-        'penerimaan' => 50000000,
-        'pengeluaran' => 20000000,
-        'saldo_akhir' => 130000000,
+        'nama_rekening' => 'Kas Umum Daerah',
+        'nomor_rekening' => '0010-01-000123-7',
+        'saldo' => 130000000,
     ]);
 
     $admin = User::factory()->admin()->create();
@@ -243,14 +231,15 @@ function seedFullDataset(): array
         'nomor_transfer' => 'TRF-0001',
         'opd_id' => $opd->id,
         'jumlah' => 50000000,
-        'sumber_dana' => 'Dana Alokasi Umum (DAU)',
+        'sumber_dana_pengirim_id' => $sumberDanaB->id,
+        'sumber_dana_penerima_id' => $sumberDana->id,
         'keterangan' => 'Transfer',
         'status' => 'selesai',
         'tanggal' => now(),
     ]);
 
     return compact(
-        'opd', 'opdB', 'admin', 'user', 'sumberDana', 'program', 'rekening',
+        'opd', 'opdB', 'admin', 'user', 'sumberDana', 'sumberDanaB', 'program', 'rekening',
         'permintaanDraft', 'permintaanMenunggu', 'kegiatan', 'subKegiatan',
         'belanja', 'dinas', 'unit', 'upt', 'pendapatanRekening', 'kasInduk', 'kasDetail',
         'rekeningBank', 'rekeningBankB', 'inactiveRekeningBank', 'penerimaan', 'transaksiPenerimaan'

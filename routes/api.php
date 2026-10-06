@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\V1\KegiatanController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OpdController;
 use App\Http\Controllers\Api\V1\PenerimaanController;
-use App\Http\Controllers\Api\V1\PenerimaanDetailController;
 use App\Http\Controllers\Api\V1\PengeluaranController;
 use App\Http\Controllers\Api\V1\PermintaanDanaController;
 use App\Http\Controllers\Api\V1\PersetujuanController;
@@ -92,7 +91,6 @@ Route::prefix('v1')->group(function (): void {
         // Revenue -------------------------------------------------------------
         Route::apiResource('penerimaan', PenerimaanController::class)
             ->names('api.penerimaan');
-        Route::apiResource('penerimaan-details', PenerimaanDetailController::class)->only(['index', 'show']);
         Route::apiResource('transaksi-penerimaan', TransaksiPenerimaanController::class)->except(['show'])
             ->names('api.transaksi-penerimaan');
         Route::get('transaksi-penerimaan/{transaksiPenerimaan}', [TransaksiPenerimaanController::class, 'show'])
