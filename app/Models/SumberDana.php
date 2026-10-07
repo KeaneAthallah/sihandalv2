@@ -26,4 +26,21 @@ class SumberDana extends Model
     {
         return $this->hasMany(PermintaanDana::class);
     }
+
+    /**
+     * Cash receipts attributed to this fund source; the basis of
+     * the per-sumber-dana cash balance.
+     */
+    public function transaksiPenerimaans(): HasMany
+    {
+        return $this->hasMany(TransaksiPenerimaan::class);
+    }
+
+    /**
+     * Cash reservation rows (permintaan dana commit) for this fund source.
+     */
+    public function kasSumberDanas(): HasMany
+    {
+        return $this->hasMany(KasSumberDana::class);
+    }
 }

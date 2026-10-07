@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\KasService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -31,6 +32,23 @@ class UpdateTransferDanaRequest extends FormRequest
             if ($this->input('sumber_dana_pengirim_id') !== null
                 && $this->input('sumber_dana_pengirim_id') === $this->input('sumber_dana_penerima_id')) {
                 $validator->errors()->add('sumber_dana_penerima_id', 'Sumber dana pengirim dan penerima tidak boleh sama.');
+            }
+
+            // Pra-cek kas pengirim saat transfer akan
+            // diselesaikan. Validasi otoritatif (dengan
+            // kunci baris) dilakukan pada layanan.
+            if ($this->input('status') === 'selesai') {
+                $opdId = $this->input('opd_id');
+                $pengirimId = $this->input('sumber_dana_pengirim_id');
+                $jumlah = $this->input('jumlah');
+
+                if ($opdId !== null && $pengirimId !== null && $jumlah !== null) {
+                    $kasTersedia = app(KasService::class)->saldoTersedia((int) $opdId, (int) $pengirimId);
+
+                    if ((float) $jumlah > $kasTersedia) {
+                        $validator->errors()->add('jumlah', 'Kas pada sumber dana pengirim tidak mencukupi untuk transfer ini.');
+                    }
+                }
             }
         });
     }

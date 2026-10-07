@@ -50,11 +50,11 @@
         <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
             <div class="flex items-center gap-2">
                 <label class="text-sm text-slate-500 font-medium">Dari</label>
-                <input type="date" value="{{ request('from', '2026-01-01') }}" class="input" />
+                <input type="text" value="{{ request('from', '2026-01-01') }}" class="input datepicker" />
             </div>
             <div class="flex items-center gap-2">
                 <label class="text-sm text-slate-500 font-medium">Sampai</label>
-                <input type="date" value="{{ request('to', '2026-12-31') }}" class="input" />
+                <input type="text" value="{{ request('to', '2026-12-31') }}" class="input datepicker" />
             </div>
             <select name="rekening_id" class="input">
                 <option value="">Semua Rekening</option>

@@ -34,6 +34,8 @@ class PengeluaranResource extends JsonResource
             'sumber_dana_ref' => new SumberDanaResource($this->whenLoaded('sumberDana')),
             'sumber_dana' => $this->sumber_dana,
             'tahun_anggaran_id' => $this->tahun_anggaran_id,
+            'permintaan_dana_id' => $this->permintaan_dana_id,
+            'permintaan_dana' => new PermintaanDanaResource($this->whenLoaded('permintaanDana')),
             'jumlah' => (float) $this->jumlah,
             'keperluan' => $this->keperluan,
             'no_sp2d' => $this->no_sp2d,

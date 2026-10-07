@@ -13,6 +13,7 @@ class TransaksiPenerimaan extends Model
 
     protected $fillable = [
         'penerimaan_id',
+        'sumber_dana_id',
         'nomor_registrasi', 'realisasi', 'tanggal', 'keterangan',
         'source_file', 'source_row', 'source_identifier',
     ];
@@ -25,6 +26,15 @@ class TransaksiPenerimaan extends Model
     public function penerimaan(): BelongsTo
     {
         return $this->belongsTo(Penerimaan::class);
+    }
+
+    /**
+     * The sumber dana this cash receipt is attributed to, used
+     * to compute the cash balance per fund source.
+     */
+    public function sumberDana(): BelongsTo
+    {
+        return $this->belongsTo(SumberDana::class);
     }
 
     public function bkus(): HasMany

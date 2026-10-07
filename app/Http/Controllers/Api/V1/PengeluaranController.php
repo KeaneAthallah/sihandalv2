@@ -5,22 +5,26 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\StorePengeluaranApiRequest;
 use App\Http\Resources\PengeluaranResource;
-use App\Models\Kegiatan;
 use App\Models\Pengeluaran;
+use App\Models\PermintaanDana;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Services\PermintaanDanaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class PengeluaranController extends ApiController
 {
+    public function __construct(private readonly PermintaanDanaService $permintaanDanaService) {}
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $query = Pengeluaran::query()
-            ->with(['opd', 'kegiatan', 'sumberDana', 'rekening'])
+            ->with(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana'])
             ->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id))
             ->when($request->filled('opd_id') && $user->isAdmin(), fn ($q) => $q->where('opd_id', $request->input('opd_id')))
             ->when($request->filled('kegiatan_id'), fn ($q) => $q->where('kegiatan_id', $request->input('kegiatan_id')))
@@ -30,7 +34,7 @@ class PengeluaranController extends ApiController
             ->when($request->filled('rekening_id'), fn ($q) => $q->where('rekening_id', $request->input('rekening_id')))
             ->when($request->filled('tanggal_dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->input('tanggal_dari')))
             ->when($request->filled('tanggal_sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->input('tanggal_sampai')))
-            ->when($request->filled('search'), fn ($q) => $q->where('nama_kegiatan', 'like', '%'.$request->string('search').'%'));
+            ->when($request->filled('search'), fn ($q) => $q->where('keperluan', 'like', '%'.$request->string('search').'%'));
 
         $perPage = $this->perPage($request);
 
@@ -45,15 +49,39 @@ class PengeluaranController extends ApiController
     {
         $data = $request->validated();
 
+        // Mode dari permintaan dana (admin): seluruh
+        // field keuangan di-copy dari permintaan dana
+        // di server, hanya SP2D yang diinput.
+        if (! empty($data['permintaan_dana_id'])) {
+            if (! $request->user()->isAdmin()) {
+                return $this->businessError('Unauthorized', [
+                    'permintaan_dana_id' => ['Hanya admin yang dapat membuat pengeluaran dari permintaan dana.'],
+                ]);
+            }
+
+            try {
+                $permintaanDana = PermintaanDana::findOrFail($data['permintaan_dana_id']);
+
+                $pengeluaran = $this->permintaanDanaService->catatPengeluaran(
+                    $permintaanDana,
+                    $data['no_sp2d'] ?? null,
+                    $data['tanggal_sp2d'] ?? null,
+                    $data['tanggal'] ?? null,
+                );
+
+                return $this->success(
+                    new PengeluaranResource($pengeluaran->load(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana'])),
+                    'Pengeluaran dari permintaan dana berhasil ditambahkan.',
+                    201,
+                );
+            } catch (RuntimeException $e) {
+                return $this->businessError('Unable to create expenditure', ['business' => [$e->getMessage()]]);
+            }
+        }
+
+        // Mode manual
         $pengeluaran = DB::transaction(function () use ($request, $data): Pengeluaran {
             $data['tahun_anggaran_id'] = $data['tahun_anggaran_id'] ?? TahunAnggaran::currentActive()?->id;
-            $data['persentase'] = $data['anggaran'] > 0 ? round(($data['realisasi'] ?? 0) / $data['anggaran'] * 100, 2) : 0;
-
-            if (($data['kegiatan_id'] ?? null) !== null) {
-                $kegiatan = Kegiatan::find($data['kegiatan_id']);
-                $data['kode_kegiatan'] = $kegiatan?->kode_kegiatan;
-                $data['nama_kegiatan'] = $kegiatan?->nama_kegiatan;
-            }
 
             if (($data['sumber_dana_id'] ?? null) !== null) {
                 $data['sumber_dana'] = SumberDana::find($data['sumber_dana_id'])?->nama_sumber_dana;
@@ -66,14 +94,18 @@ class PengeluaranController extends ApiController
             return Pengeluaran::create($data);
         });
 
-        return $this->success(new PengeluaranResource($pengeluaran->fresh(['opd', 'kegiatan', 'sumberDana', 'rekening'])), 'Pengeluaran berhasil ditambahkan.', 201);
+        return $this->success(
+            new PengeluaranResource($pengeluaran->fresh(['opd', 'kegiatan', 'sumberDana', 'rekening'])),
+            'Pengeluaran berhasil ditambahkan.',
+            201,
+        );
     }
 
     public function show(Request $request, Pengeluaran $pengeluaran): JsonResponse
     {
         $this->authorizeOpd($request, $pengeluaran->opd_id);
 
-        $pengeluaran->load(['opd', 'kegiatan', 'sumberDana', 'rekening']);
+        $pengeluaran->load(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana']);
 
         return $this->success(new PengeluaranResource($pengeluaran), 'Data pengeluaran berhasil diambil.');
     }
@@ -84,15 +116,11 @@ class PengeluaranController extends ApiController
 
         $data = $request->validated();
 
+        // Kaitan permintaan dana hanya dibentuk saat
+        // pembuatan dan tidak dapat diubah via edit.
+        unset($data['permintaan_dana_id']);
+
         DB::transaction(function () use ($data, $pengeluaran): void {
-            $data['persentase'] = $data['anggaran'] > 0 ? round(($data['realisasi'] ?? 0) / $data['anggaran'] * 100, 2) : 0;
-
-            if (($data['kegiatan_id'] ?? null) !== null) {
-                $kegiatan = Kegiatan::find($data['kegiatan_id']);
-                $data['kode_kegiatan'] = $kegiatan?->kode_kegiatan;
-                $data['nama_kegiatan'] = $kegiatan?->nama_kegiatan;
-            }
-
             if (($data['sumber_dana_id'] ?? null) !== null) {
                 $data['sumber_dana'] = SumberDana::find($data['sumber_dana_id'])?->nama_sumber_dana;
             }

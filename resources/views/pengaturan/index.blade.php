@@ -3,143 +3,105 @@
         <x-page-header title="Pengaturan" :breadcrumbs="['Pengaturan']" />
     </x-slot>
 
-    <div class="max-w-2xl space-y-5">
+    <div class="max-w-3xl mx-auto space-y-6">
 
-        {{-- Section: Umum --}}
-        <x-card title="Umum" x-data="{ tahunAnggaran: '2026', mataUang: 'IDR' }">
-            <p class="text-xs text-slate-400 mb-4">Pengaturan dasar aplikasi dan konfigurasi sistem</p>
-            <div class="space-y-4">
-                <div>
-                    <x-input-label value="Nama Aplikasi" />
-                    <div class="mt-1.5 relative">
-                        <x-text-input type="text" value="Sihandal" disabled class="bg-slate-50 text-slate-500 cursor-not-allowed pr-20" />
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Tetap</span>
-                    </div>
-                    <p class="mt-1.5 text-xs text-slate-400">Nama aplikasi tidak dapat diubah.</p>
-                </div>
+        {{-- Keuangan --}}
+        <x-card title="Keuangan">
+            <form method="POST" action="{{ route('pengaturan.update') }}" class="space-y-4">
+                @csrf
+                @method('PUT')
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <x-input-label value="Tahun Anggaran" />
-                        <select x-model="tahunAnggaran" class="input">
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                        </select>
-                    </div>
-                    <div>
-                        <x-input-label value="Mata Uang" />
-                        <select x-model="mataUang" class="input">
-                            <option value="IDR">Rupiah Indonesia (IDR)</option>
-                            <option value="USD">US Dollar (USD)</option>
-                        </select>
+                        <x-input-label value="Kuota Penerimaan OPD (%)" />
+                        <x-text-input type="number" name="penerimaan_kuota_persen"
+                            :value="old('penerimaan_kuota_persen', $kuotaPenerimaanPersen)"
+                            min="0" max="100" step="0.01" required/>
+                        <x-input-error :messages="$errors->get('penerimaan_kuota_persen')" class="mt-1"/>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Persentase penerimaan yang dapat dipakai OPD. Contoh: 10% dari Rp 1.000.000 = Rp 100.000.
+                            Admin selalu melihat kas penuh tanpa potongan kuota.
+                        </p>
                     </div>
                 </div>
-            </div>
-            <x-slot name="actions">
-                <x-primary-button>Simpan</x-primary-button>
-            </x-slot>
+
+                <div class="mt-4 flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <x-primary-button>Simpan</x-primary-button>
+                </div>
+            </form>
         </x-card>
 
-        {{-- Section: Notifikasi --}}
-        <x-card title="Notifikasi" x-data="{ email: true, sms: false, dashboard: true }">
-            <p class="text-xs text-slate-400 mb-4">Atur cara Anda menerima notifikasi dari sistem</p>
-            <div class="space-y-3">
-                @php
-                    $notificationSettings = [
-                        ['key' => 'email', 'title' => 'Notifikasi Email', 'desc' => 'Terima notifikasi melalui email yang terdaftar'],
-                        ['key' => 'sms', 'title' => 'Notifikasi SMS', 'desc' => 'Terima notifikasi melalui pesan singkat'],
-                        ['key' => 'dashboard', 'title' => 'Notifikasi Dashboard', 'desc' => 'Tampilkan notifikasi langsung di halaman dashboard'],
-                    ];
-                @endphp
-                @foreach($notificationSettings as $n)
-                    <div class="flex items-center justify-between gap-4 p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
-                        <div class="min-w-0">
-                            <p class="text-sm font-medium text-slate-800">{{ $n['title'] }}</p>
-                            <p class="text-xs text-slate-400 mt-0.5">{{ $n['desc'] }}</p>
-                        </div>
-                        <button
-                            type="button"
-                            @click="{{ $n['key'] }} = !{{ $n['key'] }}"
-                            :class="{{ $n['key'] }} ? 'chip chip-active' : 'chip chip-inactive'">
-                            <span x-text="{{ $n['key'] }} ? 'Aktif' : 'Nonaktif'"></span>
-                        </button>
+        {{-- Sistem --}}
+        <x-card title="Sistem">
+            <div class="space-y-6">
+                {{-- Notifikasi Realisasi --}}
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <h4 class="font-medium text-sm text-slate-800">Kirim Notifikasi Realisasi</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Kirim notifikasi email saat anggaran mencapai target realisasi</p>
                     </div>
-                @endforeach
-            </div>
-            <x-slot name="actions">
-                <x-primary-button>Simpan</x-primary-button>
-            </x-slot>
-        </x-card>
-
-        {{-- Section: Keamanan --}}
-        <x-card title="Keamanan" x-data="{ twoFactor: false, sessionTimeout: '30', passwordPolicy: 'medium' }">
-            <p class="text-xs text-slate-400 mb-4">Pengaturan keamanan akun dan autentikasi</p>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between gap-4 p-4 rounded-lg border border-slate-200">
-                    <div class="min-w-0">
-                        <p class="text-sm font-medium text-slate-800">Autentikasi Dua Faktor (2FA)</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Tambahkan lapisan keamanan ekstra pada akun Anda</p>
-                    </div>
-                    <button
-                        type="button"
-                        @click="twoFactor = !twoFactor"
-                        :class="twoFactor ? 'chip chip-active' : 'chip chip-inactive'">
-                        <span x-text="twoFactor ? 'Aktif' : 'Nonaktif'"></span>
-                    </button>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div class="flex items-center justify-end">
+                    <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
+                </div>
+
+                <hr class="border-slate-100">
+
+                {{-- Batas Throttle --}}
+                <div class="space-y-3">
                     <div>
-                        <x-input-label value="Batas Waktu Sesi" />
-                        <select x-model="sessionTimeout" class="input">
-                            <option value="15">15 menit</option>
-                            <option value="30">30 menit</option>
-                            <option value="60">60 menit</option>
-                            <option value="120">120 menit</option>
-                        </select>
+                        <h4 class="font-medium text-sm text-slate-800">Batas Throttle</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Maksimum percobaan login sebelum akun dikunci sementara</p>
                     </div>
-                    <div>
-                        <x-input-label value="Kebijakan Kata Sandi" />
-                        <select x-model="passwordPolicy" class="input">
-                            <option value="low">Rendah (min. 6 karakter)</option>
-                            <option value="medium">Sedang (min. 8 karakter + angka)</option>
-                            <option value="high">Tinggi (min. 12 karakter + huruf besar + angka + simbol)</option>
-                        </select>
-                    </div>
+                    <x-text-input type="number" value="10" min="1" max="100" class="!w-24"/>
+                </div>
+
+                <div class="flex items-center justify-end">
+                    <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
                 </div>
             </div>
-            <x-slot name="actions">
-                <x-primary-button>Simpan</x-primary-button>
-            </x-slot>
         </x-card>
 
-        {{-- Section: Backup --}}
-        <x-card title="Backup">
-            <p class="text-xs text-slate-400 mb-4">Ekspor data dan kelola backup sistem</p>
-            <div class="space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-slate-200">
-                    <div>
-                        <p class="text-sm font-medium text-slate-800">Ekspor Data</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Unduh seluruh data dalam format CSV atau Excel</p>
+        {{-- Keamanan --}}
+        <x-card title="Keamanan">
+            <div class="space-y-6">
+                {{-- 2FA --}}
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <h4 class="font-medium text-sm text-slate-800">Two-Factor Authentication</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Wajibkan 2FA untuk semua pengguna admin</p>
                     </div>
-                    <x-primary-button type="button">Ekspor</x-primary-button>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
                 </div>
-                <div class="flex items-center justify-between gap-3 p-4 rounded-lg border border-slate-200">
-                    <div>
-                        <p class="text-sm font-medium text-slate-800">Backup Terakhir</p>
-                        <p class="text-xs text-slate-400 mt-0.5">14 Juli 2026, 03:00 WITA</p>
-                    </div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-600/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Berhasil
-                    </span>
+
+                <div class="flex items-center justify-end">
+                    <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
                 </div>
-                <div class="flex items-center justify-between gap-3 p-4 rounded-lg border border-slate-200">
+
+                <hr class="border-slate-100">
+
+                {{-- Sesi --}}
+                <div class="space-y-3">
                     <div>
-                        <p class="text-sm font-medium text-slate-800">Ukuran Data</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Total ukuran database dan file lampiran</p>
+                        <h4 class="font-medium text-sm text-slate-800">Sesi</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Durasi sesi pengguna sebelum diminta login kembali</p>
                     </div>
-                    <span class="text-sm font-bold text-slate-700 tabular-nums">248.5 MB</span>
+                    <div class="flex items-center gap-3">
+                        <x-text-input type="number" value="120" min="5" max="480" class="!w-24"/>
+                        <span class="text-xs text-slate-400">menit</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end">
+                    <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
                 </div>
             </div>
         </x-card>

@@ -21,6 +21,7 @@ abstract class TransaksiPenerimaanRequest extends FormRequest
     {
         return [
             'penerimaan_id' => ['required', 'exists:penerimaans,id'],
+            'sumber_dana_id' => ['required', 'exists:sumber_danas,id'],
             'realisasi' => ['required', 'numeric', 'min:0'],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:255'],

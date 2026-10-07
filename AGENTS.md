@@ -163,3 +163,42 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Do NOT delete tests without approval.
 
 </laravel-boost-guidelines>
+
+=== work-in-progress: integrasi kas-pagu ===
+
+# Status implementasi SIHANDAL — Integrasi Kas-Pagu, Pengeluaran dari PD, Transfer Sumber Dana, Kuota OPD
+
+Rencana lengkap (terus diperbarui): C:\Users\kenn\.commandcode\plans\kas-pagu-permintaan-pengeluaran.md
+
+## Ringkasan
+- Permintaan dana mengambil kas dari penerimaan; pagu hanya batas. Tersedia = min(pagu_tersisa, kas_efektif).
+- Pengeluaran dari PD disetujui: admin hanya isi 3 field (nomor PD, no_sp2d, tanggal_sp2d); field lain mirror read-only dari PD.
+- Transfer dana memindahkan kas antar sumber dana saat salah satu sumber dana kurang.
+- Kuota persen global dari penerimaan yang boleh dipakai OPD (default 100 persen); admin bebas kuota.
+
+## Keputusan desain
+- sumber_dana kas masuk -> transaksi_penerimaans.sumber_dana_id
+- kuota -> global (settings key: penerimaan_kuota_persen)
+- kuota -> batas keras untuk OPD, admin bebas
+- realisasi pagu -> saat approve PD; pengeluaran hanya mencatat kas keluar
+
+## Rumus
+pagu_tersisa = belanja.pagu - belanja.realisasi - belanja.dana_di_commit
+kas_masuk = sum(transaksi_penerimaans.realisasi) per (opd, sumber_dana)
+kas_keluar = sum(pengeluarans.jumlah) per (opd, sumber_dana)
+transfer_net = sum(transfer_dana selesai) masuk - keluar per (opd, sumber_dana)
+kas_di_commit = reservasi PD status menunggu per (opd, sumber_dana)
+kas_efektif = (kas_masuk x kuota%) - kas_keluar + transfer_net - kas_di_commit
+tersedia = min(pagu_tersisa, kas_efektif)  [untuk user OPD]
+tersedia_admin = min(pagu_tersisa, kas_masuk - kas_keluar + transfer_net - kas_di_commit)  [admin tanpa kuota]
+
+## Tahapan implementasi (detail lihat file rencana)
+1. [x] Migrations (4) + model Setting & KasSumberDana + update relasi model
+2. [x] KasService + perbaikan FinancialSummaryService::cashTotals
+3. [x] Extend PermintaanDanaService (min pagu/kas + kuota) + TransferDanaService
+4. [x] Web: transaksi penerimaan (sumber dana) -> permintaan dana -> pengeluaran dari PD -> transfer -> pengaturan kuota -> dashboard/laporan
+5. [x] API v1 parity + SettingController
+6. [x] Perbaiki SampleDataSeeder + seedFullDataset
+7. [x] Tests hijau + pint (299 passed, 1049 assertions)
+
+Jika sesi hilang / error 404: buka file rencana di atas dan lanjutkan dari tahap terakhir yang belum di-checklist.

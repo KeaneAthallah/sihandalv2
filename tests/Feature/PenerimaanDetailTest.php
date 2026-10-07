@@ -4,10 +4,15 @@ use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use App\Models\RekeningBank;
+use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\TransaksiPenerimaanBku;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+
+beforeEach(function () {
+    $this->sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
+});
 
 test('admin can create a penerimaan keyed to a rekening and sub rekening', function () {
     $admin = User::factory()->admin()->create();
@@ -170,6 +175,7 @@ test('transaksi penerimaan dapat membooking rekening bank pada baris BKU', funct
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -199,6 +205,7 @@ test('baris BKU dapat membooking opd dan rekening akuntansi per baris', function
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -233,6 +240,7 @@ test('baris BKU menolak rekening utama yang bukan pendapatan', function () {
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -257,6 +265,7 @@ test('baris BKU menolak sub rekening yang bukan detail dari rekening utamanya', 
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -285,6 +294,7 @@ test('satu transaksi penerimaan dapat memakai rekening bank berbeda di tiap bari
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -316,6 +326,7 @@ test('transaksi penerimaan menolak rekening bank yang tidak aktif pada baris BKU
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -337,6 +348,7 @@ test('baris BKU dapat disimpan tanpa rekening bank', function () {
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -360,6 +372,7 @@ test('baris BKU dapat berpindah rekening bank saat transaksi diupdate', function
     $master = Penerimaan::create(['opd_id' => $opd->id, 'target' => 1000000]);
     $transaksi = TransaksiPenerimaan::create([
         'penerimaan_id' => $master->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'realisasi' => 250000,
         'tanggal' => now(),
     ]);
@@ -374,6 +387,7 @@ test('baris BKU dapat berpindah rekening bank saat transaksi diupdate', function
     $this->actingAs($admin)
         ->put("/transaksi-penerimaan/{$transaksi->id}", [
             'penerimaan_id' => $master->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 250000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [

@@ -98,7 +98,7 @@
 
                             <div>
                                 <x-input-label value="Tanggal" />
-                                <x-text-input name="tanggal" type="date" :value="old('tanggal', now()->format('Y-m-d'))" required />
+                                <x-text-input name="tanggal" type="text" :value="old('tanggal', now()->format('Y-m-d'))" required class="datepicker" />
                                 <x-input-error :messages="$errors->get('tanggal')" />
                             </div>
                         </div>
@@ -114,6 +114,18 @@
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('penerimaan_id')" />
+                        </div>
+
+                        <div>
+                            <x-input-label value="Sumber Dana" />
+                            <select name="sumber_dana_id"
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                                <option value="">Pilih Sumber Dana</option>
+                                @foreach($sumberDanas as $sd)
+                                    <option value="{{ $sd->id }}">{{ $sd->nama_sumber_dana }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('sumber_dana_id')" class="mt-1"/>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -180,8 +192,8 @@
                                         </div>
                                         <div>
                                             <x-input-label value="Tanggal BKU" class="text-xs" />
-                                            <input type="date" :name="'bkus[' + index + '][tanggal_bku]'" x-model="bku.tanggal_bku"
-                                                class="input" required />
+                                            <input type="text" :name="'bkus[' + index + '][tanggal_bku]'" x-model="bku.tanggal_bku"
+                                                class="input datepicker" required />
                                         </div>
                                         <div>
                                             <x-input-label value="Nilai" class="text-xs" />

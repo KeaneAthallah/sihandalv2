@@ -3,6 +3,7 @@
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
+use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 
@@ -10,6 +11,7 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
     $this->opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $this->rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
+    $this->sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
     $this->penerimaan = Penerimaan::create([
         'opd_id' => $this->opd->id,
         'rekening_id' => $this->rekening->id,
@@ -21,6 +23,7 @@ test('nomor registrasi is auto-generated with at least 5 digits and year suffix'
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
         ])
@@ -43,6 +46,7 @@ test('nomor registrasi sequence resets per fiscal year based on transaction date
     ] as $tanggal => $realisasi) {
         $this->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => $realisasi,
             'tanggal' => $tanggal,
         ])->assertSessionHasNoErrors();
@@ -63,6 +67,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
     foreach ([1, 2, 3, 4, 5] as $i) {
         $this->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 100000 * $i,
             'tanggal' => now()->format('Y-m-d'),
         ])->assertSessionHasNoErrors();
@@ -87,6 +92,7 @@ test('auto-generated nomor registrasi is immutable on edit', function () {
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-DIEDIT',
             'realisasi' => 750000,
             'tanggal' => now()->format('Y-m-d'),

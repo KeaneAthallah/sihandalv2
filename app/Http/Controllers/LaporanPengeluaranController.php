@@ -14,7 +14,7 @@ class LaporanPengeluaranController extends Controller
     {
         $user = $request->user();
 
-        $query = Pengeluaran::with(['opd', 'kegiatan', 'sumberDana', 'rekening']);
+        $query = Pengeluaran::with(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -50,7 +50,7 @@ class LaporanPengeluaranController extends Controller
     {
         $user = $request->user();
 
-        $query = Pengeluaran::with(['opd', 'kegiatan', 'sumberDana', 'rekening']);
+        $query = Pengeluaran::with(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query = $this->applyOpdScope($query, $user);
@@ -73,7 +73,7 @@ class LaporanPengeluaranController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'No', 'Tanggal', 'OPD', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)',
+                'No', 'Tanggal', 'OPD', 'Nomor Permintaan Dana', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)',
             ]);
 
             foreach ($pengeluarans as $idx => $item) {
@@ -81,6 +81,7 @@ class LaporanPengeluaranController extends Controller
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
+                    $item->permintaanDana?->nomor_permintaan ?? '-',
                     $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-',
                     $item->keperluan ?? '-',
                     $item->no_sp2d ?? '-',

@@ -99,7 +99,7 @@ class PermintaanDanaController extends ApiController
         $this->authorizeOpd($request, $permintaanDana->opd_id);
 
         try {
-            $permintaanDana = $this->workflow->submit($permintaanDana);
+            $permintaanDana = $this->workflow->submit($permintaanDana, $request->user());
         } catch (RuntimeException $e) {
             return $this->businessError('Unable to perform operation', ['business' => [$e->getMessage()]]);
         }

@@ -155,6 +155,7 @@ function seedFullDataset(): array
 
     $transaksiPenerimaan = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
         'nomor_registrasi' => 'REG-001',
         'realisasi' => 400000000,
         'tanggal' => now(),

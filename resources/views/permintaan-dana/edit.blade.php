@@ -165,7 +165,7 @@
 
                     <div>
                         <x-input-label value="Tanggal"/>
-                        <x-text-input type="date" name="tanggal" :value="old('tanggal', $permintaanDana->tanggal?->format('Y-m-d'))"/>
+                        <x-text-input type="text" name="tanggal" :value="old('tanggal', $permintaanDana->tanggal?->format('Y-m-d'))" class="datepicker"/>
                         <x-input-error :messages="$errors->get('tanggal')" class="mt-1"/>
                     </div>
 

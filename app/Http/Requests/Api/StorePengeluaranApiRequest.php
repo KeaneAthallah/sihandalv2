@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api;
 
 use App\Models\Belanja;
 use App\Models\Kegiatan;
+use App\Models\PermintaanDana;
 use App\Models\SubKegiatan;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
  *   - rekening must be tipe belanja
  *   - kegiatan -> sub kegiatan -> belanja hierarchy must be internally
  *     consistent and belong to the selected OPD
+ *   - bila permintaan_dana_id diisi, seluruh field keuangan diambil
+ *     dari permintaan dana (mode admin), hanya SP2D yang diinput
  */
 class StorePengeluaranApiRequest extends FormRequest
 {
@@ -25,14 +28,15 @@ class StorePengeluaranApiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'opd_id' => ['required', 'exists:opds,id'],
+            'permintaan_dana_id' => ['nullable', 'exists:permintaan_danas,id'],
+            'opd_id' => ['required_without:permintaan_dana_id', 'exists:opds,id'],
             'rekening_id' => ['nullable', Rule::exists('rekenings', 'id')->where(fn (Builder $q) => $q->where('tipe', 'belanja'))],
             'kegiatan_id' => ['nullable', 'exists:kegiatan,id'],
             'sub_kegiatan_id' => ['nullable', 'exists:sub_kegiatans,id'],
             'belanja_id' => ['nullable', 'exists:belanjas,id'],
-            'sumber_dana_id' => ['required', 'exists:sumber_danas,id'],
+            'sumber_dana_id' => ['required_without:permintaan_dana_id', 'exists:sumber_danas,id'],
             'sumber_dana' => ['nullable', 'string', 'max:255'],
-            'jumlah' => ['required', 'numeric', 'min:0'],
+            'jumlah' => ['required_without:permintaan_dana_id', 'numeric', 'min:0'],
             'keperluan' => ['nullable', 'string', 'max:255'],
             'no_sp2d' => ['nullable', 'string', 'max:100'],
             'tanggal_sp2d' => ['nullable', 'date'],
@@ -44,6 +48,37 @@ class StorePengeluaranApiRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             $user = $this->user();
+
+            // Mode dari permintaan dana: field keuangan
+            // diambil dari permintaan dana, hanya SP2D
+            // yang diinput. Wajib admin, PD harus
+            // disetujui dan belum punya pengeluaran.
+            $permintaanDanaId = $this->input('permintaan_dana_id');
+            if ($permintaanDanaId) {
+                if (! $user->isAdmin()) {
+                    $validator->errors()->add('permintaan_dana_id', 'Hanya admin yang dapat membuat pengeluaran dari permintaan dana.');
+
+                    return;
+                }
+
+                $pd = PermintaanDana::with('pengeluaran')->find($permintaanDanaId);
+
+                if ($pd === null) {
+                    return;
+                }
+
+                if ($pd->status !== 'disetujui') {
+                    $validator->errors()->add('permintaan_dana_id', 'Hanya permintaan dana yang disetujui yang dapat dibuatkan pengeluaran.');
+                }
+
+                if ($pd->pengeluaran()->exists()) {
+                    $validator->errors()->add('permintaan_dana_id', 'Permintaan dana ini sudah memiliki pengeluaran.');
+                }
+
+                return;
+            }
+
+            // Mode manual
             $opdId = $this->input('opd_id');
 
             if (! $user->isAdmin() && (int) $opdId !== (int) $user->opd_id) {

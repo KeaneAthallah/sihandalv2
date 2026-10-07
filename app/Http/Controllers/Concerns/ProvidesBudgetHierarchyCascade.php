@@ -6,6 +6,7 @@ use App\Models\Belanja;
 use App\Models\Kegiatan;
 use App\Models\Program;
 use App\Models\SubKegiatan;
+use App\Services\KasService;
 
 /**
  * Cascade option maps for the OPD -> program -> kegiatan ->
@@ -76,9 +77,11 @@ trait ProvidesBudgetHierarchyCascade
     }
 
     /**
-     * Belanjas grouped by sub kegiatan, labelled by their rekening.
+     * Belanjas grouped by sub kegiatan, labelled by their
+     * rekening, and carrying the remaining pagu and available
+     * cash so the form can show which ceiling binds.
      *
-     * @return array<string, array<int, array{id: string, label: string}>>
+     * @return array<string, array<int, array{id: string, label: string, pagu_tersisa: float, kas_tersedia: float}>>
      */
     protected function belanjasBySubKegiatan($user): array
     {
@@ -88,9 +91,11 @@ trait ProvidesBudgetHierarchyCascade
             $query->where('opd_id', $user->opd_id);
         }
 
-        return $query->get(['id', 'sub_kegiatan_id', 'rekening_id'])
+        $kas = app(KasService::class);
+
+        return $query->get(['id', 'opd_id', 'sub_kegiatan_id', 'rekening_id', 'sumber_dana_id', 'pagu', 'realisasi', 'dana_di_commit'])
             ->groupBy('sub_kegiatan_id')
-            ->map(fn ($rows) => $rows->map(function ($b) {
+            ->map(fn ($rows) => $rows->map(function ($b) use ($kas, $user) {
                 $rekening = $b->rekening;
 
                 return [
@@ -98,6 +103,8 @@ trait ProvidesBudgetHierarchyCascade
                     'label' => $rekening
                         ? $rekening->kode.' - '.$rekening->nama
                         : 'Belanja #'.$b->id,
+                    'pagu_tersisa' => $b->availablePagu(),
+                    'kas_tersedia' => $kas->saldoEfektif((int) $b->opd_id, (int) $b->sumber_dana_id, $user),
                 ];
             })->values())
             ->all();

@@ -21,6 +21,8 @@ class TransaksiPenerimaanResource extends JsonResource
         return [
             'id' => $this->id,
             'penerimaan_id' => $this->penerimaan_id,
+            'sumber_dana_id' => $this->sumber_dana_id,
+            'sumber_dana_ref' => new SumberDanaResource($this->whenLoaded('sumberDana')),
             'nomor_registrasi' => $this->nomor_registrasi,
             'realisasi' => (float) $this->realisasi,
             'tanggal' => $this->tanggal?->toDateString(),

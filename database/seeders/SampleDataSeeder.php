@@ -49,6 +49,12 @@ class SampleDataSeeder extends Seeder
             'nama' => 'Belanja Jasa', 'tipe' => 'belanja',
         ]);
 
+        $rekeningPendapatan = Rekening::firstOrCreate([
+            'kode' => '4.1.1',
+        ], [
+            'nama' => 'Pendapatan Daerah', 'tipe' => 'pendapatan',
+        ]);
+
         // Reference to a valid active Tahun Anggaran (existing one or first)
         $tahunAnggaran = TahunAnggaran::where('is_active', true)->first()
             ?? TahunAnggaran::first();
@@ -88,7 +94,7 @@ class SampleDataSeeder extends Seeder
                 'program_id' => $program->id,
                 'opd_id' => $opd->id,
                 'sumber_dana_id' => $sumberDana?->id,
-                'kode_kegiatan' => $program->kode_program.'.'.($idx + 1),
+                'kode_kegiatan' => $program['kode_program'].'.'.($idx + 1),
                 'nama_kegiatan' => 'Penyelenggaraan Kegiatan '.($idx + 1),
                 'pagu' => 0,
                 'realisasi' => 0,
@@ -120,22 +126,30 @@ class SampleDataSeeder extends Seeder
             ]);
         }
 
-        // Sample Penerimaan data
+        // Sample Penerimaan data. Kas masuk dikaitkan ke
+        // sumber dana pada level transaksi (bukan master).
+        $sumberDanaPenerimaan = [
+            'DBH' => 'Dana Bagi Hasil (DBH)',
+            'PAD' => 'Pendapatan Asli Daerah (PAD)',
+            'DAU' => 'Dana Alokasi Umum (DAU)',
+        ];
+
         foreach ($opds->take(5) as $opd) {
-            foreach (['DBH', 'PAD', 'DAU'] as $sumberDanaNama) {
+            foreach ($sumberDanaPenerimaan as $singkatan => $namaSumberDana) {
+                $sd = SumberDana::firstOrCreate(['nama_sumber_dana' => $namaSumberDana]);
+
                 $penerimaan = Penerimaan::create([
                     'opd_id' => $opd->id,
-                    'sumber_dana_id' => $sumberDana?->id,
-                    'kode_sumber_dana' => $sumberDanaNama,
-                    'nama_sumber_dana' => $sumberDana?->nama_sumber_dana ?? $sumberDanaNama,
+                    'rekening_id' => $rekeningPendapatan->id,
                     'target' => rand(50000000, 500000000),
                 ]);
 
                 TransaksiPenerimaan::create([
                     'penerimaan_id' => $penerimaan->id,
+                    'sumber_dana_id' => $sd->id,
                     'realisasi' => rand(10000000, 300000000),
                     'tanggal' => now()->subDays(rand(1, 30)),
-                    'keterangan' => "Penerimaan {$sumberDanaNama} untuk {$opd->nama}",
+                    'keterangan' => "Penerimaan {$singkatan} untuk {$opd->nama}",
                 ]);
             }
         }
@@ -146,14 +160,10 @@ class SampleDataSeeder extends Seeder
                 Pengeluaran::create([
                     'opd_id' => $opd->id,
                     'sumber_dana_id' => $sumberDana?->id,
-                    'kode_kegiatan' => '5.1.'.rand(1, 9),
-                    'nama_kegiatan' => $kegiatanNama,
                     'sumber_dana' => $sumberDana?->nama_sumber_dana ?? 'DAU',
-                    'anggaran' => rand(100000000, 1000000000),
-                    'realisasi' => rand(50000000, 500000000),
-                    'persentase' => rand(30, 85),
+                    'jumlah' => rand(100000000, 1000000000),
+                    'keperluan' => "Pengeluaran {$kegiatanNama}",
                     'tanggal' => now()->subDays(rand(1, 30)),
-                    'keterangan' => "Pengeluaran {$kegiatanNama}",
                 ]);
             }
         }
@@ -173,13 +183,19 @@ class SampleDataSeeder extends Seeder
             ]);
         }
 
-        // Sample Transfer Dana
+        // Sample Transfer Dana (memindahkan kas antar
+        // sumber dana, jadi pengirim dan penerima wajib
+        // diisi dan berbeda)
+        $sumberDanaPengirim = SumberDana::where('nama_sumber_dana', 'Dana Alokasi Umum (DAU)')->first();
+        $sumberDanaPenerima = SumberDana::where('nama_sumber_dana', 'Dana Alokasi Khusus (DAK)')->first();
+
         foreach ($opds->take(3) as $index => $opd) {
             TransferDana::create([
                 'nomor_transfer' => 'TF-'.str_pad($index + 1, 4, '0', STR_PAD_LEFT).'/'.now()->format('Y'),
                 'opd_id' => $opd->id,
                 'jumlah' => rand(100000000, 1000000000),
-                'sumber_dana' => $sumberDana?->nama_sumber_dana ?? 'DBH',
+                'sumber_dana_pengirim_id' => $sumberDanaPengirim?->id,
+                'sumber_dana_penerima_id' => $sumberDanaPenerima?->id,
                 'keterangan' => 'Transfer dana operasional',
                 'status' => 'selesai',
                 'tanggal' => now()->subDays(rand(1, 10)),

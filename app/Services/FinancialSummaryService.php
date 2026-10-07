@@ -126,32 +126,68 @@ class FinancialSummaryService
     }
 
     /**
-     * Cash balance: penerimaan (kas rekening) minus pengeluaran (kas rekening).
+     * Cash balance derived from the cash ledger: penerimaan (kas masuk)
+     * minus pengeluaran (kas keluar) plus net transfer antar sumber dana.
      *
-     * @return array{kas_penerimaan: float, kas_pengeluaran: float, saldo_kas: float}
+     * `saldo_kas` adalah kas riil (uang yang benar-benar ada).
+     * `saldo_efektif` adalah kas yang bisa dipakai, dikurangi reservasi
+     * permintaan dana yang menunggu, dan — untuk user OPD — dipotong
+     * kuota persen penerimaan.
+     *
+     * @return array{kas_penerimaan: float, kas_pengeluaran: float, saldo_kas: float, saldo_efektif: float}
      */
     public static function cashTotals(?User $user, ?int $requestedOpdId = null): array
     {
         $opdId = static::opdScope($user, $requestedOpdId);
+        $service = new KasService;
 
-        $kasPenerimaan = (float) DB::table('transaksi_penerimaans as t')
-            ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
-            ->join('rekenings as r', 'r.id', '=', 'p.rekening_id')
-            ->when($opdId !== null, fn ($q) => $q->where('p.opd_id', $opdId))
-            ->where('r.tipe', 'kas')
-            ->sum('t.realisasi');
+        if ($opdId !== null) {
+            $ringkasan = $service->ringkasan($opdId, null, $user);
 
-        $kasPengeluaran = (float) DB::table('pengeluarans')
-            ->join('rekenings as r', 'r.id', '=', 'pengeluarans.rekening_id')
-            ->when($opdId !== null, fn ($q) => $q->where('pengeluarans.opd_id', $opdId))
-            ->where('r.tipe', 'kas')
-            ->sum('pengeluarans.jumlah');
+            return [
+                'kas_penerimaan' => $ringkasan['masuk'],
+                'kas_pengeluaran' => $ringkasan['keluar'],
+                'saldo_kas' => $ringkasan['saldo'],
+                'saldo_efektif' => $ringkasan['saldo_efektif'],
+            ];
+        }
+
+        // Admin tanpa filter: agregasikan seluruh OPD.
+        $masuk = 0.0;
+        $keluar = 0.0;
+        $transferNet = 0.0;
+
+        foreach (Opd::query()->pluck('id')->all() as $id) {
+            $ringkasan = $service->ringkasan((int) $id, null, $user);
+            $masuk += $ringkasan['masuk'];
+            $keluar += $ringkasan['keluar'];
+            $transferNet += $ringkasan['transfer_net'];
+        }
+
+        $saldo = round($masuk - $keluar + $transferNet, 2);
 
         return [
-            'kas_penerimaan' => $kasPenerimaan,
-            'kas_pengeluaran' => $kasPengeluaran,
-            'saldo_kas' => round($kasPenerimaan - $kasPengeluaran, 2),
+            'kas_penerimaan' => round($masuk, 2),
+            'kas_pengeluaran' => round($keluar, 2),
+            'saldo_kas' => $saldo,
+            'saldo_efektif' => $saldo,
         ];
+    }
+
+    /**
+     * Saldo kas per sumber dana untuk satu OPD.
+     *
+     * @return array<int, array{sumber_dana_id: int, nama: string, masuk: float, keluar: float, transfer_net: float, di_commit: float, saldo: float, saldo_efektif: float}>
+     */
+    public static function kasPerSumberDana(?User $user, ?int $requestedOpdId = null): array
+    {
+        $opdId = static::opdScope($user, $requestedOpdId);
+
+        if ($opdId === null) {
+            return [];
+        }
+
+        return (new KasService)->perSumberDana($opdId, $user);
     }
 
     /**

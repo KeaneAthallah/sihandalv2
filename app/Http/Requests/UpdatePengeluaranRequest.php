@@ -19,6 +19,7 @@ class UpdatePengeluaranRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'permintaan_dana_id' => ['nullable', 'exists:permintaan_danas,id'],
             'opd_id' => ['required', 'exists:opds,id'],
             'rekening_id' => ['nullable', Rule::exists('rekenings', 'id')->where(fn (Builder $q) => $q->where('tipe', 'belanja'))],
             'kegiatan_id' => ['nullable', 'exists:kegiatan,id'],

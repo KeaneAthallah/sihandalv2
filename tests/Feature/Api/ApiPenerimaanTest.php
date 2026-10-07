@@ -4,6 +4,7 @@ use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use App\Models\RekeningBank;
+use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use Illuminate\Testing\Fluent\AssertableJson;
@@ -20,6 +21,8 @@ function apiPenerimaanFixture(): array
     $rekening = Rekening::create(['kode' => '4.1.2', 'nama' => 'Pendapatan', 'tipe' => 'pendapatan']);
     $kasRekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Kas Daerah', 'tipe' => 'kas']);
 
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
+
     $bank = RekeningBank::create([
         'bank_name' => 'Bank BRI', 'account_number' => '001-01-000111-7',
         'account_name' => 'Dinas A', 'is_active' => true,
@@ -35,15 +38,16 @@ function apiPenerimaanFixture(): array
         'target' => 1000000,
     ]);
 
-    return compact('opd', 'opdB', 'user', 'admin', 'rekening', 'kasRekening', 'bank', 'inactiveBank', 'penerimaan');
+    return compact('opd', 'opdB', 'user', 'admin', 'rekening', 'kasRekening', 'bank', 'inactiveBank', 'penerimaan', 'sumberDana');
 }
 
 test('penerimaan realization is computed from transactions, never persisted', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 300000,
             'tanggal' => now()->toDateString(),
             'bkus' => [
@@ -56,6 +60,7 @@ test('penerimaan realization is computed from transactions, never persisted', fu
     $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 200000,
             'tanggal' => now()->toDateString(),
         ])->assertStatus(201);
@@ -71,11 +76,12 @@ test('penerimaan realization is computed from transactions, never persisted', fu
 });
 
 test('BKU total must equal transaction realisasi when BKU rows exist', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 400000,
             'tanggal' => now()->toDateString(),
             'bkus' => [
@@ -92,11 +98,12 @@ test('BKU total must equal transaction realisasi when BKU rows exist', function 
 });
 
 test('inactive bank account cannot be used on BKU rows', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan, 'inactiveBank' => $inactiveBank] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'inactiveBank' => $inactiveBank, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $response = $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 100000,
             'tanggal' => now()->toDateString(),
             'bkus' => [
@@ -110,11 +117,12 @@ test('inactive bank account cannot be used on BKU rows', function (): void {
 });
 
 test('nomor_registrasi is generated automatically and cannot be supplied', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $response = $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'nomor_registrasi' => 'HACKED-001',
             'realisasi' => 100000,
             'tanggal' => now()->toDateString(),
@@ -129,7 +137,7 @@ test('nomor_registrasi is generated automatically and cannot be supplied', funct
 });
 
 test('nomor_registrasi is immutable on update', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $transaksi = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
@@ -141,6 +149,7 @@ test('nomor_registrasi is immutable on update', function (): void {
     $this->actingAs($user, 'sanctum')
         ->putJson("/api/v1/transaksi-penerimaan/{$transaksi->id}", [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'nomor_registrasi' => 'REG-99999/'.now()->year,
             'realisasi' => 150000,
             'tanggal' => now()->toDateString(),
@@ -152,7 +161,7 @@ test('nomor_registrasi is immutable on update', function (): void {
 });
 
 test('nested BKU endpoint enforces sum rule on create and update', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $transaksi = TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
@@ -194,7 +203,7 @@ test('nested BKU endpoint enforces sum rule on create and update', function (): 
 });
 
 test('opd user cannot create transaksi against another opd penerimaan', function (): void {
-    ['user' => $user, 'opdB' => $opdB] = apiPenerimaanFixture();
+    ['user' => $user, 'opdB' => $opdB, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
@@ -204,6 +213,7 @@ test('opd user cannot create transaksi against another opd penerimaan', function
     $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaanB->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 100000,
             'tanggal' => now()->toDateString(),
         ])
@@ -214,7 +224,7 @@ test('opd user cannot create transaksi against another opd penerimaan', function
 });
 
 test('opd user cannot access another opd penerimaan', function (): void {
-    ['user' => $user, 'opdB' => $opdB] = apiPenerimaanFixture();
+    ['user' => $user, 'opdB' => $opdB, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     $penerimaanB = Penerimaan::create([
         'opd_id' => $opdB->id,
@@ -227,7 +237,7 @@ test('opd user cannot access another opd penerimaan', function (): void {
 });
 
 test('penerimaan with transactions cannot be deleted', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,
@@ -244,11 +254,12 @@ test('penerimaan with transactions cannot be deleted', function (): void {
 });
 
 test('transaksi penerimaan pagination meta is returned', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     foreach (range(1, 5) as $i) {
         TransaksiPenerimaan::create([
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'nomor_registrasi' => sprintf('REG-%05d/%s', $i, now()->year),
             'realisasi' => 10000 * $i,
             'tanggal' => now(),
@@ -269,7 +280,7 @@ test('transaksi penerimaan pagination meta is returned', function (): void {
 });
 
 test('date range filters apply to transaksi penerimaan', function (): void {
-    ['user' => $user, 'penerimaan' => $penerimaan] = apiPenerimaanFixture();
+    ['user' => $user, 'penerimaan' => $penerimaan, 'sumberDana' => $sumberDana] = apiPenerimaanFixture();
 
     TransaksiPenerimaan::create([
         'penerimaan_id' => $penerimaan->id,

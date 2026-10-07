@@ -3,6 +3,7 @@
 use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
+use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\TransaksiPenerimaanBku;
 use App\Models\User;
@@ -13,6 +14,7 @@ beforeEach(function () {
     $this->opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
     $this->user = User::factory()->create(['role' => 'opd', 'opd_id' => $this->opd->id]);
     $this->rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
+    $this->sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
     $this->penerimaan = Penerimaan::create([
         'opd_id' => $this->opd->id,
         'rekening_id' => $this->rekening->id,
@@ -24,6 +26,7 @@ test('admin can create transaksi with 1 bku', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-001',
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
@@ -49,6 +52,7 @@ test('admin can create transaksi with 2 bku', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-002',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -75,6 +79,7 @@ test('admin can create transaksi with 5 bku', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-005',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -91,6 +96,7 @@ test('transaksi fails when total bku does not equal realisasi', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-BAD',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -108,6 +114,7 @@ test('transaksi without bku is valid', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-NOBKU',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -128,6 +135,7 @@ test('transaksi with empty bku array is valid', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-EMPTY',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -144,6 +152,7 @@ test('nomor registrasi is auto-generated when not submitted', function () {
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
         ])
@@ -159,6 +168,7 @@ test('submitted nomor registrasi is ignored and rebuilt by the system', function
         ->from('/transaksi-penerimaan/create')
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-MANUAL',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -174,6 +184,7 @@ test('transaksi fails when bku has missing required fields', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-INCOMPLETE',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -194,6 +205,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -205,6 +217,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
             'bkus' => [
@@ -224,6 +237,7 @@ test('auto-generated nomor registrasi is sequential and unique', function () {
 test('admin can update transaksi and add new bku', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-UPD',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -237,6 +251,7 @@ test('admin can update transaksi and add new bku', function () {
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-UPD',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -258,6 +273,7 @@ test('admin can update transaksi and add new bku', function () {
 test('admin can update transaksi and delete bku', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-DEL',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -268,6 +284,7 @@ test('admin can update transaksi and delete bku', function () {
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-DEL',
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
@@ -284,6 +301,7 @@ test('admin can update transaksi and delete bku', function () {
 test('admin can update transaksi to remove all bku', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-REMOVE-ALL',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -295,6 +313,7 @@ test('admin can update transaksi to remove all bku', function () {
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-REMOVE-ALL',
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
@@ -308,6 +327,7 @@ test('admin can update transaksi to remove all bku', function () {
 test('admin can update transaksi to remove all bku with explicit empty array', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-REMOVE-EMPTY',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -317,6 +337,7 @@ test('admin can update transaksi to remove all bku with explicit empty array', f
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-REMOVE-EMPTY',
             'realisasi' => 500000,
             'tanggal' => now()->format('Y-m-d'),
@@ -333,6 +354,7 @@ test('admin can add bku later to a transaction that started without bku', functi
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-LATER',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -346,6 +368,7 @@ test('admin can add bku later to a transaction that started without bku', functi
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-LATER',
             'realisasi' => 10000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -365,6 +388,7 @@ test('admin can add bku later to a transaction that started without bku', functi
 test('admin can update a bku-less transaction without submitting bkus', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-NOBKU-EDIT',
         'realisasi' => 10000000,
         'tanggal' => now(),
@@ -374,6 +398,7 @@ test('admin can update a bku-less transaction without submitting bkus', function
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-NOBKU-EDIT',
             'realisasi' => 12000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -390,6 +415,7 @@ test('admin can update a bku-less transaction without submitting bkus', function
 test('deleting transaksi cascades to delete all bku', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-CAS',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -410,6 +436,7 @@ test('master penerimaan realisasi reflects sum of transactions', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-M1',
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
@@ -424,6 +451,7 @@ test('master penerimaan realisasi reflects sum of transactions', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-M2',
             'realisasi' => 200000,
             'tanggal' => now()->format('Y-m-d'),
@@ -440,6 +468,7 @@ test('bku does not cause double counting of realisasi', function () {
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-DC',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -458,6 +487,7 @@ test('opd user can create transaksi for own opd', function () {
     $this->actingAs($this->user)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-OPD',
             'realisasi' => 750000,
             'tanggal' => now()->format('Y-m-d'),
@@ -494,6 +524,7 @@ test('opd user cannot create transaksi against another opd penerimaan', function
 test('opd user cannot access other opd transaksi edit', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-OTHER',
         'realisasi' => 100000,
         'tanggal' => now(),
@@ -540,6 +571,7 @@ test('opd user cannot delete other opd transaksi', function () {
 test('admin can view all transaksi and their bku on index', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-VIEW',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -558,6 +590,7 @@ test('admin can view all transaksi and their bku on index', function () {
 test('index page shows correct jumlah bku count', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-CNT',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -584,6 +617,7 @@ test('create page renders with rekening bank dropdown', function () {
 test('edit page loads with existing bku data', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-EDIT',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -600,6 +634,7 @@ test('edit page loads with existing bku data', function () {
 test('update fails when total bku does not equal new realisasi', function () {
     $tx = TransaksiPenerimaan::create([
         'penerimaan_id' => $this->penerimaan->id,
+        'sumber_dana_id' => $this->sumberDana->id,
         'nomor_registrasi' => 'REG-UPD-BAD',
         'realisasi' => 500000,
         'tanggal' => now(),
@@ -609,6 +644,7 @@ test('update fails when total bku does not equal new realisasi', function () {
     $this->actingAs($this->admin)
         ->put("/transaksi-penerimaan/{$tx->id}", [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-UPD-BAD',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),
@@ -625,6 +661,7 @@ test('rekening balance reflects transaksi bku through master penerimaan', functi
     $this->actingAs($this->admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $this->penerimaan->id,
+            'sumber_dana_id' => $this->sumberDana->id,
             'nomor_registrasi' => 'REG-REK',
             'realisasi' => 1000000,
             'tanggal' => now()->format('Y-m-d'),

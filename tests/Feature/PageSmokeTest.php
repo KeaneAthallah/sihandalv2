@@ -79,7 +79,7 @@ test('all pages render for opd user', function () {
         '/permintaan-dana', '/permintaan-dana/create', "/permintaan-dana/{$d['permintaanDraft']->id}/edit",
         '/transfer-dana', '/transfer-dana/create',
         '/laporan-penerimaan', '/laporan-pengeluaran', '/laporan-posisi-kas',
-        '/rekap-permintaan-dana', '/notifications', '/pengaturan', '/profile',
+        '/rekap-permintaan-dana', '/notifications', '/profile',
     ];
 
     foreach ($pages as $page) {
@@ -108,5 +108,9 @@ test('opd user cannot access admin only pages', function () {
 
     $this->actingAs($d['user'])
         ->get('/persetujuan')
+        ->assertForbidden();
+
+    $this->actingAs($d['user'])
+        ->get('/pengaturan')
         ->assertForbidden();
 });

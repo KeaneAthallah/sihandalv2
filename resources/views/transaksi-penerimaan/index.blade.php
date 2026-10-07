@@ -43,7 +43,7 @@
                 <select name="penerimaan_id" class="input" onchange="if(this.value) window.location.href = '{{ url('transaksi-penerimaan') }}?penerimaan_id=' + this.value; else window.location.href = '{{ url('transaksi-penerimaan') }}';">
                     <option value="">Semua</option>
                     @foreach($penerimaans as $p)
-                        <option value="{{ $p->id }}" {{ ($filters['penerimaan_id'] ?? '') == $p->id ? 'selected' : '' }}>{{ $p->sumberDana?->nama_sumber_dana ?? $p->nama_sumber_dana }} ({{ $p->opd?->nama ?? 'Provinsi' }})</option>
+                        <option value="{{ $p->id }}" {{ ($filters['penerimaan_id'] ?? '') == $p->id ? 'selected' : '' }}>{{ $p->nama_penerimaan ?? '-' }} ({{ $p->opd?->nama ?? 'Provinsi' }})</option>
                     @endforeach
                 </select>
             </div>
@@ -76,7 +76,7 @@
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
-                                    {{ $item->penerimaan?->sumberDana?->nama_sumber_dana ?? $item->penerimaan?->nama_sumber_dana ?? '-' }}
+                                    {{ $item->sumberDana?->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->penerimaan?->opd?->nama ?? 'Provinsi' }}</td>

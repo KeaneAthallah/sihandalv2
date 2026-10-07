@@ -7,6 +7,7 @@ use App\Http\Controllers\LaporanPosisiKasController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OpdController;
 use App\Http\Controllers\PenerimaanController;
+use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\PermintaanDanaController;
 use App\Http\Controllers\PersetujuanController;
@@ -27,6 +28,7 @@ use App\Models\Belanja;
 use App\Models\Opd;
 use App\Models\Pengeluaran;
 use App\Models\PermintaanDana;
+use App\Services\FinancialSummaryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -51,18 +53,10 @@ Route::get('/dashboard', function () {
     $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('jumlah');
     $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
     $totalPagu = $totalAnggaran > 0 ? $totalAnggaran : 1;
-    $kasPenerimaan = (float) DB::table('transaksi_penerimaans as t')
-        ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
-        ->join('rekenings as r', 'r.id', '=', 'p.rekening_id')
-        ->when(! $isAdmin, fn ($q) => $q->where('p.opd_id', $user->opd_id))
-        ->where('r.tipe', 'kas')
-        ->sum('t.realisasi');
-    $kasPengeluaran = (float) DB::table('pengeluarans')
-        ->join('rekenings as r', 'r.id', '=', 'pengeluarans.rekening_id')
-        ->when(! $isAdmin, fn ($q) => $q->where('pengeluarans.opd_id', $user->opd_id))
-        ->where('r.tipe', 'kas')
-        ->sum('pengeluarans.jumlah');
-    $sisaKas = $kasPenerimaan - $kasPengeluaran;
+    $ringkasanKas = FinancialSummaryService::cashTotals($user);
+    $kasPenerimaan = $ringkasanKas['kas_penerimaan'];
+    $kasPengeluaran = $ringkasanKas['kas_pengeluaran'];
+    $sisaKas = $ringkasanKas['saldo_kas'];
     $sisaKasMax = $totalPagu > 0 ? $totalPagu : 1;
 
     $topOpd = $opdScope(Opd::query(), 'id')
@@ -169,9 +163,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tahun-anggaran/{tahunAnggaran}/activate', [TahunAnggaranController::class, 'activate'])->name('tahun-anggaran.activate')->middleware('admin');
     Route::delete('/tahun-anggaran/{tahunAnggaran}', [TahunAnggaranController::class, 'destroy'])->name('tahun-anggaran.destroy')->middleware('admin');
 
-    Route::get('/pengaturan', function () {
-        return view('pengaturan.index');
-    })->name('pengaturan.index');
+    Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index')->middleware('admin');
+    Route::put('/pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update')->middleware('admin');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');

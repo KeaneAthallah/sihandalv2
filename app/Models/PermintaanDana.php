@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PermintaanDana extends Model
 {
@@ -62,5 +63,15 @@ class PermintaanDana extends Model
     public function persetujuans(): HasMany
     {
         return $this->hasMany(Persetujuan::class);
+    }
+
+    /**
+     * The single expenditure created from this approved request.
+     * Used both to prevent a request being turned into two
+     * expenditures and to expose the request number in reports.
+     */
+    public function pengeluaran(): HasOne
+    {
+        return $this->hasOne(Pengeluaran::class);
     }
 }

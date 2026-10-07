@@ -30,7 +30,7 @@
                     </div>
                     <div>
                         <x-input-label for="tanggal" value="Tanggal" />
-                        <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <input type="text" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="datepicker w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <x-input-error :messages="$errors->get('tanggal')" />
                     </div>
                 </div>

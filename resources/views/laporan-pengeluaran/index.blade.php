@@ -77,6 +77,7 @@
                         <th class="px-5 py-3 table-head text-center w-10">No</th>
                         <th class="px-5 py-3 table-head text-left w-28">Tanggal</th>
                         <th class="px-5 py-3 table-head text-left">OPD</th>
+                        <th class="px-5 py-3 table-head text-left w-32">Nomor PD</th>
                         <th class="px-5 py-3 table-head text-left">Kegiatan</th>
                         <th class="px-5 py-3 table-head text-left">Keperluan</th>
                         <th class="px-5 py-3 table-head text-left w-32">No SP2D</th>
@@ -89,6 +90,7 @@
                             <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->permintaanDana?->nomor_permintaan ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-slate-600">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-slate-600">{{ $item->keperluan ?? '-' }}</td>
                             <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->no_sp2d ?? '-' }}</td>
@@ -98,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-12 text-center">
+                            <td colspan="8" class="px-5 py-12 text-center">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon"><x-heroicon-o-inbox class="w-7 h-7"/></div>
                                     <p class="empty-title">Belum ada data pengeluaran</p>

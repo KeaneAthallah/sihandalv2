@@ -16,7 +16,7 @@ trait ValidatesPermintaanDana
             'sumber_dana_id' => ['required', 'exists:sumber_danas,id'],
             'kegiatan_id' => ['nullable', 'exists:kegiatan,id'],
             'sub_kegiatan_id' => ['nullable', 'exists:sub_kegiatans,id'],
-            'belanja_id' => ['nullable', 'exists:belanjas,id'],
+            'belanja_id' => ['required', 'exists:belanjas,id'],
             'rekening_id' => ['nullable', 'exists:rekenings,id'],
             'jumlah' => ['required', 'numeric', 'gt:0'],
             'keperluan' => ['required', 'string', 'max:255'],
@@ -52,8 +52,19 @@ trait ValidatesPermintaanDana
         $belanjaId = $this->input('belanja_id');
         if ($belanjaId) {
             $belanja = Belanja::find($belanjaId);
-            if ($belanja && $belanja->sub_kegiatan_id !== (int) $subKegiatanId) {
-                $validator->errors()->add('belanja_id', 'Belanja tidak sesuai dengan sub kegiatan yang dipilih.');
+            if ($belanja) {
+                if ($belanja->sub_kegiatan_id !== (int) $subKegiatanId) {
+                    $validator->errors()->add('belanja_id', 'Belanja tidak sesuai dengan sub kegiatan yang dipilih.');
+                }
+
+                if ((int) $belanja->opd_id !== (int) $opdId) {
+                    $validator->errors()->add('belanja_id', 'Belanja tidak sesuai dengan OPD yang dipilih.');
+                }
+
+                $sumberDanaId = $this->input('sumber_dana_id');
+                if ($sumberDanaId && (int) $belanja->sumber_dana_id !== (int) $sumberDanaId) {
+                    $validator->errors()->add('sumber_dana_id', 'Sumber dana harus sama dengan sumber dana belanja yang dipilih.');
+                }
             }
         }
     }

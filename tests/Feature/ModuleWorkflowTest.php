@@ -140,6 +140,7 @@ test('admin can create penerimaan master and persentase reflects transactions', 
     $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
 
     $this->actingAs($admin)
         ->post('/master-data/penerimaan', [
@@ -155,6 +156,7 @@ test('admin can create penerimaan master and persentase reflects transactions', 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'nomor_registrasi' => 'REG-001',
             'realisasi' => 300000,
             'tanggal' => now()->format('Y-m-d'),
@@ -173,6 +175,7 @@ test('admin can create penerimaan master and persentase reflects transactions', 
     $this->actingAs($admin)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaan->id,
+            'sumber_dana_id' => $sumberDana->id,
             'nomor_registrasi' => 'REG-002',
             'realisasi' => 200000,
             'tanggal' => now()->format('Y-m-d'),
@@ -212,10 +215,12 @@ test('opd user cannot create transaksi against another opd penerimaan', function
         'target' => 1000000,
     ]);
     $userA = User::factory()->create(['role' => 'opd', 'opd_id' => $opdA->id]);
+    $sumberDana = SumberDana::create(['nama_sumber_dana' => 'Dana Alokasi Umum (DAU)']);
 
     $this->actingAs($userA)
         ->post('/transaksi-penerimaan', [
             'penerimaan_id' => $penerimaanB->id,
+            'sumber_dana_id' => $sumberDana->id,
             'realisasi' => 100000,
             'tanggal' => now()->format('Y-m-d'),
         ])
@@ -298,6 +303,22 @@ test('transfer dana sets tanggal_selesai when marked selesai', function () {
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
     $sumberDanaB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
+
+    // Kas masuk pada sumber dana pengirim agar
+    // transfer dapat diselesaikan.
+    $rekening = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id,
+        'rekening_id' => $rekening->id,
+        'target' => 1000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDanaB->id,
+        'realisasi' => 500000,
+        'tanggal' => now(),
+    ]);
+
     $transfer = TransferDana::create([
         'nomor_transfer' => 'TF-0001/2026',
         'opd_id' => $opd->id,

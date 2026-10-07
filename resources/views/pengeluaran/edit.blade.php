@@ -163,14 +163,14 @@
                         </div>
                         <div>
                             <x-input-label value="Tanggal SP2D" />
-                            <x-text-input type="date" name="tanggal_sp2d" :value="old('tanggal_sp2d', $pengeluaran->tanggal_sp2d?->format('Y-m-d'))"/>
+                            <x-text-input type="text" name="tanggal_sp2d" :value="old('tanggal_sp2d', $pengeluaran->tanggal_sp2d?->format('Y-m-d'))" class="datepicker"/>
                             <x-input-error :messages="$errors->get('tanggal_sp2d')" class="mt-1"/>
                         </div>
                     </div>
 
                     <div>
                         <x-input-label value="Tanggal"/>
-                        <x-text-input type="date" name="tanggal" :value="old('tanggal', $pengeluaran->tanggal?->format('Y-m-d'))"/>
+                        <x-text-input type="text" name="tanggal" :value="old('tanggal', $pengeluaran->tanggal?->format('Y-m-d'))" class="datepicker"/>
                         <x-input-error :messages="$errors->get('tanggal')" class="mt-1"/>
                     </div>
                 </div>

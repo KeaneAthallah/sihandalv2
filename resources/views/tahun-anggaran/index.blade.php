@@ -148,11 +148,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <x-input-label value="Tanggal Mulai" />
-                            <x-text-input type="date" name="tanggal_mulai" class="mt-1.5" required />
+                            <x-text-input type="text" name="tanggal_mulai" class="mt-1.5 datepicker" required />
                         </div>
                         <div>
                             <x-input-label value="Tanggal Selesai" />
-                            <x-text-input type="date" name="tanggal_selesai" class="mt-1.5" required />
+                            <x-text-input type="text" name="tanggal_selesai" class="mt-1.5 datepicker" required />
                         </div>
                     </div>
                 </div>

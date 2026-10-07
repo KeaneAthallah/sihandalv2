@@ -8,12 +8,17 @@ use App\Http\Requests\Api\UpdateTransferDanaApiRequest;
 use App\Http\Resources\TransferDanaResource;
 use App\Models\TransferDana;
 use App\Services\PermintaanDanaService;
+use App\Services\TransferDanaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class TransferDanaController extends ApiController
 {
-    public function __construct(private readonly PermintaanDanaService $workflow) {}
+    public function __construct(
+        private readonly PermintaanDanaService $workflow,
+        private readonly TransferDanaService $transferDanaService,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -76,17 +81,68 @@ class TransferDanaController extends ApiController
 
         $data = $request->validated();
 
-        if (! $request->user()->isAdmin()) {
-            $data['opd_id'] = $request->user()->opd_id;
+        // Transisi ke "selesai": kas pengirim wajib
+        // mencukupi dan status ditandai selesai oleh
+        // layanan (admin saja).
+        if (($data['status'] ?? null) === 'selesai' && $transferDana->status !== 'selesai') {
+            if (! $request->user()->isAdmin()) {
+                return $this->businessError('Unauthorized', [
+                    'status' => ['Hanya admin yang dapat menyelesaikan transfer dana.'],
+                ]);
+            }
+
+            $other = $data;
+            unset($other['status']);
+            if (! empty($other)) {
+                $transferDana->update($other);
+            }
+
+            try {
+                $this->transferDanaService->selesaikan($transferDana);
+
+                return $this->success(
+                    new TransferDanaResource($transferDana->fresh(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])),
+                    'Transfer dana selesai.',
+                );
+            } catch (RuntimeException $e) {
+                return $this->businessError('Unable to complete transfer', ['business' => [$e->getMessage()]]);
+            }
         }
 
-        if (($data['status'] ?? null) === 'selesai' && $transferDana->status !== 'selesai') {
-            $data['tanggal_selesai'] = now();
+        if (! $request->user()->isAdmin()) {
+            $data['opd_id'] = $request->user()->opd_id;
         }
 
         $transferDana->update($data);
 
         return $this->success(new TransferDanaResource($transferDana->fresh(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])), 'Transfer dana berhasil diperbarui.');
+    }
+
+    /**
+     * Explicit completion action: validates the sending
+     * fund source has enough cash, then marks the
+     * transfer finished (admin only).
+     */
+    public function complete(Request $request, TransferDana $transferDana): JsonResponse
+    {
+        $this->authorizeOpd($request, $transferDana->opd_id);
+
+        if (! $request->user()->isAdmin()) {
+            return $this->businessError('Unauthorized', [
+                'status' => ['Hanya admin yang dapat menyelesaikan transfer dana.'],
+            ]);
+        }
+
+        try {
+            $this->transferDanaService->selesaikan($transferDana);
+        } catch (RuntimeException $e) {
+            return $this->businessError('Unable to complete transfer', ['business' => [$e->getMessage()]]);
+        }
+
+        return $this->success(
+            new TransferDanaResource($transferDana->fresh(['opd', 'sumberDanaPengirim', 'sumberDanaPenerima'])),
+            'Transfer dana selesai.',
+        );
     }
 
     public function destroy(Request $request, TransferDana $transferDana): JsonResponse

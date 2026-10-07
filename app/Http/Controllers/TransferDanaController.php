@@ -7,11 +7,16 @@ use App\Http\Requests\UpdateTransferDanaRequest;
 use App\Models\SumberDana;
 use App\Models\TransferDana;
 use App\Services\PermintaanDanaService;
+use App\Services\TransferDanaService;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class TransferDanaController extends Controller
 {
-    public function __construct(private readonly PermintaanDanaService $workflow) {}
+    public function __construct(
+        private readonly PermintaanDanaService $workflow,
+        private readonly TransferDanaService $transferDanaService,
+    ) {}
 
     public function index(Request $request)
     {
@@ -82,8 +87,22 @@ class TransferDanaController extends Controller
             $data['opd_id'] = $request->user()->opd_id;
         }
 
+        // Transisi ke "selesai": kas pengirim wajib mencukupi
+        // (validasi pra-cek pada request, pengecekan dengan
+        // kunci baris pada layanan) dan penyelesaian hanya
+        // oleh admin.
         if (isset($data['status']) && $data['status'] === 'selesai' && $transferDana->status !== 'selesai') {
-            $data['tanggal_selesai'] = now();
+            if (! $request->user()->isAdmin()) {
+                return back()->withErrors(['status' => 'Hanya admin yang dapat menyelesaikan transfer dana.']);
+            }
+
+            try {
+                $this->transferDanaService->selesaikan($transferDana);
+            } catch (RuntimeException $e) {
+                return back()->withErrors(['jumlah' => $e->getMessage()]);
+            }
+
+            return back()->with('success', 'Transfer dana berhasil diselesaikan.');
         }
 
         $transferDana->update($data);

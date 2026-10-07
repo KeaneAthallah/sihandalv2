@@ -3,12 +3,14 @@
 use App\Models\Belanja;
 use App\Models\Kegiatan;
 use App\Models\Opd;
+use App\Models\Penerimaan;
 use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
 use App\Models\Program;
 use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
+use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use Illuminate\Testing\Fluent\AssertableJson;
 
@@ -41,17 +43,32 @@ function apiWorkflowFixture(): array
         'dana_di_commit' => 0,
     ]);
 
-    return compact('opd', 'opdB', 'sumberDana', 'belanja');
+    // Kas masuk agar permintaan dana dapat dikomit
+    // pada uji-coba yang menjalankan submit.
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id, 'target' => 1000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'realisasi' => 500000,
+        'tanggal' => now(),
+    ]);
+
+    return compact('opd', 'opdB', 'sumberDana', 'belanja', 'program', 'kegiatan', 'sub');
 }
 
 test('opd user creates permintaan as draft with auto number', function (): void {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = apiWorkflowFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = apiWorkflowFixture();
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $response = $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/permintaan-dana', [
             'opd_id' => $opd->id,
             'sumber_dana_id' => $sumberDana->id,
+            'kegiatan_id' => $kegiatan->id,
+            'sub_kegiatan_id' => $sub->id,
+            'belanja_id' => $belanja->id,
             'jumlah' => 400000,
             'keperluan' => 'Operasional',
         ])
@@ -134,7 +151,7 @@ test('submit beyond available pagu fails gracefully with 422 and no commit', fun
 });
 
 test('double submit does not change an already submitted permintaan', function (): void {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = apiWorkflowFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = apiWorkflowFixture();
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $permintaan = PermintaanDana::create([
@@ -142,6 +159,9 @@ test('double submit does not change an already submitted permintaan', function (
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 400000,
         'keperluan' => 'Operasional',
         'status' => 'draft',
@@ -245,7 +265,7 @@ test('reject releases committed funds and records the rejection', function (): v
 });
 
 test('clients cannot set status disetujui through generic PATCH', function (): void {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = apiWorkflowFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = apiWorkflowFixture();
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $permintaan = PermintaanDana::create([
@@ -253,6 +273,9 @@ test('clients cannot set status disetujui through generic PATCH', function (): v
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 400000,
         'keperluan' => 'Operasional',
         'status' => 'draft',
@@ -262,6 +285,9 @@ test('clients cannot set status disetujui through generic PATCH', function (): v
         ->patchJson("/api/v1/permintaan-dana/{$permintaan->id}", [
             'opd_id' => $opd->id,
             'sumber_dana_id' => $sumberDana->id,
+            'kegiatan_id' => $kegiatan->id,
+            'sub_kegiatan_id' => $sub->id,
+            'belanja_id' => $belanja->id,
             'jumlah' => 400000,
             'keperluan' => 'Operasional diubah',
             'status' => 'disetujui',
@@ -274,7 +300,7 @@ test('clients cannot set status disetujui through generic PATCH', function (): v
 });
 
 test('permintaan cannot be edited after submission', function (): void {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = apiWorkflowFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = apiWorkflowFixture();
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
 
     $permintaan = PermintaanDana::create([
@@ -282,6 +308,9 @@ test('permintaan cannot be edited after submission', function (): void {
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 400000,
         'keperluan' => 'Operasional',
         'status' => 'menunggu',
@@ -291,6 +320,9 @@ test('permintaan cannot be edited after submission', function (): void {
         ->putJson("/api/v1/permintaan-dana/{$permintaan->id}", [
             'opd_id' => $opd->id,
             'sumber_dana_id' => $sumberDana->id,
+            'kegiatan_id' => $kegiatan->id,
+            'sub_kegiatan_id' => $sub->id,
+            'belanja_id' => $belanja->id,
             'jumlah' => 999000,
             'keperluan' => 'Diubah',
         ])

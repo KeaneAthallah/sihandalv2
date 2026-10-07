@@ -1,10 +1,17 @@
 <?php
 
+use App\Models\Belanja;
+use App\Models\Kegiatan;
 use App\Models\Opd;
+use App\Models\Penerimaan;
 use App\Models\PermintaanDana;
 use App\Models\Persetujuan;
+use App\Models\Program;
+use App\Models\Rekening;
+use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransaksiPenerimaan;
 use App\Models\TransferDana;
 use App\Models\User;
 
@@ -12,12 +19,41 @@ test('double submission does not change an already submitted permintaan', functi
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
+
+    $program = Program::create(['kode_program' => '1.1', 'nama_program' => 'Program A', 'opd_id' => $opd->id]);
+    $kegiatan = Kegiatan::create([
+        'program_id' => $program->id, 'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id, 'kode_kegiatan' => '1.1.1', 'nama_kegiatan' => 'Kegiatan A',
+    ]);
+    $subKegiatan = SubKegiatan::create([
+        'kegiatan_id' => $kegiatan->id, 'kode_sub_kegiatan' => '1.1.1.1', 'nama_sub_kegiatan' => 'Sub A',
+    ]);
+    $belanja = Belanja::create([
+        'sub_kegiatan_id' => $subKegiatan->id, 'rekening_id' => $rekening->id, 'sumber_dana_id' => $sumberDana->id,
+        'opd_id' => $opd->id, 'pagu' => 1000000, 'realisasi' => 0, 'dana_di_commit' => 0,
+    ]);
+
+    // Kas masuk agar permintaan dana dapat
+    // dikomit (tersedia = min(pagu, kas)).
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id, 'target' => 1000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'realisasi' => 400000,
+        'tanggal' => now(),
+    ]);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-0001/2026',
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $subKegiatan->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 400000,
         'keperluan' => 'Operasional',
         'status' => 'draft',

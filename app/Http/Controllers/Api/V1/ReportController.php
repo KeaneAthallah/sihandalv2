@@ -161,12 +161,13 @@ class ReportController extends ApiController
         $rows = $this->pengeluaranQuery($request, $request->user())->orderBy('tanggal', 'desc')->get();
 
         return $this->streamCsv('laporan-pengeluaran', function ($handle) use ($rows): void {
-            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)']);
+            fputcsv($handle, ['No', 'Tanggal', 'OPD', 'Nomor Permintaan Dana', 'Kegiatan', 'Keperluan', 'No SP2D', 'Jumlah (Rp)']);
             foreach ($rows as $idx => $item) {
                 fputcsv($handle, [
                     $idx + 1,
                     $item->tanggal?->format('d/m/Y') ?? '-',
                     $item->opd->nama ?? '-',
+                    $item->permintaanDana?->nomor_permintaan ?? '-',
                     $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-',
                     $item->keperluan ?? '-',
                     $item->no_sp2d ?? '-',
@@ -238,7 +239,7 @@ class ReportController extends ApiController
 
     private function pengeluaranQuery(Request $request, $user): Builder
     {
-        $query = Pengeluaran::query()->with(['opd', 'kegiatan', 'sumberDana', 'rekening']);
+        $query = Pengeluaran::query()->with(['opd', 'kegiatan', 'sumberDana', 'rekening', 'permintaanDana']);
 
         if (! $user->isAdmin() || ! $request->filled('opd_id')) {
             $query->when(! $user->isAdmin(), fn ($q) => $q->where('opd_id', $user->opd_id));

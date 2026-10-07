@@ -1,8 +1,15 @@
 <?php
 
+use App\Models\Belanja;
+use App\Models\Kegiatan;
 use App\Models\Opd;
+use App\Models\Penerimaan;
 use App\Models\PermintaanDana;
+use App\Models\Program;
+use App\Models\Rekening;
+use App\Models\SubKegiatan;
 use App\Models\SumberDana;
+use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use App\Notifications\PermintaanDanaNotification;
 
@@ -63,29 +70,59 @@ test('opd user export is scoped to their opd', function () {
 });
 
 test('submit permintaan dana sends notification to admins', function () {
+    Notification::fake();
+
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A', 'total_pagu' => 2000000000]);
     $admin = User::factory()->admin()->create();
     $user = User::factory()->opd()->create(['opd_id' => $opd->id]);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
+    $rekening = Rekening::create(['kode' => '5.2.1', 'nama' => 'Belanja Jasa', 'tipe' => 'belanja']);
+
+    $program = Program::create(['kode_program' => '1.1', 'nama_program' => 'Program A', 'opd_id' => $opd->id]);
+    $kegiatan = Kegiatan::create([
+        'program_id' => $program->id, 'opd_id' => $opd->id,
+        'sumber_dana_id' => $sumberDana->id, 'kode_kegiatan' => '1.1.1', 'nama_kegiatan' => 'Kegiatan A',
+    ]);
+    $subKegiatan = SubKegiatan::create([
+        'kegiatan_id' => $kegiatan->id, 'kode_sub_kegiatan' => '1.1.1.1', 'nama_sub_kegiatan' => 'Sub A',
+    ]);
+    $belanja = Belanja::create([
+        'sub_kegiatan_id' => $subKegiatan->id, 'rekening_id' => $rekening->id, 'sumber_dana_id' => $sumberDana->id,
+        'opd_id' => $opd->id, 'pagu' => 10000000000, 'realisasi' => 0, 'dana_di_commit' => 0,
+    ]);
+
+    // Kas masuk agar permintaan dana dapat
+    // dikomit (tersedia = min(pagu, kas)).
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id, 'target' => 10000000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'realisasi' => 50000000,
+        'tanggal' => now(),
+    ]);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-TEST/'.now()->year,
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $subKegiatan->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 50000000,
         'keperluan' => 'Operasional',
         'status' => 'draft',
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)
+        ->post("/permintaan-dana/{$permintaan->id}/submit");
 
-    $this->post(route('permintaan-dana.submit', $permintaan));
-
-    $this->assertDatabaseHas('notifications', [
-        'type' => PermintaanDanaNotification::class,
-        'notifiable_id' => $admin->id,
-    ]);
+    Notification::assertSentTo(
+        [$admin],
+        PermintaanDanaNotification::class,
+    );
 });
 
 test('approve permintaan dana sends notification to opd users', function () {

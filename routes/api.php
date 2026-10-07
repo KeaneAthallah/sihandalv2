@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\ProgramController;
 use App\Http\Controllers\Api\V1\RekeningBankController;
 use App\Http\Controllers\Api\V1\RekeningController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\SubKegiatanController;
 use App\Http\Controllers\Api\V1\SumberDanaController;
 use App\Http\Controllers\Api\V1\TahunAnggaranController;
@@ -126,6 +127,17 @@ Route::prefix('v1')->group(function (): void {
         // Transfers ------------------------------------------------------------
         Route::apiResource('transfer-dana', TransferDanaController::class)
             ->names('api.transfer-dana');
+        Route::post('transfer-dana/{transferDana}/complete', [TransferDanaController::class, 'complete'])
+            ->middleware(['admin', 'throttle:api-financial'])
+            ->name('api.transfer-dana.complete');
+
+        // Settings ------------------------------------------------------------
+        Route::get('settings', [SettingController::class, 'index'])
+            ->middleware('admin')
+            ->name('api.settings.index');
+        Route::put('settings', [SettingController::class, 'update'])
+            ->middleware('admin')
+            ->name('api.settings.update');
 
         // Dashboard / reports / AI ---------------------------------------------
         Route::prefix('dashboard')->name('api.v1.dashboard.')->group(function (): void {

@@ -8,6 +8,7 @@ use App\Models\Opd;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use App\Models\RekeningBank;
+use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use App\Services\DocumentNumberService;
@@ -25,6 +26,8 @@ class TransaksiPenerimaanController extends Controller
             'penerimaan.opd',
             'penerimaan.rekening',
             'penerimaan.subRekening',
+            'penerimaan.transaksiPenerimaans',
+            'sumberDana',
             'bkus.rekeningBank',
             'bkus.rekening',
             'bkus.subRekening',
@@ -56,19 +59,21 @@ class TransaksiPenerimaanController extends Controller
         $rekeningBanks = $this->activeRekeningBanks();
         $opds = Opd::orderBy('nama')->get();
         $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
         $subRekeningsByParent = $this->subRekeningsByParent();
 
         return view('transaksi-penerimaan.create', compact(
-            'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'subRekeningsByParent'
+            'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'sumberDanas', 'subRekeningsByParent'
         ));
     }
 
     public function edit(TransaksiPenerimaan $transaksiPenerimaan)
     {
         $this->authorizeTransaction($transaksiPenerimaan, request()->user());
-        $transaksiPenerimaan->load(['bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'penerimaan.opd']);
+        $transaksiPenerimaan->load(['sumberDana', 'bkus.rekeningBank', 'bkus.rekening', 'bkus.subRekening', 'penerimaan.opd']);
         $penerimaans = $this->authorizedMasters(request()->user());
         $rekeningBanks = $this->activeRekeningBanks();
+        $sumberDanas = SumberDana::orderBy('nama_sumber_dana')->get();
 
         // Existing BKU rows may still reference a now-inactive bank; keep those
         // options visible so the select renders the current value.
@@ -85,7 +90,7 @@ class TransaksiPenerimaanController extends Controller
         $subRekeningsByParent = $this->subRekeningsByParent();
 
         return view('transaksi-penerimaan.edit', compact(
-            'transaksiPenerimaan', 'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'subRekeningsByParent'
+            'transaksiPenerimaan', 'penerimaans', 'rekeningBanks', 'opds', 'rekenings', 'sumberDanas', 'subRekeningsByParent'
         ));
     }
 

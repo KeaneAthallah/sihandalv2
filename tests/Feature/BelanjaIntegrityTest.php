@@ -3,12 +3,14 @@
 use App\Models\Belanja;
 use App\Models\Kegiatan;
 use App\Models\Opd;
+use App\Models\Penerimaan;
 use App\Models\PermintaanDana;
 use App\Models\Program;
 use App\Models\Rekening;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
+use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 
 function buildBelanjaFixture(array $overrides = []): array
@@ -179,15 +181,29 @@ test('permintaan submit fails when belanja belongs to another opd', function () 
 });
 
 test('permintaan submit succeeds and commits funds from belanja', function () {
-    ['belanja' => $belanja, 'opd' => $opd, 'sumberDana' => $sumberDana] = buildBelanjaFixture();
+    ['belanja' => $belanja, 'opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub] = buildBelanjaFixture();
 
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
+
+    // Kas masuk agar permintaan dana dapat
+    // dikomit (tersedia = min(pagu, kas)).
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id, 'target' => 1000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'realisasi' => 400000,
+        'tanggal' => now(),
+    ]);
 
     $permintaan = PermintaanDana::create([
         'nomor_permintaan' => 'PD-0102/'.now()->year,
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
         'sumber_dana' => 'DAU',
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
         'belanja_id' => $belanja->id,
         'jumlah' => 400000,
         'keperluan' => 'Operasional',
@@ -202,7 +218,7 @@ test('permintaan submit succeeds and commits funds from belanja', function () {
 });
 
 test('next permintaan number does not reuse numbers after deletion', function () {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = buildBelanjaFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = buildBelanjaFixture();
 
     $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
     $year = now()->year;
@@ -210,6 +226,9 @@ test('next permintaan number does not reuse numbers after deletion', function ()
     $this->actingAs($user)->post('/permintaan-dana', [
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 500000,
         'keperluan' => 'Permintaan A',
     ]);
@@ -217,6 +236,9 @@ test('next permintaan number does not reuse numbers after deletion', function ()
     $this->actingAs($user)->post('/permintaan-dana', [
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 500000,
         'keperluan' => 'Permintaan B',
     ]);
@@ -227,6 +249,9 @@ test('next permintaan number does not reuse numbers after deletion', function ()
     $this->actingAs($user)->post('/permintaan-dana', [
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 500000,
         'keperluan' => 'Permintaan C',
     ]);
@@ -243,7 +268,7 @@ test('next permintaan number does not reuse numbers after deletion', function ()
 });
 
 test('permintaan store assigns the active fiscal year', function () {
-    ['opd' => $opd, 'sumberDana' => $sumberDana] = buildBelanjaFixture();
+    ['opd' => $opd, 'sumberDana' => $sumberDana, 'kegiatan' => $kegiatan, 'sub' => $sub, 'belanja' => $belanja] = buildBelanjaFixture();
 
     $ta = TahunAnggaran::create([
         'tahun' => (string) now()->year,
@@ -258,6 +283,9 @@ test('permintaan store assigns the active fiscal year', function () {
     $this->actingAs($user)->post('/permintaan-dana', [
         'opd_id' => $opd->id,
         'sumber_dana_id' => $sumberDana->id,
+        'kegiatan_id' => $kegiatan->id,
+        'sub_kegiatan_id' => $sub->id,
+        'belanja_id' => $belanja->id,
         'jumlah' => 500000,
         'keperluan' => 'Operasional tahun berjalan',
     ]);

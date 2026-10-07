@@ -11,6 +11,8 @@ use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
 use App\Services\PermintaanDanaService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use RuntimeException;
 
 class PermintaanDanaController extends Controller
 {
@@ -40,7 +42,7 @@ class PermintaanDanaController extends Controller
         ));
     }
 
-    public function create()
+    public function create(): View
     {
         $user = request()->user();
         $opds = $this->userOpds($user);
@@ -76,7 +78,7 @@ class PermintaanDanaController extends Controller
         return back()->with('success', 'Permintaan dana berhasil dibuat sebagai draft.');
     }
 
-    public function edit(PermintaanDana $permintaanDana)
+    public function edit(PermintaanDana $permintaanDana): View
     {
         $this->authorizeOpdRecord($permintaanDana, request()->user());
         $user = request()->user();
@@ -110,6 +112,19 @@ class PermintaanDanaController extends Controller
         return back()->with('success', 'Permintaan dana berhasil diperbarui.');
     }
 
+    public function submit(Request $request, PermintaanDana $permintaanDana)
+    {
+        $this->authorizeOpdRecord($permintaanDana, $request->user());
+
+        try {
+            $this->workflow->submit($permintaanDana, $request->user());
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['jumlah' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Permintaan dana berhasil diajukan dan menunggu persetujuan.');
+    }
+
     public function destroy(PermintaanDana $permintaanDana)
     {
         $this->authorizeOpdRecord($permintaanDana, request()->user());
@@ -121,18 +136,5 @@ class PermintaanDanaController extends Controller
         $permintaanDana->delete();
 
         return back()->with('success', 'Permintaan dana berhasil dihapus.');
-    }
-
-    public function submit(PermintaanDana $permintaanDana)
-    {
-        $this->authorizeOpdRecord($permintaanDana, request()->user());
-
-        try {
-            $this->workflow->submit($permintaanDana);
-        } catch (\RuntimeException $e) {
-            return back()->withErrors(['jumlah' => $e->getMessage()]);
-        }
-
-        return back()->with('success', 'Permintaan dana berhasil diajukan dan menunggu persetujuan.');
     }
 }

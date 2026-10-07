@@ -19,6 +19,7 @@
                       programId: {{ json_encode((string) old('program_id', '')) }},
                       kegiatanId: {{ json_encode((string) old('kegiatan_id', '')) }},
                       subKegiatanId: {{ json_encode((string) old('sub_kegiatan_id', '')) }},
+                      belanjaId: {{ json_encode((string) old('belanja_id', '')) }},
                       programsByOpd: {{ Js::from($programsByOpd) }},
                       kegiatansByProgram: {{ Js::from($kegiatansByProgram) }},
                       subKegiatansByKegiatan: {{ Js::from($subKegiatansByKegiatan) }},
@@ -34,6 +35,13 @@
                       },
                       get belanjaOptions() {
                           return this.belanjasBySubKegiatan[this.subKegiatanId] || [];
+                      },
+                      get selectedBelanja() {
+                          return this.belanjaOptions.find(function (b) { return b.id === this.belanjaId; }) || null;
+                      },
+                      formatRupiah(value) {
+                          var n = parseFloat(value) || 0;
+                          return 'Rp ' + n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
                       },
                       onOpdChange() {
                           this.programId = '';
@@ -114,14 +122,25 @@
                         </div>
                         <div>
                             <x-input-label value="Belanja" />
-                            <select name="belanja_id"
+                            <select name="belanja_id" x-model="belanjaId" required
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
-                                <option value="">Pilih Belanja (Opsional)</option>
+                                <option value="">Pilih Belanja</option>
                                 <template x-for="b in belanjaOptions" :key="b.id">
                                     <option :value="b.id" x-text="b.label"></option>
                                 </template>
                             </select>
                             <x-input-error :messages="$errors->get('belanja_id')" class="mt-1"/>
+                            <div x-show="selectedBelanja" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Pagu tersisa</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu_tersisa : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Kas tersedia</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.kas_tersedia : 0)"></span>
+                                </div>
+                                <p class="text-slate-400">Yang dapat dipakai adalah nilai terkecil dari pagu tersisa dan kas tersedia.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -152,7 +171,7 @@
 
                     <div>
                         <x-input-label value="Tanggal"/>
-                        <x-text-input type="date" name="tanggal" :value="old('tanggal', date('Y-m-d'))"/>
+                        <x-text-input type="text" name="tanggal" :value="old('tanggal', date('Y-m-d'))" class="datepicker"/>
                         <x-input-error :messages="$errors->get('tanggal')" class="mt-1"/>
                     </div>
 

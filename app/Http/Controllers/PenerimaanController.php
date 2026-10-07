@@ -87,7 +87,7 @@ class PenerimaanController extends Controller
         $this->authorizeOpdRecord($penerimaan, request()->user());
         $penerimaan->load(['subRekening']);
         $opds = $this->userOpds(request()->user());
-        $rekenings = Rekening::orderBy('kode')->get();
+        $rekenings = Rekening::where('tipe', 'pendapatan')->orderBy('kode')->get();
         $subRekeningsByParent = $this->subRekeningsByParent();
         $tahunAnggarans = TahunAnggaran::orderByDesc('tahun')->get();
 

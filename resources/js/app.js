@@ -1,5 +1,8 @@
 import Alpine from 'alpinejs';
 import ApexCharts from 'apexcharts';
+import flatpickr from 'flatpickr';
+import { Indonesian } from 'flatpickr/dist/l10n/id.js';
+import 'flatpickr/dist/flatpickr.min.css';
 
 window.Alpine = Alpine;
 window.ApexCharts = ApexCharts;
@@ -38,3 +41,25 @@ Alpine.store('modal', {
 });
 
 Alpine.start();
+
+// Kalender untuk seluruh input tanggal (class "datepicker"),
+// termasuk baris BKU yang ditambahkan secara dinamis via Alpine.
+const initDatepickers = (root) => {
+    (root || document)
+        .querySelectorAll('input.datepicker:not([data-flatpickr-initialized])')
+        .forEach((el) => {
+            el.setAttribute('data-flatpickr-initialized', '1');
+            flatpickr(el, {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+                locale: Indonesian,
+            });
+        });
+};
+
+initDatepickers();
+
+// Baris dinamis (mis. BKU) tidak ada saat DOM ready, jadi
+// inisialisasi ulang setiap ada elemen baru yang masuk ke DOM.
+const datepickerObserver = new MutationObserver(() => initDatepickers());
+datepickerObserver.observe(document.body, { childList: true, subtree: true });
