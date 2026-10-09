@@ -78,7 +78,9 @@ test('opd user creates permintaan as draft with auto number', function (): void 
     $permintaan = PermintaanDana::findOrFail($response->json('data.id'));
 
     expect($permintaan->status)->toBe('draft')
-        ->and($permintaan->nomor_permintaan)->toMatch('/^PD-\\d{4}\\/'.now()->year.'$/');
+        ->and($permintaan->nomor_permintaan)->toMatch('/^PD-\\d{4}\\/'.now()->year.'$/')
+        // Rekening always follows the selected belanja.
+        ->and($permintaan->rekening_id)->toBe($belanja->rekening_id);
 });
 
 test('opd user cannot create permintaan for another opd', function (): void {

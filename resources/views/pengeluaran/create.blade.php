@@ -38,7 +38,7 @@
                           return this.belanjasBySubKegiatan[this.subKegiatanId] || [];
                       },
                       get selectedPd() {
-                          return this.permintaanDanas.find(function (p) { return String(p.id) === String(this.pdId); }) || null;
+                          return this.permintaanDanas.find(function (p) { return String(p.id) === String(this.pdId); }, this) || null;
                       },
                       formatRupiah(value) {
                           var n = parseFloat(value) || 0;

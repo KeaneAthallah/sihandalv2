@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ProvidesBudgetHierarchyCascade;
 use App\Http\Requests\StorePermintaanDanaRequest;
 use App\Http\Requests\UpdatePermintaanDanaRequest;
+use App\Models\Belanja;
 use App\Models\PermintaanDana;
-use App\Models\Rekening;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
 use App\Services\PermintaanDanaService;
@@ -51,11 +51,10 @@ class PermintaanDanaController extends Controller
         $kegiatansByProgram = $this->kegiatansByProgram($user);
         $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
         $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
-        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
 
         return view('permintaan-dana.create', compact(
             'opds', 'sumberDanas', 'programsByOpd', 'kegiatansByProgram',
-            'subKegiatansByKegiatan', 'belanjasBySubKegiatan', 'rekenings'
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan'
         ));
     }
 
@@ -63,6 +62,10 @@ class PermintaanDanaController extends Controller
     {
         $data = $request->validated();
         $sumberDana = SumberDana::findOrFail($data['sumber_dana_id']);
+
+        // Rekening selalu mengikuti belanja yang dipilih agar
+        // pengeluaran nanti konsisten dengan sumber anggaran.
+        $data['rekening_id'] = Belanja::findOrFail($data['belanja_id'])->rekening_id;
 
         if (! $request->user()->isAdmin()) {
             $data['opd_id'] = $request->user()->opd_id;
@@ -88,11 +91,10 @@ class PermintaanDanaController extends Controller
         $kegiatansByProgram = $this->kegiatansByProgram($user);
         $subKegiatansByKegiatan = $this->subKegiatansByKegiatan($user);
         $belanjasBySubKegiatan = $this->belanjasBySubKegiatan($user);
-        $rekenings = Rekening::where('tipe', 'belanja')->orderBy('kode')->get();
 
         return view('permintaan-dana.edit', compact(
             'permintaanDana', 'opds', 'sumberDanas', 'programsByOpd', 'kegiatansByProgram',
-            'subKegiatansByKegiatan', 'belanjasBySubKegiatan', 'rekenings'
+            'subKegiatansByKegiatan', 'belanjasBySubKegiatan'
         ));
     }
 
@@ -106,6 +108,7 @@ class PermintaanDanaController extends Controller
 
         $data = $request->validated();
         $data['sumber_dana'] = SumberDana::findOrFail($data['sumber_dana_id'])->nama_sumber_dana;
+        $data['rekening_id'] = Belanja::findOrFail($data['belanja_id'])->rekening_id;
 
         $permintaanDana->update($data);
 

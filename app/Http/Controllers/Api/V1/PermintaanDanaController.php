@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\StorePermintaanDanaApiRequest;
 use App\Http\Resources\PermintaanDanaResource;
+use App\Models\Belanja;
 use App\Models\PermintaanDana;
 use App\Models\SumberDana;
 use App\Models\TahunAnggaran;
@@ -45,6 +46,10 @@ class PermintaanDanaController extends ApiController
     {
         $data = $request->validated();
 
+        // Rekening selalu mengikuti belanja yang dipilih agar
+        // pengeluaran nanti konsisten dengan sumber anggaran.
+        $data['rekening_id'] = Belanja::findOrFail($data['belanja_id'])->rekening_id;
+
         if (! $request->user()->isAdmin()) {
             $data['opd_id'] = $request->user()->opd_id;
         }
@@ -80,6 +85,7 @@ class PermintaanDanaController extends ApiController
 
         $data = $request->validated();
         $data['sumber_dana'] = SumberDana::findOrFail($data['sumber_dana_id'])->nama_sumber_dana;
+        $data['rekening_id'] = Belanja::findOrFail($data['belanja_id'])->rekening_id;
 
         // Status is never client-settable here.
         unset($data['status']);

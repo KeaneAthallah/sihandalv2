@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\Belanja;
 use App\Models\Kegiatan;
-use App\Models\Program;
 use App\Models\SubKegiatan;
 use App\Services\KasService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Cascade option maps for the OPD -> program -> kegiatan ->
@@ -18,16 +18,26 @@ trait ProvidesBudgetHierarchyCascade
     /**
      * Programs grouped by OPD.
      *
+     * Programs are global (programs.opd_id is null on imported
+     * rows), so the OPD link is derived from the kegiatan rows
+     * under each program.
+     *
      * @return array<string, array<int, array{id: string, label: string}>>
      */
     protected function programsByOpd(): array
     {
-        return Program::orderBy('kode_program')
-            ->get(['id', 'opd_id', 'kode_program', 'nama_program'])
+        $rows = DB::table('kegiatan')
+            ->join('programs', 'programs.id', '=', 'kegiatan.program_id')
+            ->select('kegiatan.opd_id', 'programs.id as program_id', 'programs.kode_program', 'programs.nama_program')
+            ->distinct()
+            ->orderBy('programs.kode_program')
+            ->get();
+
+        return collect($rows)
             ->groupBy('opd_id')
-            ->map(fn ($rows) => $rows->map(fn ($p) => [
-                'id' => (string) $p->id,
-                'label' => $p->kode_program.' - '.$p->nama_program,
+            ->map(fn ($rows) => $rows->map(fn ($r) => [
+                'id' => (string) $r->program_id,
+                'label' => $r->kode_program.' - '.$r->nama_program,
             ])->values())
             ->all();
     }
@@ -97,14 +107,19 @@ trait ProvidesBudgetHierarchyCascade
             ->groupBy('sub_kegiatan_id')
             ->map(fn ($rows) => $rows->map(function ($b) use ($kas, $user) {
                 $rekening = $b->rekening;
+                $ringkasan = $kas->ringkasan((int) $b->opd_id, (int) $b->sumber_dana_id, $user);
 
                 return [
                     'id' => (string) $b->id,
                     'label' => $rekening
                         ? $rekening->kode.' - '.$rekening->nama
                         : 'Belanja #'.$b->id,
+                    'sumber_dana_id' => (string) $b->sumber_dana_id,
+                    'pagu' => (float) $b->pagu,
+                    'penerimaan' => $ringkasan['masuk'],
+                    'dana_di_commit' => (float) $b->dana_di_commit,
                     'pagu_tersisa' => $b->availablePagu(),
-                    'kas_tersedia' => $kas->saldoEfektif((int) $b->opd_id, (int) $b->sumber_dana_id, $user),
+                    'kas_tersedia' => $ringkasan['saldo_efektif'],
                 ];
             })->values())
             ->all();

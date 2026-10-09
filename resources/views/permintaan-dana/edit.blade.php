@@ -28,13 +28,17 @@
             <form action="{{ route('permintaan-dana.update', $permintaanDana) }}" method="POST"
                   x-data="{
                       opdId: {{ json_encode((string) old('opd_id', (string) $permintaanDana->opd_id)) }},
-                      programId: {{ json_encode((string) old('program_id', '')) }},
+                      programId: {{ json_encode((string) old('program_id', (string) ($permintaanDana->kegiatan->program_id ?? ''))) }},
                       kegiatanId: {{ json_encode((string) old('kegiatan_id', (string) ($permintaanDana->kegiatan_id ?? ''))) }},
                       subKegiatanId: {{ json_encode((string) old('sub_kegiatan_id', (string) ($permintaanDana->sub_kegiatan_id ?? ''))) }},
+                      belanjaId: {{ json_encode((string) old('belanja_id', (string) ($permintaanDana->belanja_id ?? ''))) }},
+                      sumberDanaId: {{ json_encode((string) old('sumber_dana_id', (string) $permintaanDana->sumber_dana_id)) }},
+                      jumlahInput: {{ json_encode((int) old('jumlah', (int) $permintaanDana->jumlah)) }},
                       programsByOpd: {{ Js::from($programsByOpd) }},
                       kegiatansByProgram: {{ Js::from($kegiatansByProgram) }},
                       subKegiatansByKegiatan: {{ Js::from($subKegiatansByKegiatan) }},
                       belanjasBySubKegiatan: {{ Js::from($belanjasBySubKegiatan) }},
+                      sumberDanaList: {{ Js::from($sumberDanas->map(fn ($sd) => ['id' => (string) $sd->id, 'label' => $sd->nama_sumber_dana])->values()) }},
                       get programOptions() {
                           return this.programsByOpd[this.opdId] || [];
                       },
@@ -47,17 +51,57 @@
                       get belanjaOptions() {
                           return this.belanjasBySubKegiatan[this.subKegiatanId] || [];
                       },
+                      get sumberDanaOptions() {
+                          // Hanya sumber dana yang dimiliki belanja
+                          // pada sub kegiatan yang dipilih.
+                          var ids = {};
+                          this.belanjaOptions.forEach(function (b) {
+                              ids[b.sumber_dana_id] = true;
+                          });
+                          return this.sumberDanaList.filter(function (s) {
+                              return ids[s.id] === true;
+                          });
+                      },
+                      get selectedBelanja() {
+                          return this.belanjaOptions.find(function (b) { return b.id === this.belanjaId; }, this) || null;
+                      },
+                      get jumlahTersedia() {
+                          if (!this.selectedBelanja) {
+                              return 0;
+                          }
+                          return Math.min(this.selectedBelanja.pagu_tersisa, this.selectedBelanja.kas_tersedia);
+                      },
+                      formatRupiah(value) {
+                          var n = parseFloat(value) || 0;
+                          return 'Rp ' + n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                      },
                       onOpdChange() {
                           this.programId = '';
                           this.kegiatanId = '';
                           this.subKegiatanId = '';
+                          this.belanjaId = '';
+                          this.sumberDanaId = '';
                       },
                       onProgramChange() {
                           this.kegiatanId = '';
                           this.subKegiatanId = '';
+                          this.belanjaId = '';
+                          this.sumberDanaId = '';
                       },
                       onKegiatanChange() {
                           this.subKegiatanId = '';
+                          this.belanjaId = '';
+                          this.sumberDanaId = '';
+                      },
+                      onSubKegiatanChange() {
+                          this.belanjaId = '';
+                          this.sumberDanaId = '';
+                      },
+                      onBelanjaChange(belanjaId) {
+                          // Sumber dana mengikuti belanja — satu-satunya
+                          // pilihan yang valid untuk belanja ini.
+                          var b = this.belanjaOptions.find(function (o) { return o.id === belanjaId; });
+                          this.sumberDanaId = b ? b.sumber_dana_id : '';
                       }
                   }">
                 @csrf
@@ -77,12 +121,12 @@
                         </div>
                         <div>
                             <x-input-label>Sumber Dana <span class="text-red-500">*</span></x-input-label>
-                            <select name="sumber_dana_id"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                            <select name="sumber_dana_id" x-model="sumberDanaId" :disabled="!belanjaId" required
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
                                 <option value="">Pilih Sumber Dana</option>
-                                @foreach($sumberDanas as $sd)
-                                    <option value="{{ $sd->id }}" {{ old('sumber_dana_id', $permintaanDana->sumber_dana_id) == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
-                                @endforeach
+                                <template x-for="sd in sumberDanaOptions" :key="sd.id">
+                                    <option :value="sd.id" x-text="sd.label"></option>
+                                </template>
                             </select>
                             <x-input-error :messages="$errors->get('sumber_dana_id')" class="mt-1"/>
                         </div>
@@ -116,7 +160,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label value="Sub Kegiatan" />
-                            <select name="sub_kegiatan_id" x-model="subKegiatanId"
+                            <select name="sub_kegiatan_id" x-model="subKegiatanId" @change="onSubKegiatanChange()"
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih Sub Kegiatan</option>
                                 <template x-for="s in subKegiatanOptions" :key="s.id">
@@ -127,33 +171,52 @@
                         </div>
                         <div>
                             <x-input-label value="Belanja" />
-                            <select name="belanja_id"
+                            <select name="belanja_id" x-model="belanjaId" @change="onBelanjaChange($event.target.value)"
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
-                                <option value="">Pilih Belanja (Opsional)</option>
+                                <option value="">Pilih Belanja</option>
                                 <template x-for="b in belanjaOptions" :key="b.id">
                                     <option :value="b.id" x-text="b.label"></option>
                                 </template>
                             </select>
                             <x-input-error :messages="$errors->get('belanja_id')" class="mt-1"/>
+                            <div x-show="selectedBelanja" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Pagu</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Penerimaan</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.penerimaan : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Dana commit</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.dana_di_commit : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-slate-200 pt-1">
+                                    <span class="text-slate-500">Pagu tersisa</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu_tersisa : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-500">Kas tersedia</span>
+                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.kas_tersedia : 0)"></span>
+                                </div>
+                                <p class="text-slate-400">Yang dapat dipakai adalah nilai terkecil dari pagu tersisa dan kas tersedia.</p>
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                        <x-input-label value="Rekening" />
-                        <select name="rekening_id"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
-                            <option value="">Pilih Rekening (Opsional)</option>
-                            @foreach($rekenings as $rekening)
-                                <option value="{{ $rekening->id }}" {{ old('rekening_id', $permintaanDana->rekening_id) == $rekening->id ? 'selected' : '' }}>{{ $rekening->kode . ' - ' . $rekening->nama }}</option>
-                            @endforeach
-                        </select>
-                        <x-input-error :messages="$errors->get('rekening_id')" class="mt-1"/>
-                        <p class="mt-1 text-xs text-slate-400">Rekening bertipe belanja.</p>
-                    </div>
-
-                    <div>
                         <x-input-label>Jumlah (Rp) <span class="text-red-500">*</span></x-input-label>
-                        <x-text-input type="number" name="jumlah" :value="old('jumlah', $permintaanDana->jumlah)" min="1" step="1" placeholder="0" required/>
+                        <input type="range" min="0" :max="jumlahTersedia > 0 ? jumlahTersedia : 1" step="1000"
+                            x-model.number="jumlahInput" :disabled="!sumberDanaId"
+                            class="w-full accent-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                        <x-text-input type="number" name="jumlah" x-model.number="jumlahInput" min="1" step="1" placeholder="0" required
+                            class="mt-2"/>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Maksimal yang dapat dipakai:
+                            <span class="font-semibold text-slate-600" x-text="formatRupiah(jumlahTersedia)"></span>
+                            — nilai terkecil dari pagu tersisa dan kas tersedia.
+                        </p>
                         <x-input-error :messages="$errors->get('jumlah')" class="mt-1"/>
                     </div>
 
