@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BelanjaController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanPenerimaanController;
 use App\Http\Controllers\LaporanPengeluaranController;
 use App\Http\Controllers\LaporanPosisiKasController;
@@ -24,63 +25,15 @@ use App\Http\Controllers\TransaksiPenerimaanController;
 use App\Http\Controllers\TransferDanaController;
 use App\Http\Controllers\UptController;
 use App\Http\Controllers\UserManagementController;
-use App\Models\Belanja;
-use App\Models\Opd;
-use App\Models\Pengeluaran;
-use App\Models\PermintaanDana;
-use App\Services\FinancialSummaryService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    $isAdmin = $user->isAdmin();
-    $opdScope = fn ($query, $column = 'opd_id') => $isAdmin ? $query : $query->where($column, $user->opd_id);
-
-    $totalAnggaran = $opdScope(Opd::query(), 'id')->sum('total_pagu');
-    $totalBelanja = $opdScope(Belanja::query())->sum('pagu');
-    if ($totalBelanja > 0) {
-        $totalAnggaran = $totalBelanja;
-    }
-    $totalPenerimaan = (float) DB::table('transaksi_penerimaans')
-        ->join('penerimaans', 'penerimaans.id', '=', 'transaksi_penerimaans.penerimaan_id')
-        ->when(! $isAdmin, fn ($q) => $q->where('penerimaans.opd_id', $user->opd_id))
-        ->sum('transaksi_penerimaans.realisasi');
-    $totalPengeluaran = $opdScope(Pengeluaran::query())->sum('jumlah');
-    $permintaanPending = $opdScope(PermintaanDana::query())->where('status', 'menunggu')->count();
-    $totalPagu = $totalAnggaran > 0 ? $totalAnggaran : 1;
-    $ringkasanKas = FinancialSummaryService::cashTotals($user);
-    $kasPenerimaan = $ringkasanKas['kas_penerimaan'];
-    $kasPengeluaran = $ringkasanKas['kas_pengeluaran'];
-    $sisaKas = $ringkasanKas['saldo_kas'];
-    $sisaKasMax = $totalPagu > 0 ? $totalPagu : 1;
-
-    $topOpd = $opdScope(Opd::query(), 'id')
-        ->withSum('pengeluarans as total_realisasi_pengeluaran', 'jumlah')
-        ->orderByDesc('total_realisasi_pengeluaran')
-        ->take(10)
-        ->get();
-
-    $recentPermintaan = $opdScope(PermintaanDana::with('opd'))
-        ->latest()
-        ->take(6)
-        ->get();
-
-    $statusCounts = $opdScope(PermintaanDana::query())
-        ->selectRaw('status, count(*) as count')
-        ->groupBy('status')
-        ->pluck('count', 'status');
-
-    return view('dashboard.index', compact(
-        'totalAnggaran', 'totalPenerimaan', 'totalPengeluaran',
-        'permintaanPending', 'sisaKas', 'sisaKasMax',
-        'topOpd', 'recentPermintaan', 'statusCounts'
-    ));
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/opd', [OpdController::class, 'index'])->name('opd.index');
