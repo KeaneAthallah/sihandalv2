@@ -116,7 +116,7 @@ trait ProvidesBudgetHierarchyCascade
                         : 'Belanja #'.$b->id,
                     'sumber_dana_id' => (string) $b->sumber_dana_id,
                     'pagu' => (float) $b->pagu,
-                    'penerimaan' => $ringkasan['masuk'],
+                    'penerimaan' => $kas->masukEfektif((int) $b->opd_id, (int) $b->sumber_dana_id, $user),
                     'dana_di_commit' => (float) $b->dana_di_commit,
                     'pagu_tersisa' => $b->availablePagu(),
                     'kas_tersedia' => $ringkasan['saldo_efektif'],

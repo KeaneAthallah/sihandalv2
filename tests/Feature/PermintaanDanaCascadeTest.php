@@ -3,11 +3,14 @@
 use App\Models\Belanja;
 use App\Models\Kegiatan;
 use App\Models\Opd;
+use App\Models\Penerimaan;
 use App\Models\PermintaanDana;
 use App\Models\Program;
 use App\Models\Rekening;
+use App\Models\Setting;
 use App\Models\SubKegiatan;
 use App\Models\SumberDana;
+use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 
 test('create page lists programs under the opd of their kegiatans', function () {
@@ -122,10 +125,11 @@ test('rekening permintaan dana mengikuti rekening belanja', function () {
 });
 
 test('edit page prefills the cascade with sumber dana gating', function () {
-    $admin = User::factory()->admin()->create();
     $opd = Opd::create(['kode' => 'OPD-A', 'nama' => 'Dinas A']);
+    $user = User::factory()->create(['role' => 'opd', 'opd_id' => $opd->id]);
     $sumberDana = SumberDana::create(['nama_sumber_dana' => 'DAU']);
     $rekening = Rekening::create(['kode' => '5.1.1', 'nama' => 'Belanja Pegawai', 'tipe' => 'belanja']);
+    $rekeningPendapatan = Rekening::create(['kode' => '4.1.1', 'nama' => 'Pendapatan PAD', 'tipe' => 'pendapatan']);
 
     $program = Program::create(['kode_program' => '1.01.1', 'nama_program' => 'Program A']);
     $kegiatan = Kegiatan::create([
@@ -157,7 +161,20 @@ test('edit page prefills the cascade with sumber dana gating', function () {
         'status' => 'draft',
     ]);
 
-    $this->actingAs($admin)
+    // Kas masuk 500k dengan kuota 50% — untuk user OPD,
+    // panel menampilkan penerimaan setelah kuota (250k).
+    $penerimaan = Penerimaan::create([
+        'opd_id' => $opd->id, 'rekening_id' => $rekeningPendapatan->id, 'target' => 1000000,
+    ]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberDana->id,
+        'realisasi' => 500000,
+        'tanggal' => now(),
+    ]);
+    Setting::set('penerimaan_kuota_persen', '50');
+
+    $this->actingAs($user)
         ->get(route('permintaan-dana.edit', $permintaan))
         ->assertSuccessful()
         ->assertSee('sumberDanaId')
@@ -174,6 +191,6 @@ test('edit page prefills the cascade with sumber dana gating', function () {
         ->assertSee('type="range"', false)
         ->assertSee('x-model.number="jumlahInput"', false)
         ->assertSee('\u0022pagu\u0022', false)
-        ->assertSee('\u0022penerimaan\u0022', false)
+        ->assertSee('\u0022penerimaan\u0022:250000', false)
         ->assertSee('\u0022dana_di_commit\u0022', false);
 });

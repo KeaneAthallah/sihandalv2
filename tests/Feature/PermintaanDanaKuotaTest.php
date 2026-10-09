@@ -53,6 +53,19 @@ test('admin bebas kuota penerimaan', function () {
     expect(app(KasService::class)->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
 });
 
+test('masuk efektif mengikuti kuota penerimaan', function () {
+    $f = kuotaFixture();
+
+    expect(app(KasService::class)->masukEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(500000.0);
+
+    Setting::set('penerimaan_kuota_persen', '50');
+
+    // 50% dari kas masuk 500k = 250k yang ditampilkan
+    // sebagai penerimaan untuk OPD; admin tetap penuh.
+    expect(app(KasService::class)->masukEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(250000.0)
+        ->and(app(KasService::class)->masukEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
+});
+
 test('ringkasan dihitung sekali per pasangan opd, sumber dana, dan actor', function () {
     $f = kuotaFixture();
     $service = app(KasService::class);

@@ -83,6 +83,18 @@ class KasService
     }
 
     /**
+     * Kas masuk setelah kuota penerimaan diterapkan
+     * untuk user OPD — angka penerimaan yang boleh
+     * dipakai. Admin selalu melihat angka penuh.
+     */
+    public function masukEfektif(int $opdId, ?int $sumberDanaId = null, ?User $actor = null): float
+    {
+        $ringkasan = $this->ringkasan($opdId, $sumberDanaId, $actor);
+
+        return round($this->terapkanKuota((float) $ringkasan['masuk'], $actor), 2);
+    }
+
+    /**
      * Kas riil (tanpa kuota) — kas yang benar-benar ada tanpa
      * dikurangi reservasi.
      */
