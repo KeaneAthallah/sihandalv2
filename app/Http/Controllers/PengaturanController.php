@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Models\SumberDana;
+use App\Services\KasService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,19 +13,32 @@ class PengaturanController extends Controller
 {
     public function index(): View
     {
-        $kuotaPenerimaanPersen = (float) Setting::get('penerimaan_kuota_persen', 100);
+        $sumberDanas = SumberDana::query()->orderBy('nama_sumber_dana')->get(['id', 'nama_sumber_dana']);
 
-        return view('pengaturan.index', compact('kuotaPenerimaanPersen'));
+        $kuota = $sumberDanas->mapWithKeys(fn (SumberDana $sumberDana): array => [
+            (int) $sumberDana->id => (float) Setting::get(KasService::kuotaKey((int) $sumberDana->id), 100),
+        ]);
+
+        return view('pengaturan.index', compact('sumberDanas', 'kuota'));
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $request->validate([
-            'penerimaan_kuota_persen' => ['required', 'numeric', 'min:0', 'max:100'],
+        $validated = $request->validate([
+            'kuota' => ['required', 'array'],
+            'kuota.*' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        Setting::set('penerimaan_kuota_persen', (string) $request->input('penerimaan_kuota_persen'));
+        $sumberDanaIds = SumberDana::query()->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
-        return back()->with('success', 'Pengaturan keuangan diperbarui.');
+        foreach ($validated['kuota'] as $sumberDanaId => $persen) {
+            if (! in_array((int) $sumberDanaId, $sumberDanaIds, true)) {
+                continue;
+            }
+
+            Setting::set(KasService::kuotaKey((int) $sumberDanaId), (string) $persen);
+        }
+
+        return back()->with('success', 'Kuota penerimaan per sumber dana diperbarui.');
     }
 }

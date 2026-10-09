@@ -4,37 +4,59 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Models\Setting;
+use App\Models\SumberDana;
+use App\Services\KasService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SettingController extends ApiController
 {
     /**
-     * Application settings (admin). Currently holds the
-     * revenue quota percentage applied to OPD users.
+     * Kuota penerimaan per sumber dana (admin).
      */
     public function index(Request $request): JsonResponse
     {
         $this->authorizeAdmin($request);
 
-        return $this->success([
-            'penerimaan_kuota_pesen' => (float) Setting::get('penerimaan_kuota_pesen', 100),
-        ]);
+        return $this->success($this->payload());
     }
 
     public function update(Request $request): JsonResponse
     {
         $this->authorizeAdmin($request);
 
-        $request->validate([
-            'penerimaan_kuota_pesen' => ['required', 'numeric', 'min:0', 'max:100'],
+        $validated = $request->validate([
+            'kuota' => ['required', 'array'],
+            'kuota.*' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        Setting::set('penerimaan_kuota_pesen', (string) $request->input('penerimaan_kuota_pesen'));
+        $sumberDanaIds = SumberDana::query()->pluck('id')->map(fn ($id): int => (int) $id)->all();
 
-        return $this->success([
-            'penerimaan_kuota_pesen' => (float) Setting::get('penerimaan_kuota_pesen', 100),
-        ], 'Pengaturan diperbarui.');
+        foreach ($validated['kuota'] as $sumberDanaId => $persen) {
+            if (! in_array((int) $sumberDanaId, $sumberDanaIds, true)) {
+                continue;
+            }
+
+            Setting::set(KasService::kuotaKey((int) $sumberDanaId), (string) $persen);
+        }
+
+        return $this->success($this->payload(), 'Pengaturan diperbarui.');
+    }
+
+    /**
+     * @return array{kuota_penerimaan: array<int, array{sumber_dana_id: int, nama_sumber_dana: string, persen: float}>}
+     */
+    private function payload(): array
+    {
+        $sumberDanas = SumberDana::query()->orderBy('nama_sumber_dana')->get(['id', 'nama_sumber_dana']);
+
+        return [
+            'kuota_penerimaan' => $sumberDanas->map(fn (SumberDana $sumberDana): array => [
+                'sumber_dana_id' => (int) $sumberDana->id,
+                'nama_sumber_dana' => (string) $sumberDana->nama_sumber_dana,
+                'persen' => (float) Setting::get(KasService::kuotaKey((int) $sumberDana->id), 100),
+            ])->all(),
+        ];
     }
 
     private function authorizeAdmin(Request $request): void

@@ -174,11 +174,11 @@ Rencana lengkap (terus diperbarui): C:\Users\kenn\.commandcode\plans\kas-pagu-pe
 - Permintaan dana mengambil kas dari penerimaan; pagu hanya batas. Tersedia = min(pagu_tersisa, kas_efektif).
 - Pengeluaran dari PD disetujui: admin hanya isi 3 field (nomor PD, no_sp2d, tanggal_sp2d); field lain mirror read-only dari PD.
 - Transfer dana memindahkan kas antar sumber dana saat salah satu sumber dana kurang.
-- Kuota persen global dari penerimaan yang boleh dipakai OPD (default 100 persen); admin bebas kuota.
+- Kuota persen penerimaan per sumber dana yang boleh dipakai OPD (default 100 persen); admin bebas kuota.
 
 ## Keputusan desain
 - sumber_dana kas masuk -> transaksi_penerimaans.sumber_dana_id
-- kuota -> global (settings key: penerimaan_kuota_persen)
+- kuota -> per sumber dana via settings key `penerimaan_kuota_persen.{sumber_dana_id}`; diatur di halaman Pengaturan (isi tiap sumber dana)
 - kuota -> batas keras untuk OPD, admin bebas
 - realisasi pagu -> saat approve PD; pengeluaran hanya mencatat kas keluar
 
@@ -188,7 +188,8 @@ kas_masuk = sum(transaksi_penerimaans.realisasi) per (opd, sumber_dana)
 kas_keluar = sum(pengeluarans.jumlah) per (opd, sumber_dana)
 transfer_net = sum(transfer_dana selesai) masuk - keluar per (opd, sumber_dana)
 kas_di_commit = reservasi PD status menunggu per (opd, sumber_dana)
-kas_efektif = (kas_masuk x kuota%) - kas_keluar + transfer_net - kas_di_commit
+kas_efektif = (kas_masuk x kuota(sumber_dana)%) - kas_keluar + transfer_net - kas_di_commit
+  (agregat semua sumber dana: tiap sumber dana ditimbang kuotanya sendiri; transaksi tanpa sumber dana tidak dipotong kuota)
 tersedia = min(pagu_tersisa, kas_efektif)  [untuk user OPD]
 tersedia_admin = min(pagu_tersisa, kas_masuk - kas_keluar + transfer_net - kas_di_commit)  [admin tanpa kuota]
 

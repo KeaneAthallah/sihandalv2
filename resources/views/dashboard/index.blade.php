@@ -81,22 +81,13 @@
     </div>
 
     {{-- Saldo kas efektif --}}
-    <div class="mb-5 flex flex-col sm:flex-row gap-4">
-        <div class="flex-1">
-            <x-progress-card
-                title="Saldo Kas Efektif"
-                amount="Rp {{ $rupiah($saldoEfektif) }}"
-                :percentage="$saldoPersen"
-                color="{{ $saldoColor }}"
-            />
-        </div>
-        @unless($isAdmin)
-            <div class="card p-4 sm:w-64 flex flex-col justify-center">
-                <p class="stat-label">Kuota Penerimaan</p>
-                <p class="mt-1 text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($kuotaPersen, 0) }}%</p>
-                <p class="text-xs text-slate-400 mt-1">dari penerimaan boleh dipakai</p>
-            </div>
-        @endunless
+    <div class="mb-5">
+        <x-progress-card
+            title="Saldo Kas Efektif"
+            amount="Rp {{ $rupiah($saldoEfektif) }}"
+            :percentage="$saldoPersen"
+            color="{{ $saldoColor }}"
+        />
     </div>
 
     {{-- Tren + distribusi status --}}
@@ -151,7 +142,7 @@
         <div class="mb-5">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-sm font-semibold text-slate-700">Kas Saya per Sumber Dana</h2>
-                <span class="text-xs text-slate-400">Setelah kuota penerimaan {{ number_format($kuotaPersen, 0) }}%</span>
+                <span class="text-xs text-slate-400">Setelah kuota penerimaan per sumber dana</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 @forelse($kasPerSumberDana as $row)
@@ -168,6 +159,7 @@
                             <p class="text-sm font-semibold text-slate-800 truncate">{{ $row['nama'] }}</p>
                             <span class="text-xs text-slate-400 shrink-0">{{ $terpakaiPersen }}% terpakai</span>
                         </div>
+                        <p class="text-xs text-slate-400 mt-1">Kuota penerimaan {{ number_format((float) $row['kuota_persen'], 0) }}%</p>
                         <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mt-2 mb-3">
                             <div class="bg-primary h-2 rounded-full" style="width: {{ $terpakaiPersen }}%"></div>
                         </div>

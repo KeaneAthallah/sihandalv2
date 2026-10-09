@@ -104,37 +104,42 @@ function transferDanaBaru(array $f, int $jumlah = 400000, string $status = 'dipr
 // ---------------------------------------------------------------- pengaturan kuota
 
 test('admin dapat membaca pengaturan melalui api', function () {
-    ['admin' => $admin] = kasPaguFixture();
+    ['admin' => $admin, 'sumberDana' => $sumberDana] = kasPaguFixture();
 
     $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/settings');
 
     $response->assertOk();
-    expect((float) $response->json('data.penerimaan_kuota_pesen'))->toBe(100.0);
+
+    $kuota = collect($response->json('data.kuota_penerimaan'))->keyBy('sumber_dana_id');
+
+    expect((float) $kuota[$sumberDana->id]['persen'])->toBe(100.0);
 });
 
 test('admin memperbarui kuota penerimaan melalui api', function () {
-    ['admin' => $admin] = kasPaguFixture();
+    ['admin' => $admin, 'sumberDana' => $sumberDana] = kasPaguFixture();
 
     $this->actingAs($admin, 'sanctum')
-        ->putJson('/api/v1/settings', ['penerimaan_kuota_pesen' => 50])
+        ->putJson('/api/v1/settings', ['kuota' => [$sumberDana->id => 50]])
         ->assertOk();
 
-    expect((float) Setting::get('penerimaan_kuota_pesen', 100))->toBe(50.0);
+    expect((float) Setting::get(KasService::kuotaKey($sumberDana->id), 100))->toBe(50.0);
 });
 
 test('kuota di luar rentang 0-100 ditolak melalui api', function () {
-    ['admin' => $admin] = kasPaguFixture();
+    ['admin' => $admin, 'sumberDana' => $sumberDana] = kasPaguFixture();
 
     $this->actingAs($admin, 'sanctum')
-        ->putJson('/api/v1/settings', ['penerimaan_kuota_pesen' => 150])
-        ->assertJsonValidationErrors('penerimaan_kuota_pesen');
+        ->putJson('/api/v1/settings', ['kuota' => [$sumberDana->id => 150]])
+        ->assertJsonValidationErrors('kuota.'.$sumberDana->id);
 });
 
 test('opd tidak dapat mengakses pengaturan melalui api', function () {
-    ['user' => $user] = kasPaguFixture();
+    ['user' => $user, 'sumberDana' => $sumberDana] = kasPaguFixture();
 
     $this->actingAs($user, 'sanctum')->getJson('/api/v1/settings')->assertForbidden();
-    $this->actingAs($user, 'sanctum')->putJson('/api/v1/settings', ['penerimaan_kuota_pesen' => 50])->assertForbidden();
+    $this->actingAs($user, 'sanctum')
+        ->putJson('/api/v1/settings', ['kuota' => [$sumberDana->id => 50]])
+        ->assertForbidden();
 });
 
 // ---------------------------------------------------------------- batas kas permintaan dana

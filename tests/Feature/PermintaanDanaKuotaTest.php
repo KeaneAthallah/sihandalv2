@@ -32,23 +32,57 @@ function kuotaFixture(): array
 
 test('kuota penerimaan default 100 persen', function () {
     $f = kuotaFixture();
+    $key = KasService::kuotaKey($f['sumberDana']->id);
 
-    expect((float) Setting::get('penerimaan_kuota_persen', 100))->toBe(100.0)
+    expect(Setting::get($key, 100))->toBe(100)
         ->and(app(KasService::class)->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(500000.0);
 });
 
-test('opd dibatasi kuota penerimaan', function () {
+test('opd dibatasi kuota penerimaan per sumber dana', function () {
     $f = kuotaFixture();
-    Setting::set('penerimaan_kuota_persen', '50');
+    Setting::set(KasService::kuotaKey($f['sumberDana']->id), '50');
 
     // 50% dari kas masuk 500k = 250k yang boleh dipakai OPD.
     expect(app(KasService::class)->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(250000.0)
         ->and(app(KasService::class)->saldo($f['opd']->id, $f['sumberDana']->id))->toBe(500000.0);
 });
 
+test('kuota hanya berlaku untuk sumber dana terkait', function () {
+    $f = kuotaFixture();
+    $service = app(KasService::class);
+
+    $sumberB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
+    $penerimaan = Penerimaan::where('opd_id', $f['opd']->id)->first();
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberB->id,
+        'realisasi' => 200000,
+        'tanggal' => now(),
+    ]);
+
+    Setting::set(KasService::kuotaKey($f['sumberDana']->id), '50');
+
+    // Sumber dana yang sama berlaku untuk semua OPD.
+    $opdB = Opd::create(['kode' => 'OPD-B', 'nama' => 'Dinas B']);
+    $userB = User::factory()->create(['role' => 'opd', 'opd_id' => $opdB->id]);
+    $penerimaanB = Penerimaan::create(['opd_id' => $opdB->id, 'target' => 1000000]);
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaanB->id,
+        'sumber_dana_id' => $f['sumberDana']->id,
+        'realisasi' => 300000,
+        'tanggal' => now(),
+    ]);
+
+    expect($service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(250000.0)
+        // ...sumber dana lain tidak terpengaruh...
+        ->and($service->saldoEfektif($f['opd']->id, $sumberB->id, $f['user']))->toBe(200000.0)
+        // ...dan OPD lain pada sumber dana yang sama ikut terpotong.
+        ->and($service->saldoEfektif($opdB->id, $f['sumberDana']->id, $userB))->toBe(150000.0);
+});
+
 test('admin bebas kuota penerimaan', function () {
     $f = kuotaFixture();
-    Setting::set('penerimaan_kuota_persen', '50');
+    Setting::set(KasService::kuotaKey($f['sumberDana']->id), '50');
 
     expect(app(KasService::class)->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
 });
@@ -58,7 +92,7 @@ test('masuk efektif mengikuti kuota penerimaan', function () {
 
     expect(app(KasService::class)->masukEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(500000.0);
 
-    Setting::set('penerimaan_kuota_persen', '50');
+    Setting::set(KasService::kuotaKey($f['sumberDana']->id), '50');
 
     // 50% dari kas masuk 500k = 250k yang ditampilkan
     // sebagai penerimaan untuk OPD; admin tetap penuh.
@@ -96,35 +130,48 @@ test('memo ringkasan memisahkan sumber dana dan peran actor', function () {
         'tanggal' => now(),
     ]);
 
-    Setting::set('penerimaan_kuota_persen', '50');
+    Setting::set(KasService::kuotaKey($f['sumberDana']->id), '50');
+    Setting::set(KasService::kuotaKey($sumberB->id), '50');
 
     // Warm the cache for an OPD user on the first sumber dana.
     $service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']);
 
     expect($service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(250000.0)
         ->and($service->saldoEfektif($f['opd']->id, $sumberB->id, $f['user']))->toBe(50000.0)
+        // Agregat menimbang tiap sumber dana dengan kuotanya.
         ->and($service->saldoEfektif($f['opd']->id, null, $f['user']))->toBe(300000.0)
         ->and($service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
 });
 
-test('pengaturan menyimpan kuota penerimaan antara 0 dan 100', function () {
-    $admin = User::factory()->admin()->create();
+test('halaman pengaturan menampilkan kuota per sumber dana', function () {
+    $f = kuotaFixture();
 
-    $this->actingAs($admin)
-        ->put('/pengaturan', ['penerimaan_kuota_persen' => 75])
+    $this->actingAs($f['admin'])
+        ->get('/pengaturan')
+        ->assertSuccessful()
+        ->assertSee($f['sumberDana']->nama_sumber_dana)
+        ->assertSee('name="kuota['.$f['sumberDana']->id.']"', false);
+});
+
+test('pengaturan menyimpan kuota penerimaan per sumber dana antara 0 dan 100', function () {
+    $f = kuotaFixture();
+    $key = KasService::kuotaKey($f['sumberDana']->id);
+
+    $this->actingAs($f['admin'])
+        ->put('/pengaturan', ['kuota' => [$f['sumberDana']->id => 75]])
         ->assertRedirect();
 
-    expect((float) Setting::get('penerimaan_kuota_persen', 100))->toBe(75.0);
+    expect((float) Setting::get($key, 100))->toBe(75.0);
 
-    $this->actingAs($admin)
+    $this->actingAs($f['admin'])
         ->from('/pengaturan')
-        ->put('/pengaturan', ['penerimaan_kuota_persen' => 150])
-        ->assertSessionHasErrors('penerimaan_kuota_persen');
+        ->put('/pengaturan', ['kuota' => [$f['sumberDana']->id => 150]])
+        ->assertSessionHasErrors('kuota.'.$f['sumberDana']->id);
 
-    $this->actingAs($admin)
+    $this->actingAs($f['admin'])
         ->from('/pengaturan')
-        ->put('/pengaturan', ['penerimaan_kuota_persen' => -5])
-        ->assertSessionHasErrors('penerimaan_kuota_persen');
+        ->put('/pengaturan', ['kuota' => [$f['sumberDana']->id => -5]])
+        ->assertSessionHasErrors('kuota.'.$f['sumberDana']->id);
 
-    expect((float) Setting::get('penerimaan_kuota_persen', 100))->toBe(75.0);
+    expect((float) Setting::get($key, 100))->toBe(75.0);
 });

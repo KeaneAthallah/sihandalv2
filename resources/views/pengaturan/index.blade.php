@@ -6,24 +6,34 @@
     <div class="max-w-3xl mx-auto space-y-6">
 
         {{-- Keuangan --}}
-        <x-card title="Keuangan">
+        <x-card title="Keuangan" subtitle="Kuota penerimaan per sumber dana">
             <form method="POST" action="{{ route('pengaturan.update') }}" class="space-y-4">
                 @csrf
                 @method('PUT')
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <x-input-label value="Kuota Penerimaan OPD (%)" />
-                        <x-text-input type="number" name="penerimaan_kuota_persen"
-                            :value="old('penerimaan_kuota_persen', $kuotaPenerimaanPersen)"
-                            min="0" max="100" step="0.01" required/>
-                        <x-input-error :messages="$errors->get('penerimaan_kuota_persen')" class="mt-1"/>
-                        <p class="mt-1 text-xs text-slate-400">
-                            Persentase penerimaan yang dapat dipakai OPD. Contoh: 10% dari Rp 1.000.000 = Rp 100.000.
-                            Admin selalu melihat kas penuh tanpa potongan kuota.
-                        </p>
-                    </div>
+                <div class="divide-y divide-slate-100">
+                    @forelse($sumberDanas as $sumberDana)
+                        <div class="flex items-center justify-between gap-4 py-3">
+                            <x-input-label :for="'kuota-'.$sumberDana->id" :value="$sumberDana->nama_sumber_dana"/>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <x-text-input :id="'kuota-'.$sumberDana->id" type="number" name="kuota[{{ $sumberDana->id }}]"
+                                        :value="old('kuota.'.$sumberDana->id, $kuota[$sumberDana->id] ?? 100)"
+                                        min="0" max="100" step="0.01" required class="!w-24 text-right"/>
+                                    <span class="text-sm text-slate-400">%</span>
+                                </div>
+                                <x-input-error :messages="$errors->get('kuota.'.$sumberDana->id)" class="mt-1"/>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="py-8 text-center text-sm text-slate-400">Belum ada sumber dana</p>
+                    @endforelse
                 </div>
+
+                <p class="text-xs text-slate-400">
+                    Persentase penerimaan dari tiap sumber dana yang dapat dipakai OPD.
+                    Contoh: 10% dari Rp 1.000.000 = Rp 100.000. Admin selalu melihat kas penuh tanpa potongan kuota.
+                </p>
 
                 <div class="mt-4 flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <x-primary-button>Simpan</x-primary-button>

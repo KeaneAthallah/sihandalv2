@@ -58,12 +58,10 @@ class DashboardController extends Controller
             $user,
         )->latest()->take(5)->get();
 
-        $kuotaPersen = $this->kasService->kuotaPersen();
-
         return view('dashboard.index', compact(
             'tahunAnggaran', 'budget', 'kas', 'permintaanCounts', 'trenBulanan',
             'penerimaanTarget', 'programTotals', 'topOpd', 'kasPerSumberDana',
-            'recentPermintaan', 'recentTransfer', 'kuotaPersen', 'isAdmin'
+            'recentPermintaan', 'recentTransfer', 'isAdmin'
         ));
     }
 

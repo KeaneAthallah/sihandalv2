@@ -12,6 +12,7 @@ use App\Models\SubKegiatan;
 use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
+use App\Services\KasService;
 
 test('create page lists programs under the opd of their kegiatans', function () {
     $admin = User::factory()->admin()->create();
@@ -172,7 +173,7 @@ test('edit page prefills the cascade with sumber dana gating', function () {
         'realisasi' => 500000,
         'tanggal' => now(),
     ]);
-    Setting::set('penerimaan_kuota_persen', '50');
+    Setting::set(KasService::kuotaKey($sumberDana->id), '50');
 
     $this->actingAs($user)
         ->get(route('permintaan-dana.edit', $permintaan))

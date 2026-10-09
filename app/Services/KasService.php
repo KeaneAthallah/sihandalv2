@@ -17,20 +17,31 @@ class KasService
     /**
      * Request-scoped memo for ringkasan(). Keyed by
      * "opdId|sumberDanaId|actorRole" — only the actor's
-     * admin-ness affects the result (kuota is global).
+     * admin-ness affects the result (kuota is keyed per
+     * sumber dana).
      *
      * @var array<string, array<string, mixed>>
      */
     private array $ringkasanCache = [];
 
     /**
-     * Kuota persen penerimaan yang boleh dipakai OPD (global).
-     * Default 100 sehingga perilaku lama tidak berubah sampai
-     * admin menurunkannya.
+     * Key Pengaturan untuk kuota penerimaan satu sumber dana.
      */
-    public function kuotaPersen(): float
+    public static function kuotaKey(int $sumberDanaId): string
     {
-        return $this->kuotaPersenCache['penerimaan_kuota_persen'] ??= (float) Setting::get('penerimaan_kuota_persen', 100);
+        return "penerimaan_kuota_persen.{$sumberDanaId}";
+    }
+
+    /**
+     * Kuota persen penerimaan yang boleh dipakai OPD untuk satu
+     * sumber dana. Default 100 sehingga perilaku lama tidak berubah
+     * sampai admin menurunkannya.
+     */
+    public function kuotaPersen(int $sumberDanaId): float
+    {
+        $key = static::kuotaKey($sumberDanaId);
+
+        return $this->kuotaPersenCache[$key] ??= (float) Setting::get($key, 100);
     }
 
     /**
@@ -59,7 +70,7 @@ class KasService
         // Kas yang bisa dipakai: kas riil dikurangi reservasi,
         // dengan potongan kuota untuk user OPD.
         $saldoEfektif = round(
-            $this->terapkanKuota($masuk, $actor) - $keluar + $transferNet - $diCommit,
+            $this->masukSetelahKuota($opdId, $sumberDanaId, $actor) - $keluar + $transferNet - $diCommit,
             2,
         );
 
@@ -89,9 +100,7 @@ class KasService
      */
     public function masukEfektif(int $opdId, ?int $sumberDanaId = null, ?User $actor = null): float
     {
-        $ringkasan = $this->ringkasan($opdId, $sumberDanaId, $actor);
-
-        return round($this->terapkanKuota((float) $ringkasan['masuk'], $actor), 2);
+        return round($this->masukSetelahKuota($opdId, $sumberDanaId, $actor), 2);
     }
 
     /**
@@ -136,16 +145,18 @@ class KasService
             ->map(fn ($sumberDana) => [
                 'sumber_dana_id' => (int) $sumberDana->id,
                 'nama' => (string) $sumberDana->nama_sumber_dana,
+                'kuota_persen' => $this->kuotaPersen((int) $sumberDana->id),
                 ...$this->ringkasan($opdId, (int) $sumberDana->id, $actor),
             ])
             ->values()
             ->all();
 
-        $legacy = $this->ringkasanTanpaSumberDana($opdId, $actor);
+        $legacy = $this->ringkasanTanpaSumberDana($opdId);
         if ($legacy['masuk'] !== 0.0 || $legacy['keluar'] !== 0.0 || $legacy['di_commit'] !== 0.0) {
             $rows[] = [
                 'sumber_dana_id' => 0,
                 'nama' => 'Tanpa Sumber Dana',
+                'kuota_persen' => 100.0,
                 ...$legacy,
             ];
         }
@@ -158,10 +169,12 @@ class KasService
      * dikaitkan ke sumber dana manapun. Transfer
      * dana selalu menyebutkan kedua sumber dana,
      * jadi transfer_net selalu nol di bucket ini.
+     * Kuota penerimaan tidak berlaku karena kuota
+     * diatur per sumber dana.
      *
      * @return array<string, float>
      */
-    private function ringkasanTanpaSumberDana(int $opdId, ?User $actor = null): array
+    private function ringkasanTanpaSumberDana(int $opdId): array
     {
         $masuk = (float) DB::table('transaksi_penerimaans as t')
             ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
@@ -185,7 +198,7 @@ class KasService
             'transfer_net' => 0.0,
             'di_commit' => round($diCommit, 2),
             'saldo' => round($masuk - $keluar, 2),
-            'saldo_efektif' => round($this->terapkanKuota($masuk, $actor) - $keluar - $diCommit, 2),
+            'saldo_efektif' => round($masuk - $keluar - $diCommit, 2),
         ];
     }
 
@@ -254,15 +267,37 @@ class KasService
     }
 
     /**
-     * Terapkan kuota persen ke kas masuk untuk user OPD. Admin
-     * selalu melihat angka penuh.
+     * Kas masuk setelah kuota penerimaan diterapkan untuk user OPD.
+     *
+     * Kuota diatur per sumber dana. Untuk agregat seluruh sumber dana,
+     * tiap sumber dana ditimbang dengan kuotanya masing-masing.
+     * Transaksi legacy tanpa sumber dana tidak dipotong kuota.
+     * Admin selalu melihat angka penuh.
      */
-    private function terapkanKuota(float $masuk, ?User $actor): float
+    private function masukSetelahKuota(int $opdId, ?int $sumberDanaId, ?User $actor): float
     {
         if ($actor !== null && $actor->isAdmin()) {
-            return $masuk;
+            return $this->masuk($opdId, $sumberDanaId);
         }
 
-        return $masuk * ($this->kuotaPersen() / 100);
+        if ($sumberDanaId !== null) {
+            return $this->masuk($opdId, $sumberDanaId) * ($this->kuotaPersen($sumberDanaId) / 100);
+        }
+
+        return (float) DB::table('transaksi_penerimaans as t')
+            ->join('penerimaans as p', 'p.id', '=', 't.penerimaan_id')
+            ->where('p.opd_id', $opdId)
+            ->selectRaw('t.sumber_dana_id, COALESCE(SUM(t.realisasi), 0) as total')
+            ->groupBy('t.sumber_dana_id')
+            ->get()
+            ->sum(function ($row): float {
+                $total = (float) $row->total;
+
+                if ($row->sumber_dana_id === null) {
+                    return $total;
+                }
+
+                return $total * ($this->kuotaPersen((int) $row->sumber_dana_id) / 100);
+            });
     }
 }
