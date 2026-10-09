@@ -8,6 +8,7 @@ use App\Models\SumberDana;
 use App\Models\TransaksiPenerimaan;
 use App\Models\User;
 use App\Services\KasService;
+use Illuminate\Support\Facades\DB;
 
 function kuotaFixture(): array
 {
@@ -50,6 +51,47 @@ test('admin bebas kuota penerimaan', function () {
     Setting::set('penerimaan_kuota_persen', '50');
 
     expect(app(KasService::class)->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
+});
+
+test('ringkasan dihitung sekali per pasangan opd, sumber dana, dan actor', function () {
+    $f = kuotaFixture();
+    $service = app(KasService::class);
+
+    DB::enableQueryLog();
+    $service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']);
+    $first = count(DB::getQueryLog());
+
+    DB::flushQueryLog();
+    $service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']);
+    $repeat = count(DB::getQueryLog());
+
+    expect($first)->toBeGreaterThan(0)
+        ->and($repeat)->toBe(0);
+});
+
+test('memo ringkasan memisahkan sumber dana dan peran actor', function () {
+    $f = kuotaFixture();
+    $service = app(KasService::class);
+
+    // Second sumber dana with its own transaction.
+    $sumberB = SumberDana::create(['nama_sumber_dana' => 'DAK']);
+    $penerimaan = Penerimaan::where('opd_id', $f['opd']->id)->first();
+    TransaksiPenerimaan::create([
+        'penerimaan_id' => $penerimaan->id,
+        'sumber_dana_id' => $sumberB->id,
+        'realisasi' => 100000,
+        'tanggal' => now(),
+    ]);
+
+    Setting::set('penerimaan_kuota_persen', '50');
+
+    // Warm the cache for an OPD user on the first sumber dana.
+    $service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']);
+
+    expect($service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['user']))->toBe(250000.0)
+        ->and($service->saldoEfektif($f['opd']->id, $sumberB->id, $f['user']))->toBe(50000.0)
+        ->and($service->saldoEfektif($f['opd']->id, null, $f['user']))->toBe(300000.0)
+        ->and($service->saldoEfektif($f['opd']->id, $f['sumberDana']->id, $f['admin']))->toBe(500000.0);
 });
 
 test('pengaturan menyimpan kuota penerimaan antara 0 dan 100', function () {

@@ -179,6 +179,18 @@ class SihandalImportService
 
         $subKegiatan = $this->resolveSubKegiatan($kegiatan, $record);
 
+        // Denormalized legacy columns: a kegiatan has many sub-kegiatan/rekening,
+        // so store the first (lowest id) child. Never overwrite on re-runs.
+        if ($kegiatan->kode_sub_kegiatan === null) {
+            $kegiatan->update([
+                'kode_sub_kegiatan' => $subKegiatan->kode_sub_kegiatan,
+                'nama_sub_kegiatan' => $subKegiatan->nama_sub_kegiatan,
+                'rekening_id' => $rekening->id,
+                'kode_rekening' => $rekening->kode,
+                'nama_rekening' => $rekening->nama,
+            ]);
+        }
+
         Belanja::create([
             'sub_kegiatan_id' => $subKegiatan->id,
             'rekening_id' => $rekening->id,

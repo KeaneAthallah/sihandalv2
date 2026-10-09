@@ -10,13 +10,27 @@ use Illuminate\Support\Facades\DB;
 class KasService
 {
     /**
+     * @var array<string, float>
+     */
+    private array $kuotaPersenCache = [];
+
+    /**
+     * Request-scoped memo for ringkasan(). Keyed by
+     * "opdId|sumberDanaId|actorRole" — only the actor's
+     * admin-ness affects the result (kuota is global).
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private array $ringkasanCache = [];
+
+    /**
      * Kuota persen penerimaan yang boleh dipakai OPD (global).
      * Default 100 sehingga perilaku lama tidak berubah sampai
      * admin menurunkannya.
      */
     public function kuotaPersen(): float
     {
-        return (float) Setting::get('penerimaan_kuota_persen', 100);
+        return $this->kuotaPersenCache['penerimaan_kuota_persen'] ??= (float) Setting::get('penerimaan_kuota_persen', 100);
     }
 
     /**
@@ -25,6 +39,13 @@ class KasService
      * @return array{masuk: float, keluar: float, transfer_net: float, di_commit: float, saldo: float, saldo_efektif: float}
      */
     public function ringkasan(int $opdId, ?int $sumberDanaId = null, ?User $actor = null): array
+    {
+        $key = $opdId.'|'.($sumberDanaId ?? '-').'|'.($actor === null ? 'guest' : ($actor->isAdmin() ? 'admin' : 'opd'));
+
+        return $this->ringkasanCache[$key] ??= $this->hitungRingkasan($opdId, $sumberDanaId, $actor);
+    }
+
+    private function hitungRingkasan(int $opdId, ?int $sumberDanaId = null, ?User $actor = null): array
     {
         $masuk = $this->masuk($opdId, $sumberDanaId);
         $keluar = $this->keluar($opdId, $sumberDanaId);

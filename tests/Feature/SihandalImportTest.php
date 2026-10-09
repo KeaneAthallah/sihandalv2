@@ -101,6 +101,27 @@ test('two CSV rows under the same sub kegiatan become two distinct belanjas', fu
         ->toContain(1750000000.0, 100000000.0);
 });
 
+test('kegiatan legacy flat columns are filled from the first sub kegiatan and belanja', function () {
+    runImporter();
+
+    $cipta = Opd::where('kode', '1.03.0.00.0.00.02.0000')->first();
+    $kegiatan = Kegiatan::where('opd_id', $cipta->id)
+        ->where('kode_kegiatan', '1.03.07.1.01')
+        ->first();
+
+    expect($kegiatan->kode_sub_kegiatan)->toBe('1.03.07.1.01.0026')
+        ->and($kegiatan->nama_sub_kegiatan)->toBe('Pembangunan SPAM')
+        ->and($kegiatan->kode_rekening)->toBe('5.1.02.02.008.00021')
+        ->and($kegiatan->nama_rekening)->toBe('Belanja Jasa Konsultansi')
+        ->and((int) $kegiatan->rekening_id)->toBe((int) Rekening::where('kode', '5.1.02.02.008.00021')->first()->id);
+
+    // Re-import keeps the first-wins values instead of overwriting them.
+    runImporter();
+
+    expect($kegiatan->refresh()->kode_sub_kegiatan)->toBe('1.03.07.1.01.0026')
+        ->and($kegiatan->kode_rekening)->toBe('5.1.02.02.008.00021');
+});
+
 test('re-import is idempotent and never doubles budget or revenue', function () {
     runImporter();
 
