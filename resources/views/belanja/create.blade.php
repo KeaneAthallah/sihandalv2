@@ -16,15 +16,15 @@
 
             <x-card title="Data Belanja">
                 <div class="space-y-4">
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
+                    <div class="rounded-xl bg-surface border border-border px-4 py-3 text-sm">
                         <span class="text-xs font-mono font-bold text-primary">{{ $subKegiatan->kode_sub_kegiatan }}</span>
-                        <p class="text-slate-700 font-medium mt-0.5">{{ $subKegiatan->nama_sub_kegiatan }}</p>
+                        <p class="text-content-secondary font-medium mt-0.5">{{ $subKegiatan->nama_sub_kegiatan }}</p>
                     </div>
 
                     @if(auth()->user()->isAdmin())
                         <div>
                             <x-input-label for="opd_id" value="OPD" required/>
-                            <select name="opd_id" id="opd_id" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <select name="opd_id" id="opd_id" required class="mt-1 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">-- Pilih OPD --</option>
                                 @foreach($opds as $opd)
                                     <option value="{{ $opd->id }}" @selected(old('opd_id') == $opd->id)>{{ $opd->nama }}</option>
@@ -38,7 +38,7 @@
 
                     <div>
                         <x-input-label for="rekening_id" value="Rekening" required/>
-                        <select name="rekening_id" id="rekening_id" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select name="rekening_id" id="rekening_id" required class="mt-1 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">-- Pilih Rekening --</option>
                             @foreach($rekenings as $rekening)
                                 <option value="{{ $rekening->id }}" @selected(old('rekening_id') == $rekening->id)>{{ $rekening->kode }} — {{ $rekening->nama }}</option>
@@ -49,7 +49,7 @@
 
                     <div>
                         <x-input-label for="sumber_dana_id" value="Sumber Dana"/>
-                        <select name="sumber_dana_id" id="sumber_dana_id" class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select name="sumber_dana_id" id="sumber_dana_id" class="mt-1 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">-- Pilih Sumber Dana --</option>
                             @foreach($sumberDanas as $sumberDana)
                                 <option value="{{ $sumberDana->id }}" @selected(old('sumber_dana_id') == $sumberDana->id)>{{ $sumberDana->nama_sumber_dana }}</option>

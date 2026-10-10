@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ImportsMasterData;
+use App\Http\Requests\ImportMasterDataRequest;
 use App\Http\Requests\StoreRekeningRequest;
 use App\Http\Requests\UpdateRekeningRequest;
+use App\Imports\Definitions\RekeningImportDefinition;
 use App\Models\Rekening;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RekeningKasController extends Controller
 {
+    use ImportsMasterData;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -115,6 +120,16 @@ class RekeningKasController extends Controller
         }
 
         return $ids;
+    }
+
+    public function template()
+    {
+        return $this->templateMaster(new RekeningImportDefinition);
+    }
+
+    public function import(ImportMasterDataRequest $request)
+    {
+        return $this->importMaster($request, new RekeningImportDefinition);
     }
 
     protected function authorizeAdmin(): void

@@ -86,12 +86,12 @@
                 >
                     {{-- Informasi Transaksi --}}
                     <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-slate-800 border-b border-slate-100 pb-2">Informasi Transaksi</h3>
+                        <h3 class="text-sm font-semibold text-content border-b border-border-light pb-2">Informasi Transaksi</h3>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label value="Nomor Registrasi" />
-                                <div class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500">
+                                <div class="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-content-muted">
                                     Digenerate otomatis oleh sistem (format REG-XXXXX/tahun)
                                 </div>
                             </div>
@@ -105,7 +105,7 @@
 
                         <div>
                             <x-input-label value="Penerimaan" />
-                            <select name="penerimaan_id" x-model="penerimaanId" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                            <select name="penerimaan_id" x-model="penerimaanId" class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih Penerimaan</option>
                                 @foreach($penerimaans as $p)
                                     <option value="{{ $p->id }}">
@@ -119,7 +119,7 @@
                         <div>
                             <x-input-label value="Sumber Dana" />
                             <select name="sumber_dana_id"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih Sumber Dana</option>
                                 @foreach($sumberDanas as $sd)
                                     <option value="{{ $sd->id }}">{{ $sd->nama_sumber_dana }}</option>
@@ -132,7 +132,7 @@
                             <div>
                                 <x-input-label value="Realisasi / Nilai Transaksi" />
                                 <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-muted font-medium">Rp</span>
                                     <x-text-input name="realisasi" type="number" x-model="realisasi" step="0.01" min="0" placeholder="0" class="pl-10" required />
                                 </div>
                                 <x-input-error :messages="$errors->get('realisasi')" />
@@ -148,10 +148,10 @@
 
                     {{-- Detail BKU --}}
                     <div>
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
+                        <div class="flex items-center justify-between border-b border-border-light pb-2 mb-4">
                             <div>
-                                <h3 class="text-sm font-semibold text-slate-800">Detail BKU</h3>
-                                <p class="mt-0.5 text-xs text-slate-400">Setiap baris BKU mencatat OPD, rekening utama, sub rekening dan rekening banknya sendiri.</p>
+                                <h3 class="text-sm font-semibold text-content">Detail BKU</h3>
+                                <p class="mt-0.5 text-xs text-content-muted">Setiap baris BKU mencatat OPD, rekening utama, sub rekening dan rekening banknya sendiri.</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="button" @click="showBankModal = true; bankErrors = {};" class="btn-secondary !py-1.5 !px-3 text-xs">
@@ -169,16 +169,16 @@
 
                         <div class="space-y-4">
                             {{-- Empty state --}}
-                            <div x-show="bkus.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-6 text-center">
-                                <p class="text-sm text-slate-500">Belum ada data BKU.</p>
+                            <div x-show="bkus.length === 0" class="rounded-xl border border-dashed border-border-strong bg-surface/50 p-6 text-center">
+                                <p class="text-sm text-content-muted">Belum ada data BKU.</p>
                             </div>
 
                             <template x-for="(bku, index) in bkus" :key="index">
-                                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                                <div class="border border-border rounded-xl p-4 bg-surface/50">
                                     <div class="flex items-center justify-between mb-3">
-                                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide" x-text="'BKU #' + (index + 1)"></p>
+                                        <p class="text-xs font-semibold text-content-muted uppercase tracking-wide" x-text="'BKU #' + (index + 1)"></p>
                                         <button type="button" @click="removeBku(index)"
-                                            class="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg px-2 py-1 transition">
+                                            class="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10 rounded-lg px-2 py-1 transition">
                                             <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                             Hapus
                                         </button>
@@ -198,7 +198,7 @@
                                         <div>
                                             <x-input-label value="Nilai" class="text-xs" />
                                             <div class="relative">
-                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">Rp</span>
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-content-muted font-medium">Rp</span>
                                                 <input type="number" :name="'bkus[' + index + '][nilai]'" x-model="bku.nilai"
                                                     class="input pl-9" step="0.01" min="0" placeholder="0" required />
                                             </div>
@@ -206,7 +206,7 @@
                                         <div>
                                             <x-input-label value="OPD" class="text-xs" />
                                             <select :name="'bkus[' + index + '][opd_id]'" x-model="bku.opd_id"
-                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                                 <option value="">Pilih OPD</option>
                                                 <template x-for="o in opds" :key="o.id">
                                                     <option :value="o.id" x-text="o.label"></option>
@@ -217,7 +217,7 @@
                                             <x-input-label value="Rekening Utama" class="text-xs" />
                                             <select :name="'bkus[' + index + '][rekening_id]'" x-model="bku.rekening_id"
                                                 @change="bku.sub_rekening_id = ''"
-                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                                 <option value="">Pilih Rekening Utama (Opsional)</option>
                                                 <template x-for="r in rekenings" :key="r.id">
                                                     <option :value="r.id" x-text="r.label"></option>
@@ -227,7 +227,7 @@
                                         <div>
                                             <x-input-label value="Sub Rekening" class="text-xs" />
                                             <select :name="'bkus[' + index + '][sub_rekening_id]'" x-model="bku.sub_rekening_id"
-                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                                 <option value="">Pilih Sub Rekening (Opsional)</option>
                                                 <template x-for="r in getSubOptions(bku)" :key="r.id">
                                                     <option :value="r.id" x-text="r.label"></option>
@@ -237,13 +237,13 @@
                                         <div class="sm:col-span-2">
                                             <x-input-label value="Rekening Bank" class="text-xs" />
                                             <select :name="'bkus[' + index + '][rekening_bank_id]'" x-model="bku.rekening_bank_id"
-                                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                                 <option value="">Pilih Rekening Bank (Opsional)</option>
                                                 <template x-for="b in bankOptions" :key="b.id">
                                                     <option :value="b.id" x-text="b.label"></option>
                                                 </template>
                                             </select>
-                                            <p class="mt-1 text-xs text-slate-400">Rekening bank fisik tempat BKU ini masuk. Belum ada datanya? Gunakan tombol <span class="font-medium">Tambah Bank</span> di atas.</p>
+                                            <p class="mt-1 text-xs text-content-muted">Rekening bank fisik tempat BKU ini masuk. Belum ada datanya? Gunakan tombol <span class="font-medium">Tambah Bank</span> di atas.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -251,21 +251,21 @@
                         </div>
 
                         {{-- Rekap Total --}}
-                        <div class="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                        <div class="mt-4 rounded-xl border border-border bg-card p-4">
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                                 <div>
-                                    <p class="text-xs text-slate-400 font-medium">Total Nilai BKU</p>
-                                    <p class="font-semibold text-slate-800 mt-0.5" x-text="formatRupiah(totalBku)"></p>
+                                    <p class="text-xs text-content-muted font-medium">Total Nilai BKU</p>
+                                    <p class="font-semibold text-content mt-0.5" x-text="formatRupiah(totalBku)"></p>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 font-medium">Nilai Transaksi</p>
-                                    <p class="font-semibold text-slate-800 mt-0.5" x-text="formatRupiah(realisasi)"></p>
+                                    <p class="text-xs text-content-muted font-medium">Nilai Transaksi</p>
+                                    <p class="font-semibold text-content mt-0.5" x-text="formatRupiah(realisasi)"></p>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 font-medium">Status</p>
+                                    <p class="text-xs text-content-muted font-medium">Status</p>
                                     <p class="mt-0.5 font-semibold"
                                         x-text="bkus.length === 0 ? 'Belum ada BKU' : (isMatch ? '✓ Sesuai' : '✕ Tidak sesuai')"
-                                        :class="bkus.length === 0 ? 'text-slate-500' : (isMatch ? 'text-emerald-600' : 'text-red-500')"></p>
+                                        :class="bkus.length === 0 ? 'text-content-muted' : (isMatch ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500')"></p>
                                 </div>
                             </div>
                         </div>

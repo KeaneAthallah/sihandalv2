@@ -33,9 +33,9 @@
     </div>
 
     <x-card :padding="false">
-        <div class="px-5 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="px-5 py-3 border-b border-border-light flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="relative flex-1 max-w-sm">
-                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-content-muted absolute left-3 top-1/2 -translate-y-1/2"/>
                 <input type="text" placeholder="Cari sub kegiatan..." class="input pl-9"/>
             </div>
         </div>
@@ -43,7 +43,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="border-b border-slate-200">
+                    <tr class="border-b border-border">
                         <th class="text-left px-5 py-3 table-head">No</th>
                         <th class="text-left px-5 py-3 table-head">Kode Sub Kegiatan</th>
                         <th class="text-left px-5 py-3 table-head">Nama Sub Kegiatan</th>
@@ -52,28 +52,28 @@
                         <th class="text-center px-5 py-3 table-head">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($subKegiatans as $sub)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400">{{ $loop->iteration }}</td>
+                            <td class="px-5 py-3.5 text-content-muted">{{ $loop->iteration }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="text-xs font-mono font-semibold text-primary whitespace-nowrap">{{ $sub->kode_sub_kegiatan }}</span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="font-medium text-slate-800">{{ $sub->nama_sub_kegiatan }}</span>
+                                <span class="font-medium text-content">{{ $sub->nama_sub_kegiatan }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">Rp {{ number_format((float) $sub->pagu, 0, ',', '.') }}</span>
+                                <span class="text-sm font-semibold text-content-secondary whitespace-nowrap">Rp {{ number_format((float) $sub->pagu, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-medium text-slate-600 whitespace-nowrap">Rp {{ number_format((float) $sub->realisasi, 0, ',', '.') }}</span>
+                                <span class="text-sm font-medium text-content-secondary whitespace-nowrap">Rp {{ number_format((float) $sub->realisasi, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1.5">
                                     <a href="{{ route('belanja.index', $sub) }}" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition whitespace-nowrap">
                                         Belanja
                                     </a>
-                                    <a href="{{ route('sub-kegiatan.edit', ['kegiatan' => $kegiatan, 'subKegiatan' => $sub]) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
+                                    <a href="{{ route('sub-kegiatan.edit', ['kegiatan' => $kegiatan, 'subKegiatan' => $sub]) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                 </div>
@@ -81,7 +81,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-12 text-center text-sm text-slate-400">
+                            <td colspan="6" class="px-5 py-12 text-center text-sm text-content-muted">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-clipboard-document-list class="w-7 h-7"/>
@@ -97,8 +97,8 @@
         </div>
 
         @if($subKegiatans->total() > 0)
-            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $subKegiatans->total() }}</span> sub kegiatan</p>
+            <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+                <p class="text-sm text-content-muted">Menampilkan <span class="font-semibold text-content-secondary">{{ $subKegiatans->total() }}</span> sub kegiatan</p>
                 <div class="text-sm">
                     {{ $subKegiatans->withQueryString()->links() }}
                 </div>

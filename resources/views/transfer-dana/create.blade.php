@@ -10,7 +10,7 @@
 
                 <div>
                     <x-input-label for="opd_id" value="OPD" />
-                    <select name="opd_id" id="opd_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                    <select name="opd_id" id="opd_id" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <option value="">Pilih OPD</option>
                         @foreach($opds as $opd)
                             <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -23,14 +23,14 @@
                     <div>
                         <x-input-label for="jumlah" value="Jumlah" />
                         <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-muted font-medium">Rp</span>
                             <input type="number" name="jumlah" id="jumlah" min="0" value="{{ old('jumlah') }}" placeholder="0" required class="input pl-10 pr-3">
                         </div>
                         <x-input-error :messages="$errors->get('jumlah')" />
                     </div>
                     <div>
                         <x-input-label for="tanggal" value="Tanggal" />
-                        <input type="text" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="datepicker w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <input type="text" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="datepicker w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <x-input-error :messages="$errors->get('tanggal')" />
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <x-input-label for="sumber_dana_pengirim_id" value="Sumber Dana Pengirim" />
-                        <select name="sumber_dana_pengirim_id" id="sumber_dana_pengirim_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select name="sumber_dana_pengirim_id" id="sumber_dana_pengirim_id" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">Pilih Sumber Dana Pengirim</option>
                             @foreach($sumberDanas as $sd)
                                 <option value="{{ $sd->id }}" {{ old('sumber_dana_pengirim_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
@@ -48,7 +48,7 @@
                     </div>
                     <div>
                         <x-input-label for="sumber_dana_penerima_id" value="Sumber Dana Penerima" />
-                        <select name="sumber_dana_penerima_id" id="sumber_dana_penerima_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <select name="sumber_dana_penerima_id" id="sumber_dana_penerima_id" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">Pilih Sumber Dana Penerima</option>
                             @foreach($sumberDanas as $sd)
                                 <option value="{{ $sd->id }}" {{ old('sumber_dana_penerima_id') == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>

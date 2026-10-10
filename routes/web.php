@@ -25,11 +25,10 @@ use App\Http\Controllers\TransaksiPenerimaanController;
 use App\Http\Controllers\TransferDanaController;
 use App\Http\Controllers\UptController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -40,6 +39,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/opd/{opd}', [OpdController::class, 'show'])->name('opd.show');
 
     Route::resource('upt', UptController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('/upt/import/template', [UptController::class, 'template'])->name('upt.import.template')->middleware('admin');
+    Route::post('/upt/import', [UptController::class, 'import'])->name('upt.import')->middleware(['admin', 'throttle:30']);
 
     Route::resource('sumber-dana', SumberDanaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::post('/rekening-bank', [RekeningBankController::class, 'store'])->name('rekening-bank.store');
@@ -47,12 +48,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('rekening-kas', RekeningKasController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'rekening-kas' => 'rekening',
     ]);
+    Route::get('/rekening-kas/import/template', [RekeningKasController::class, 'template'])->name('rekening-kas.import.template')->middleware('admin');
+    Route::post('/rekening-kas/import', [RekeningKasController::class, 'import'])->name('rekening-kas.import')->middleware(['admin', 'throttle:30']);
     Route::resource('program-kegiatan', ProgramKegiatanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'program-kegiatan' => 'program',
     ]);
     Route::post('/program-kegiatan/{program}/kegiatan', [ProgramKegiatanController::class, 'storeKegiatan'])->name('program-kegiatan.kegiatan.store')->middleware('throttle:30');
     Route::put('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'updateKegiatan'])->name('program-kegiatan.kegiatan.update')->middleware('throttle:30');
     Route::delete('/program-kegiatan/{program}/kegiatan/{kegiatan}', [ProgramKegiatanController::class, 'destroyKegiatan'])->name('program-kegiatan.kegiatan.destroy');
+    Route::get('/program-kegiatan/import/template', [ProgramKegiatanController::class, 'template'])->name('program-kegiatan.import.template')->middleware('admin');
+    Route::post('/program-kegiatan/import', [ProgramKegiatanController::class, 'import'])->name('program-kegiatan.import')->middleware(['admin', 'throttle:30']);
 
     Route::get('/kegiatan/{kegiatan}/sub-kegiatan', [SubKegiatanController::class, 'index'])->name('sub-kegiatan.index');
     Route::get('/kegiatan/{kegiatan}/sub-kegiatan/create', [SubKegiatanController::class, 'create'])->name('sub-kegiatan.create');
@@ -69,6 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/sub-kegiatan/{subKegiatan}/belanja/{belanja}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
 
     Route::resource('master-data/penerimaan', PenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->names('master-data.penerimaan');
+    Route::get('/master-data/penerimaan/import/template', [PenerimaanController::class, 'template'])->name('master-data.penerimaan.import.template')->middleware('admin');
+    Route::post('/master-data/penerimaan/import', [PenerimaanController::class, 'import'])->name('master-data.penerimaan.import')->middleware(['admin', 'throttle:30']);
     Route::resource('transaksi-penerimaan', TransaksiPenerimaanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->parameters([
         'transaksi-penerimaan' => 'transaksiPenerimaan',
     ]);

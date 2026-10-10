@@ -11,7 +11,7 @@
                 @csrf
                 @method('PUT')
 
-                <div class="divide-y divide-slate-100">
+                <div class="divide-y divide-border-light">
                     @forelse($sumberDanas as $sumberDana)
                         <div class="flex items-center justify-between gap-4 py-3">
                             <x-input-label :for="'kuota-'.$sumberDana->id" :value="$sumberDana->nama_sumber_dana"/>
@@ -20,22 +20,22 @@
                                     <x-text-input :id="'kuota-'.$sumberDana->id" type="number" name="kuota[{{ $sumberDana->id }}]"
                                         :value="old('kuota.'.$sumberDana->id, $kuota[$sumberDana->id] ?? 100)"
                                         min="0" max="100" step="0.01" required class="!w-24 text-right"/>
-                                    <span class="text-sm text-slate-400">%</span>
+                                    <span class="text-sm text-content-muted">%</span>
                                 </div>
                                 <x-input-error :messages="$errors->get('kuota.'.$sumberDana->id)" class="mt-1"/>
                             </div>
                         </div>
                     @empty
-                        <p class="py-8 text-center text-sm text-slate-400">Belum ada sumber dana</p>
+                        <p class="py-8 text-center text-sm text-content-muted">Belum ada sumber dana</p>
                     @endforelse
                 </div>
 
-                <p class="text-xs text-slate-400">
+                <p class="text-xs text-content-muted">
                     Persentase penerimaan dari tiap sumber dana yang dapat dipakai OPD.
                     Contoh: 10% dari Rp 1.000.000 = Rp 100.000. Admin selalu melihat kas penuh tanpa potongan kuota.
                 </p>
 
-                <div class="mt-4 flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <div class="mt-4 flex items-center justify-end gap-3 pt-4 border-t border-border-light">
                     <x-primary-button>Simpan</x-primary-button>
                 </div>
             </form>
@@ -47,12 +47,12 @@
                 {{-- Notifikasi Realisasi --}}
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex-1">
-                        <h4 class="font-medium text-sm text-slate-800">Kirim Notifikasi Realisasi</h4>
-                        <p class="text-xs text-slate-400 mt-0.5">Kirim notifikasi email saat anggaran mencapai target realisasi</p>
+                        <h4 class="font-medium text-sm text-content">Kirim Notifikasi Realisasi</h4>
+                        <p class="text-xs text-content-muted mt-0.5">Kirim notifikasi email saat anggaran mencapai target realisasi</p>
                     </div>
                     <label class="inline-flex items-center cursor-pointer">
                         <input type="checkbox" class="sr-only peer" checked>
-                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div class="relative w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border-strong after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
 
@@ -60,13 +60,13 @@
                     <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
                 </div>
 
-                <hr class="border-slate-100">
+                <hr class="border-border-light">
 
                 {{-- Batas Throttle --}}
                 <div class="space-y-3">
                     <div>
-                        <h4 class="font-medium text-sm text-slate-800">Batas Throttle</h4>
-                        <p class="text-xs text-slate-400 mt-0.5">Maksimum percobaan login sebelum akun dikunci sementara</p>
+                        <h4 class="font-medium text-sm text-content">Batas Throttle</h4>
+                        <p class="text-xs text-content-muted mt-0.5">Maksimum percobaan login sebelum akun dikunci sementara</p>
                     </div>
                     <x-text-input type="number" value="10" min="1" max="100" class="!w-24"/>
                 </div>
@@ -83,12 +83,12 @@
                 {{-- 2FA --}}
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex-1">
-                        <h4 class="font-medium text-sm text-slate-800">Two-Factor Authentication</h4>
-                        <p class="text-xs text-slate-400 mt-0.5">Wajibkan 2FA untuk semua pengguna admin</p>
+                        <h4 class="font-medium text-sm text-content">Two-Factor Authentication</h4>
+                        <p class="text-xs text-content-muted mt-0.5">Wajibkan 2FA untuk semua pengguna admin</p>
                     </div>
                     <label class="inline-flex items-center cursor-pointer">
                         <input type="checkbox" class="sr-only peer">
-                        <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div class="relative w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border-strong after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
 
@@ -96,17 +96,17 @@
                     <button class="btn-secondary !py-1.5 !px-3 text-xs">Simpan Perubahan</button>
                 </div>
 
-                <hr class="border-slate-100">
+                <hr class="border-border-light">
 
                 {{-- Sesi --}}
                 <div class="space-y-3">
                     <div>
-                        <h4 class="font-medium text-sm text-slate-800">Sesi</h4>
-                        <p class="text-xs text-slate-400 mt-0.5">Durasi sesi pengguna sebelum diminta login kembali</p>
+                        <h4 class="font-medium text-sm text-content">Sesi</h4>
+                        <p class="text-xs text-content-muted mt-0.5">Durasi sesi pengguna sebelum diminta login kembali</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <x-text-input type="number" value="120" min="5" max="480" class="!w-24"/>
-                        <span class="text-xs text-slate-400">menit</span>
+                        <span class="text-xs text-content-muted">menit</span>
                     </div>
                 </div>
 

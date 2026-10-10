@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ImportsMasterData;
+use App\Http\Requests\ImportMasterDataRequest;
 use App\Http\Requests\StoreKegiatanRequest;
 use App\Http\Requests\StoreProgramRequest;
 use App\Http\Requests\UpdateKegiatanRequest;
 use App\Http\Requests\UpdateProgramRequest;
+use App\Imports\Definitions\ProgramKegiatanImportDefinition;
 use App\Models\Kegiatan;
 use App\Models\Program;
 use App\Models\Rekening;
@@ -18,6 +21,8 @@ use Illuminate\Support\Facades\Redirect;
 
 class ProgramKegiatanController extends Controller
 {
+    use ImportsMasterData;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -197,5 +202,15 @@ class ProgramKegiatanController extends Controller
         if ($program->opd_id !== null && (int) $program->opd_id !== (int) $user->opd_id) {
             abort(403);
         }
+    }
+
+    public function template()
+    {
+        return $this->templateMaster(new ProgramKegiatanImportDefinition);
+    }
+
+    public function import(ImportMasterDataRequest $request)
+    {
+        return $this->importMaster($request, new ProgramKegiatanImportDefinition);
     }
 }

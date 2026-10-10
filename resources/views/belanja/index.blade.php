@@ -42,9 +42,9 @@
     </div>
 
     <x-card :padding="false">
-        <div class="px-5 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="px-5 py-3 border-b border-border-light flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="relative flex-1 max-w-sm">
-                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-content-muted absolute left-3 top-1/2 -translate-y-1/2"/>
                 <input type="text" placeholder="Cari belanja..." class="input pl-9"/>
             </div>
         </div>
@@ -52,7 +52,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[900px]">
                 <thead>
-                    <tr class="border-b border-slate-200">
+                    <tr class="border-b border-border">
                         <th class="text-left px-5 py-3 table-head">No</th>
                         <th class="text-left px-5 py-3 table-head">Rekening</th>
                         <th class="text-left px-5 py-3 table-head">Sumber Dana</th>
@@ -62,35 +62,35 @@
                         <th class="text-center px-5 py-3 table-head">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($belanjas as $belanja)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400">{{ $loop->iteration }}</td>
+                            <td class="px-5 py-3.5 text-content-muted">{{ $loop->iteration }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="text-xs font-mono font-semibold text-primary whitespace-nowrap">{{ $belanja->rekening?->kode }}</span>
-                                <p class="text-sm font-medium text-slate-800">{{ $belanja->rekening?->nama ?? '-' }}</p>
+                                <p class="text-sm font-medium text-content">{{ $belanja->rekening?->nama ?? '-' }}</p>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm text-slate-600">{{ $belanja->sumberDana?->nama_sumber_dana ?? '-' }}</span>
+                                <span class="text-sm text-content-secondary">{{ $belanja->sumberDana?->nama_sumber_dana ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">Rp {{ number_format((float) $belanja->pagu, 0, ',', '.') }}</span>
+                                <span class="text-sm font-semibold text-content-secondary whitespace-nowrap">Rp {{ number_format((float) $belanja->pagu, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-medium text-emerald-600 whitespace-nowrap">Rp {{ number_format((float) $belanja->realisasi, 0, ',', '.') }}</span>
+                                <span class="text-sm font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Rp {{ number_format((float) $belanja->realisasi, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-medium text-amber-600 whitespace-nowrap">Rp {{ number_format((float) $belanja->dana_di_commit, 0, ',', '.') }}</span>
+                                <span class="text-sm font-medium text-amber-600 dark:text-amber-400 whitespace-nowrap">Rp {{ number_format((float) $belanja->dana_di_commit, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('belanja.edit', ['subKegiatan' => $subKegiatan, 'belanja' => $belanja]) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
+                                    <a href="{{ route('belanja.edit', ['subKegiatan' => $subKegiatan, 'belanja' => $belanja]) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form action="{{ route('belanja.destroy', ['subKegiatan' => $subKegiatan, 'belanja' => $belanja->id]) }}" method="POST" class="inline" x-data @submit.prevent="if(confirm('Yakin ingin menghapus belanja ini?')) $el.submit()">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="icon-btn hover:text-red-600 hover:bg-red-50" title="Hapus">
+                                        <button type="submit" class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10" title="Hapus">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -99,7 +99,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-12 text-center text-sm text-slate-400">
+                            <td colspan="7" class="px-5 py-12 text-center text-sm text-content-muted">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-banknotes class="w-7 h-7"/>
@@ -115,8 +115,8 @@
         </div>
 
         @if($belanjas->total() > 0)
-            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $belanjas->total() }}</span> belanja</p>
+            <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+                <p class="text-sm text-content-muted">Menampilkan <span class="font-semibold text-content-secondary">{{ $belanjas->total() }}</span> belanja</p>
                 <div class="text-sm">
                     {{ $belanjas->withQueryString()->links() }}
                 </div>

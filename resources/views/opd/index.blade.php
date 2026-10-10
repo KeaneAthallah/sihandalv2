@@ -29,7 +29,7 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="flex flex-col lg:flex-row lg:items-center gap-4">
                 <div class="flex items-center gap-2 flex-wrap">
                     @php
@@ -46,7 +46,7 @@
                             @click="active = '{{ $chip['key'] }}'"
                             :class="active === '{{ $chip['key'] }}'
                                 ? 'bg-primary text-white ring-2 ring-primary/20 shadow-sm'
-                                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:text-slate-800'"
+                                : 'bg-card text-content-secondary border border-border hover:border-border-strong hover:text-content'"
                             class="px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-150">
                             {{ $chip['label'] }}
                         </button>
@@ -55,7 +55,7 @@
 
                 <div class="lg:ml-auto flex items-center gap-2">
                     <div class="relative flex-1 lg:flex-none">
-                        <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                        <x-heroicon-o-magnifying-glass class="w-4 h-4 text-content-muted absolute left-3 top-1/2 -translate-y-1/2"/>
                         <input type="text" placeholder="Cari nama / kode OPD..." class="input pl-9 lg:!w-72"/>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="divide-y divide-slate-100">
+                    <tr class="divide-y divide-border-light">
                         <th class="px-5 py-3 table-head w-12 text-left">No</th>
                         <th class="px-5 py-3 table-head text-left">Nama OPD</th>
                         <th class="px-5 py-3 table-head w-32 text-left">Kode</th>
@@ -74,16 +74,16 @@
                         <th class="px-5 py-3 table-head w-20 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($opds as $idx => $opd)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-muted">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm font-medium text-slate-800">{{ $opd->nama }}</span>
+                                <span class="text-sm font-medium text-content">{{ $opd->nama }}</span>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-500 font-mono text-sm">{{ $opd->kode }}</td>
+                            <td class="px-5 py-3.5 text-content-muted font-mono text-sm">{{ $opd->kode }}</td>
                             <td class="px-5 py-3.5 text-center">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-alt text-sm font-semibold text-content-secondary">
                                     {{ $opd->kegiatans_count }}
                                 </span>
                             </td>
@@ -94,7 +94,7 @@
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center">
-                                    <a href="{{ route('opd.show', $opd) }}" title="Lihat Detail" class="icon-btn hover:text-amber-600 hover:bg-amber-50">
+                                    <a href="{{ route('opd.show', $opd) }}" title="Lihat Detail" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
                                 </div>
@@ -118,8 +118,8 @@
         </div>
 
         @if($opds->total() > 0)
-            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $opds->total() }}</span> OPD</p>
+            <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+                <p class="text-sm text-content-muted">Menampilkan <span class="font-semibold text-content-secondary">{{ $opds->total() }}</span> OPD</p>
                 <div class="text-sm">
                     {{ $opds->withQueryString()->links() }}
                 </div>

@@ -12,13 +12,13 @@
 
     <div class="max-w-2xl mx-auto space-y-6">
 
-        <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div class="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
             <div>
                 <h3 class="text-sm font-semibold text-amber-800">Mode Edit</h3>
-                <p class="text-sm text-amber-700 mt-0.5">
+                <p class="text-sm text-amber-700 dark:text-amber-400 mt-0.5">
                     Mengedit permintaan <span class="font-mono font-semibold">{{ $permintaanDana->nomor_permintaan }}</span>
                     @if($permintaanDana->status === 'ditolak')
-                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">Ditolak</span>
+                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 dark:text-red-400">Ditolak</span>
                     @endif
                 </p>
             </div>
@@ -111,7 +111,7 @@
                         <div>
                             <x-input-label>OPD <span class="text-red-500">*</span></x-input-label>
                             <select name="opd_id" x-model="opdId" @change="onOpdChange()"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="">Pilih OPD</option>
                                 @foreach($opds as $opd)
                                     <option value="{{ $opd->id }}">{{ $opd->nama }}</option>
@@ -122,7 +122,7 @@
                         <div>
                             <x-input-label>Sumber Dana <span class="text-red-500">*</span></x-input-label>
                             <select name="sumber_dana_id" x-model="sumberDanaId" :disabled="!belanjaId" required
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition disabled:bg-surface-alt disabled:text-content-muted disabled:cursor-not-allowed">
                                 <option value="">Pilih Sumber Dana</option>
                                 <template x-for="sd in sumberDanaOptions" :key="sd.id">
                                     <option :value="sd.id" x-text="sd.label"></option>
@@ -136,7 +136,7 @@
                         <div>
                             <x-input-label value="Program" />
                             <select name="program_id" x-model="programId" @change="onProgramChange()"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih Program</option>
                                 <template x-for="p in programOptions" :key="p.id">
                                     <option :value="p.id" x-text="p.label"></option>
@@ -147,7 +147,7 @@
                         <div>
                             <x-input-label value="Kegiatan" />
                             <select name="kegiatan_id" x-model="kegiatanId" @change="onKegiatanChange()"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih Kegiatan</option>
                                 <template x-for="k in kegiatanOptions" :key="k.id">
                                     <option :value="k.id" x-text="k.label"></option>
@@ -161,7 +161,7 @@
                         <div>
                             <x-input-label value="Sub Kegiatan" />
                             <select name="sub_kegiatan_id" x-model="subKegiatanId" @change="onSubKegiatanChange()"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih Sub Kegiatan</option>
                                 <template x-for="s in subKegiatanOptions" :key="s.id">
                                     <option :value="s.id" x-text="s.label"></option>
@@ -172,35 +172,35 @@
                         <div>
                             <x-input-label value="Belanja" />
                             <select name="belanja_id" x-model="belanjaId" @change="onBelanjaChange($event.target.value)"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                                class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih Belanja</option>
                                 <template x-for="b in belanjaOptions" :key="b.id">
                                     <option :value="b.id" x-text="b.label"></option>
                                 </template>
                             </select>
                             <x-input-error :messages="$errors->get('belanja_id')" class="mt-1"/>
-                            <div x-show="selectedBelanja" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-1">
+                            <div x-show="selectedBelanja" class="mt-2 rounded-lg border border-border bg-surface p-3 text-xs space-y-1">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-slate-500">Pagu</span>
-                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu : 0)"></span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-slate-500">Penerimaan</span>
-                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.penerimaan : 0)"></span>
+                                    <span class="text-content-muted">Pagu</span>
+                                    <span class="font-semibold text-content-secondary" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu : 0)"></span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-slate-500">Dana commit</span>
-                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.dana_di_commit : 0)"></span>
-                                </div>
-                                <div class="flex items-center justify-between border-t border-slate-200 pt-1">
-                                    <span class="text-slate-500">Pagu tersisa</span>
-                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu_tersisa : 0)"></span>
+                                    <span class="text-content-muted">Penerimaan</span>
+                                    <span class="font-semibold text-content-secondary" x-text="formatRupiah(selectedBelanja ? selectedBelanja.penerimaan : 0)"></span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-slate-500">Kas tersedia</span>
-                                    <span class="font-semibold text-slate-700" x-text="formatRupiah(selectedBelanja ? selectedBelanja.kas_tersedia : 0)"></span>
+                                    <span class="text-content-muted">Dana commit</span>
+                                    <span class="font-semibold text-content-secondary" x-text="formatRupiah(selectedBelanja ? selectedBelanja.dana_di_commit : 0)"></span>
                                 </div>
-                                <p class="text-slate-400">Yang dapat dipakai adalah nilai terkecil dari pagu tersisa dan kas tersedia.</p>
+                                <div class="flex items-center justify-between border-t border-border pt-1">
+                                    <span class="text-content-muted">Pagu tersisa</span>
+                                    <span class="font-semibold text-content-secondary" x-text="formatRupiah(selectedBelanja ? selectedBelanja.pagu_tersisa : 0)"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-content-muted">Kas tersedia</span>
+                                    <span class="font-semibold text-content-secondary" x-text="formatRupiah(selectedBelanja ? selectedBelanja.kas_tersedia : 0)"></span>
+                                </div>
+                                <p class="text-content-muted">Yang dapat dipakai adalah nilai terkecil dari pagu tersisa dan kas tersedia.</p>
                             </div>
                         </div>
                     </div>
@@ -212,9 +212,9 @@
                             class="w-full accent-primary disabled:opacity-50 disabled:cursor-not-allowed">
                         <x-text-input type="number" name="jumlah" x-model.number="jumlahInput" min="1" step="1" placeholder="0" required
                             class="mt-2"/>
-                        <p class="mt-1 text-xs text-slate-400">
+                        <p class="mt-1 text-xs text-content-muted">
                             Maksimal yang dapat dipakai:
-                            <span class="font-semibold text-slate-600" x-text="formatRupiah(jumlahTersedia)"></span>
+                            <span class="font-semibold text-content-secondary" x-text="formatRupiah(jumlahTersedia)"></span>
                             — nilai terkecil dari pagu tersisa dan kas tersedia.
                         </p>
                         <x-input-error :messages="$errors->get('jumlah')" class="mt-1"/>
@@ -232,7 +232,7 @@
                         <x-input-error :messages="$errors->get('tanggal')" class="mt-1"/>
                     </div>
 
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
                         <a href="{{ route('permintaan-dana.index') }}"
                            class="btn-secondary">
                             Batal

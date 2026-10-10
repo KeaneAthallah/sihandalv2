@@ -22,11 +22,11 @@
     $created = $created ?? ($permintaanDana?->created_at?->format('d M Y H:i') ?? '-');
 
     $statusConfig = match($status) {
-        'draft' => ['label' => 'Draft', 'desc' => 'Permintaan belum diajukan', 'bg' => 'bg-slate-50', 'border' => 'border-slate-200', 'text' => 'text-slate-700', 'dot' => 'bg-slate-400'],
-        'menunggu' => ['label' => 'Menunggu', 'desc' => 'Menunggu persetujuan', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'text' => 'text-amber-700', 'dot' => 'bg-amber-500'],
-        'disetujui' => ['label' => 'Disetujui', 'desc' => 'Permintaan telah disetujui', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'text' => 'text-emerald-700', 'dot' => 'bg-emerald-500'],
-        'ditolak' => ['label' => 'Ditolak', 'desc' => 'Permintaan ditolak', 'bg' => 'bg-red-50', 'border' => 'border-red-200', 'text' => 'text-red-700', 'dot' => 'bg-red-500'],
-        default => ['label' => $status, 'desc' => '', 'bg' => 'bg-slate-50', 'border' => 'border-slate-200', 'text' => 'text-slate-700', 'dot' => 'bg-slate-400'],
+        'draft' => ['label' => 'Draft', 'desc' => 'Permintaan belum diajukan', 'bg' => 'bg-surface', 'border' => 'border-border', 'text' => 'text-content-secondary', 'dot' => 'bg-slate-400'],
+        'menunggu' => ['label' => 'Menunggu', 'desc' => 'Menunggu persetujuan', 'bg' => 'bg-amber-50 dark:bg-amber-500/10', 'border' => 'border-amber-200 dark:border-amber-500/30', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
+        'disetujui' => ['label' => 'Disetujui', 'desc' => 'Permintaan telah disetujui', 'bg' => 'bg-emerald-50 dark:bg-emerald-500/10', 'border' => 'border-emerald-200 dark:border-emerald-500/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
+        'ditolak' => ['label' => 'Ditolak', 'desc' => 'Permintaan ditolak', 'bg' => 'bg-red-50 dark:bg-red-500/10', 'border' => 'border-red-200 dark:border-red-500/30', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
+        default => ['label' => $status, 'desc' => '', 'bg' => 'bg-surface', 'border' => 'border-border', 'text' => 'text-content-secondary', 'dot' => 'bg-slate-400'],
     };
 
     $workflowSteps = match($status) {
@@ -48,7 +48,7 @@
                     <x-status-badge :status="$status"/>
                 </div>
                 <p class="text-sm mt-1 {{ $statusConfig['text'] }} opacity-80">{{ $statusConfig['desc'] }}</p>
-                <p class="text-xs mt-2 text-slate-500">Diajukan: {{ $created }}</p>
+                <p class="text-xs mt-2 text-content-muted">Diajukan: {{ $created }}</p>
             </div>
         </div>
     </div>
@@ -56,56 +56,56 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div class="px-5 py-4 border-b border-slate-100">
-                    <h4 class="text-sm font-semibold text-slate-800">Informasi Permintaan</h4>
+            <div class="bg-card rounded-xl border border-border shadow-sm">
+                <div class="px-5 py-4 border-b border-border-light">
+                    <h4 class="text-sm font-semibold text-content">Informasi Permintaan</h4>
                 </div>
                 <div class="px-5 py-4">
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">OPD</p>
-                                <p class="text-sm font-medium text-slate-800">{{ $opd }}</p>
+                                <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-1">OPD</p>
+                                <p class="text-sm font-medium text-content">{{ $opd }}</p>
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Tanggal</p>
-                                <p class="text-sm text-slate-700">{{ $tanggal }}</p>
+                                <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-1">Tanggal</p>
+                                <p class="text-sm text-content-secondary">{{ $tanggal }}</p>
                             </div>
                         </div>
 
-                        <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Sumber Dana</p>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <div class="border-t border-border-light pt-4">
+                            <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-1">Sumber Dana</p>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-alt text-content-secondary border border-border">
                                 {{ $sumberDana }}
                             </span>
                         </div>
 
-                        <div class="border-t border-slate-100 pt-4">
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Keperluan</p>
-                            <p class="text-sm text-slate-700 leading-relaxed">{{ $keperluan }}</p>
+                        <div class="border-t border-border-light pt-4">
+                            <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-1">Keperluan</p>
+                            <p class="text-sm text-content-secondary leading-relaxed">{{ $keperluan }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div class="px-5 py-4 border-b border-slate-100">
-                    <h4 class="text-sm font-semibold text-slate-800">Ringkasan Keuangan</h4>
+            <div class="bg-card rounded-xl border border-border shadow-sm">
+                <div class="px-5 py-4 border-b border-border-light">
+                    <h4 class="text-sm font-semibold text-content">Ringkasan Keuangan</h4>
                 </div>
                 <div class="px-5 py-4">
-                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 mb-4">
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Nilai Permintaan</p>
-                        <p class="text-2xl font-bold text-slate-800 tracking-tight">Rp {{ number_format($jumlah, 0, ',', '.') }}</p>
+                    <div class="p-4 bg-surface rounded-lg border border-border mb-4">
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-1">Nilai Permintaan</p>
+                        <p class="text-2xl font-bold text-content tracking-tight">Rp {{ number_format($jumlah, 0, ',', '.') }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="p-3 bg-slate-50 rounded-lg">
-                            <p class="text-xs font-medium text-slate-500 mb-1">Status</p>
+                        <div class="p-3 bg-surface rounded-lg">
+                            <p class="text-xs font-medium text-content-muted mb-1">Status</p>
                             <x-status-badge :status="$status"/>
                         </div>
-                        <div class="p-3 bg-slate-50 rounded-lg">
-                            <p class="text-xs font-medium text-slate-500 mb-1">Sumber</p>
-                            <span class="text-sm font-semibold text-slate-800">{{ $sumberDana }}</span>
+                        <div class="p-3 bg-surface rounded-lg">
+                            <p class="text-xs font-medium text-content-muted mb-1">Sumber</p>
+                            <span class="text-sm font-semibold text-content">{{ $sumberDana }}</span>
                         </div>
                     </div>
                 </div>
@@ -113,9 +113,9 @@
         </div>
 
         <div class="space-y-6">
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div class="px-5 py-4 border-b border-slate-100">
-                    <h4 class="text-sm font-semibold text-slate-800">Alur Proses</h4>
+            <div class="bg-card rounded-xl border border-border shadow-sm">
+                <div class="px-5 py-4 border-b border-border-light">
+                    <h4 class="text-sm font-semibold text-content">Alur Proses</h4>
                 </div>
                 <div class="px-5 py-5">
                     @if($status === 'ditolak')
@@ -131,7 +131,7 @@
                                         <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
                                             @if($isCompleted) bg-primary text-white
                                             @elseif($isCurrent) bg-red-500 text-white ring-4 ring-red-100
-                                            @else bg-slate-100 text-slate-400 border-2 border-slate-200
+                                            @else bg-surface-alt text-content-muted border-2 border-border
                                             @endif">
                                             @if($isCompleted)
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -144,11 +144,11 @@
                                             @endif
                                         </div>
                                         @if(!$loop->last)
-                                            <div class="w-0.5 h-7 mt-1 {{ $isCompleted ? 'bg-primary' : 'bg-slate-200' }}"></div>
+                                            <div class="w-0.5 h-7 mt-1 {{ $isCompleted ? 'bg-primary' : 'bg-border' }}"></div>
                                         @endif
                                     </div>
                                     <div class="pb-5 pt-0.5">
-                                        <p class="text-sm font-medium {{ $isCurrent ? 'text-red-600' : ($isCompleted ? 'text-slate-700' : 'text-slate-400') }}">
+                                        <p class="text-sm font-medium {{ $isCurrent ? 'text-red-600 dark:text-red-400' : ($isCompleted ? 'text-content-secondary' : 'text-content-muted') }}">
                                             {{ $step }}
                                         </p>
                                         @if($isCurrent)
@@ -167,15 +167,15 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div class="px-5 py-4 border-b border-slate-100">
-                    <h4 class="text-sm font-semibold text-slate-800">Informasi Proses</h4>
+            <div class="bg-card rounded-xl border border-border shadow-sm">
+                <div class="px-5 py-4 border-b border-border-light">
+                    <h4 class="text-sm font-semibold text-content">Informasi Proses</h4>
                 </div>
                 <div class="px-5 py-4">
                     <div class="space-y-3">
                         <div class="flex items-start gap-2.5">
                             <div class="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0"></div>
-                            <p class="text-sm text-slate-600">
+                            <p class="text-sm text-content-secondary">
                                 @if($status === 'draft')
                                     Permintaan masih dalam bentuk draft. Klik "Ajukan" untuk mengirim ke proses persetujuan.
                                 @elseif($status === 'menunggu')
@@ -189,7 +189,7 @@
                         </div>
                         <div class="flex items-start gap-2.5">
                             <div class="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0"></div>
-                            <p class="text-sm text-slate-600">Dana akan di-commit dari pagu setelah permintaan disetujui.</p>
+                            <p class="text-sm text-content-secondary">Dana akan di-commit dari pagu setelah permintaan disetujui.</p>
                         </div>
                     </div>
                 </div>

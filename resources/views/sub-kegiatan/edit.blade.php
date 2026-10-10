@@ -17,9 +17,9 @@
 
             <x-card title="Data Sub Kegiatan">
                 <div class="space-y-4">
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
+                    <div class="rounded-xl bg-surface border border-border px-4 py-3 text-sm">
                         <span class="text-xs font-mono font-bold text-primary">{{ $kegiatan->kode_kegiatan }}</span>
-                        <p class="text-slate-700 font-medium mt-0.5">{{ $kegiatan->nama_kegiatan }}</p>
+                        <p class="text-content-secondary font-medium mt-0.5">{{ $kegiatan->nama_kegiatan }}</p>
                     </div>
 
                     <div>

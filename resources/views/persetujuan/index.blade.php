@@ -31,9 +31,9 @@
 
     {{-- Antrian Persetujuan --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <h3 class="card-title">Antrian Permintaan Dana</h3>
-            <p class="text-xs text-slate-400 mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
+            <p class="text-xs text-content-muted mt-0.5">{{ $totalMenunggu }} permintaan menunggu keputusan Anda</p>
         </div>
 
         <div class="overflow-x-auto">
@@ -50,43 +50,43 @@
                         <th class="px-5 py-3 table-head text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($permintaanDanas as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400 text-xs font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-muted text-xs font-medium">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
                                         {{ strtoupper(substr($item->opd->nama ?? 'O', 0, 2)) }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-sm font-semibold text-slate-800 truncate">{{ $item->nomor_permintaan }}</p>
-                                        <p class="text-xs text-slate-400 truncate">{{ $item->catatan ?? '-' }}</p>
+                                        <p class="text-sm font-semibold text-content truncate">{{ $item->nomor_permintaan }}</p>
+                                        <p class="text-xs text-content-muted truncate">{{ $item->catatan ?? '-' }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm text-slate-700 max-w-[180px] truncate block">{{ $item->opd->nama ?? '-' }}</span>
+                                <span class="text-sm text-content-secondary max-w-[180px] truncate block">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-bold text-slate-900 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
+                                <span class="text-sm font-bold text-content whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface text-content-secondary border border-border whitespace-nowrap">
                                     {{ $item->sumber_dana }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">
+                                <span class="text-sm text-content-secondary max-w-[220px] truncate block" title="{{ $item->keperluan }}">
                                     {{ Str::limit($item->keperluan, 40) ?: '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 whitespace-nowrap">
-                                <span class="text-xs text-slate-500">{{ $item->tanggal?->format('d M Y') ?? '-' }}</span>
+                                <span class="text-xs text-content-muted">{{ $item->tanggal?->format('d M Y') ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="icon-btn hover:text-primary hover:bg-blue-50" title="Lihat Detail">
+                                    <a href="{{ route('permintaan-dana.edit', $item) }}" class="icon-btn hover:text-primary hover:bg-blue-50 hover:dark:bg-blue-500/10" title="Lihat Detail">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </a>
                                     <button
@@ -102,7 +102,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'approve-confirm'); $dispatch('approve-item', $data.item)"
-                                        class="icon-btn hover:text-emerald-600 hover:bg-emerald-50"
+                                        class="icon-btn hover:text-emerald-600 hover:dark:text-emerald-400 hover:bg-emerald-50 hover:dark:bg-emerald-500/10"
                                         title="Setujui"
                                     >
                                         <x-heroicon-o-check class="w-4 h-4"/>
@@ -120,7 +120,7 @@
                                             }
                                         }"
                                         @click="$dispatch('open-modal', 'reject-confirm'); $dispatch('reject-item', $data.item)"
-                                        class="icon-btn hover:text-red-600 hover:bg-red-50"
+                                        class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10"
                                         title="Tolak"
                                     >
                                         <x-heroicon-o-x-mark class="w-4 h-4"/>
@@ -132,12 +132,12 @@
                         <tr>
                             <td colspan="8" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center gap-3">
-                                    <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-500">
+                                    <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500">
                                         <x-heroicon-o-check-badge class="w-10 h-10"/>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-slate-700">Semua permintaan telah ditindaklanjuti</p>
-                                        <p class="text-xs text-slate-400 mt-1">Tidak ada permintaan dana yang menunggu persetujuan saat ini</p>
+                                        <p class="text-sm font-semibold text-content-secondary">Semua permintaan telah ditindaklanjuti</p>
+                                        <p class="text-xs text-content-muted mt-1">Tidak ada permintaan dana yang menunggu persetujuan saat ini</p>
                                     </div>
                                 </div>
                             </td>
@@ -147,8 +147,8 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> permintaan menunggu persetujuan</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $permintaanDanas->total() }}</span> permintaan menunggu persetujuan</p>
             @if(method_exists($permintaanDanas, 'links'))
                 <div class="text-sm">
                     {{ $permintaanDanas->withQueryString()->links() }}
@@ -161,40 +161,40 @@
     <x-modal name="approve-confirm" max-width="md">
         <div class="p-6" x-data="{ item: {} }" x-on:approve-item.window="item = $event.detail">
             <div class="flex items-center gap-3 mb-4">
-                <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
+                <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     <x-heroicon-o-check-circle class="w-6 h-6"/>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">Setujui Permintaan Dana</h3>
-                    <p class="text-sm text-slate-500">Konfirmasi persetujuan dana</p>
+                    <h3 class="text-lg font-bold text-content">Setujui Permintaan Dana</h3>
+                    <p class="text-sm text-content-muted">Konfirmasi persetujuan dana</p>
                 </div>
             </div>
 
-            <div class="bg-slate-50 rounded-xl p-4 space-y-2.5 mb-5">
+            <div class="bg-surface rounded-xl p-4 space-y-2.5 mb-5">
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">Nomor</span>
-                    <span class="font-semibold text-slate-800" x-text="item.nomor">-</span>
+                    <span class="text-content-muted">Nomor</span>
+                    <span class="font-semibold text-content" x-text="item.nomor">-</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">OPD</span>
-                    <span class="font-semibold text-slate-800" x-text="item.opd">-</span>
+                    <span class="text-content-muted">OPD</span>
+                    <span class="font-semibold text-content" x-text="item.opd">-</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">Keperluan</span>
-                    <span class="font-medium text-slate-700 text-right max-w-[250px]" x-text="item.keperluan">-</span>
+                    <span class="text-content-muted">Keperluan</span>
+                    <span class="font-medium text-content-secondary text-right max-w-[250px]" x-text="item.keperluan">-</span>
                 </div>
-                <div class="border-t border-slate-200 pt-2.5 mt-2.5">
+                <div class="border-t border-border pt-2.5 mt-2.5">
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium text-slate-600">Nilai yang Disetujui</span>
-                        <span class="text-lg font-bold text-emerald-700" x-text="'Rp ' + item.jumlah">-</span>
+                        <span class="text-sm font-medium text-content-secondary">Nilai yang Disetujui</span>
+                        <span class="text-lg font-bold text-emerald-700 dark:text-emerald-400" x-text="'Rp ' + item.jumlah">-</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mb-5">
+            <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-3.5 mb-5">
                 <div class="flex items-start gap-2.5">
-                    <x-heroicon-o-information-circle class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"/>
-                    <p class="text-sm text-emerald-700 leading-relaxed">
+                    <x-heroicon-o-information-circle class="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"/>
+                    <p class="text-sm text-emerald-700 dark:text-emerald-400 leading-relaxed">
                         Dengan menyetujui, permintaan sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan berstatus disetujui.
                     </p>
                 </div>
@@ -219,40 +219,40 @@
     <x-modal name="reject-confirm" max-width="md">
         <div class="p-6" x-data="{ item: {} }" x-on:reject-item.window="item = $event.detail">
             <div class="flex items-center gap-3 mb-4">
-                <div class="p-2.5 rounded-xl bg-red-50 text-red-600">
+                <div class="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400">
                     <x-heroicon-o-x-circle class="w-6 h-6"/>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">Tolak Permintaan Dana</h3>
-                    <p class="text-sm text-slate-500">Konfirmasi penolakan dana</p>
+                    <h3 class="text-lg font-bold text-content">Tolak Permintaan Dana</h3>
+                    <p class="text-sm text-content-muted">Konfirmasi penolakan dana</p>
                 </div>
             </div>
 
-            <div class="bg-slate-50 rounded-xl p-4 space-y-2.5 mb-5">
+            <div class="bg-surface rounded-xl p-4 space-y-2.5 mb-5">
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">Nomor</span>
-                    <span class="font-semibold text-slate-800" x-text="item.nomor">-</span>
+                    <span class="text-content-muted">Nomor</span>
+                    <span class="font-semibold text-content" x-text="item.nomor">-</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">OPD</span>
-                    <span class="font-semibold text-slate-800" x-text="item.opd">-</span>
+                    <span class="text-content-muted">OPD</span>
+                    <span class="font-semibold text-content" x-text="item.opd">-</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-slate-500">Keperluan</span>
-                    <span class="font-medium text-slate-700 text-right max-w-[250px]" x-text="item.keperluan">-</span>
+                    <span class="text-content-muted">Keperluan</span>
+                    <span class="font-medium text-content-secondary text-right max-w-[250px]" x-text="item.keperluan">-</span>
                 </div>
-                <div class="border-t border-slate-200 pt-2.5 mt-2.5">
+                <div class="border-t border-border pt-2.5 mt-2.5">
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium text-slate-600">Nilai yang Ditolak</span>
-                        <span class="text-lg font-bold text-red-700" x-text="'Rp ' + item.jumlah">-</span>
+                        <span class="text-sm font-medium text-content-secondary">Nilai yang Ditolak</span>
+                        <span class="text-lg font-bold text-red-700 dark:text-red-400" x-text="'Rp ' + item.jumlah">-</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-red-50 border border-red-200 rounded-xl p-3.5 mb-5">
+            <div class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl p-3.5 mb-5">
                 <div class="flex items-start gap-2.5">
-                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 shrink-0 mt-0.5"/>
-                    <p class="text-sm text-red-700 leading-relaxed">
+                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"/>
+                    <p class="text-sm text-red-700 dark:text-red-400 leading-relaxed">
                         Dengan menolak, permintaan sebesar <span class="font-bold" x-text="'Rp ' + item.jumlah"></span> dari sumber dana <span class="font-semibold" x-text="item.sumberDana"></span> akan berstatus ditolak.
                     </p>
                 </div>

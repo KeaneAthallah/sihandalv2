@@ -19,9 +19,9 @@
     </div>
 
     <x-card :padding="false">
-        <div class="px-5 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="px-5 py-3 border-b border-border-light flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="relative flex-1 max-w-sm">
-                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-content-muted absolute left-3 top-1/2 -translate-y-1/2"/>
                 <input type="text" placeholder="Cari sumber dana..." class="input pl-9"/>
             </div>
         </div>
@@ -29,28 +29,28 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[600px]">
                 <thead>
-                    <tr class="border-b border-slate-200">
+                    <tr class="border-b border-border">
                         <th class="text-left px-5 py-3 table-head">No</th>
                         <th class="text-left px-5 py-3 table-head">Sumber Dana</th>
                         <th class="text-center px-5 py-3 table-head">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($sumberDanas as $idx => $src)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400">{{ $sumberDanas->firstItem() + $idx }}</td>
+                            <td class="px-5 py-3.5 text-content-muted">{{ $sumberDanas->firstItem() + $idx }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="font-medium text-slate-800">{{ $src->nama_sumber_dana }}</span>
+                                <span class="font-medium text-content">{{ $src->nama_sumber_dana }}</span>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('sumber-dana.edit', $src) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
+                                    <a href="{{ route('sumber-dana.edit', $src) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form action="{{ route('sumber-dana.destroy', $src->id) }}" method="POST" class="inline" x-data @submit.prevent="if(confirm('Yakin ingin menghapus data ini?')) $el.submit()">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="icon-btn hover:text-red-600 hover:bg-red-50" title="Hapus">
+                                        <button type="submit" class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10" title="Hapus">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -59,7 +59,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-5 py-12 text-center text-sm text-slate-400">
+                            <td colspan="3" class="px-5 py-12 text-center text-sm text-content-muted">
                                 <div class="inline-flex flex-col items-center">
                                     <div class="empty-icon">
                                         <x-heroicon-o-banknotes class="w-7 h-7"/>
@@ -75,8 +75,8 @@
         </div>
 
         @if($sumberDanas->hasPages())
-            <div class="px-5 py-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-xs text-slate-400">Menampilkan {{ $sumberDanas->firstItem() }}–{{ $sumberDanas->lastItem() }} dari {{ $sumberDanas->total() }}</p>
+            <div class="px-5 py-3 border-t border-border-light flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-xs text-content-muted">Menampilkan {{ $sumberDanas->firstItem() }}–{{ $sumberDanas->lastItem() }} dari {{ $sumberDanas->total() }}</p>
                 {{ $sumberDanas->withQueryString()->links('pagination::tailwind') }}
             </div>
         @endif

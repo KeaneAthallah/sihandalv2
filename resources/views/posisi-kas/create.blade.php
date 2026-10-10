@@ -10,7 +10,7 @@
 
                 <div>
                     <x-input-label for="opd_id" value="OPD" />
-                    <select name="opd_id" id="opd_id" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                    <select name="opd_id" id="opd_id" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <option value="">Pilih OPD</option>
                         @foreach($opds as $opd)
                             <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -21,19 +21,19 @@
 
                 <div>
                     <x-input-label for="tanggal" value="Tanggal" />
-                    <input type="text" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="datepicker w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                    <input type="text" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" class="datepicker w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                     <x-input-error :messages="$errors->get('tanggal')" />
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <x-input-label for="nama_rekening" value="Nama Rekening" />
-                        <input type="text" name="nama_rekening" id="nama_rekening" value="{{ old('nama_rekening') }}" placeholder="mis. Kas Umum Daerah" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <input type="text" name="nama_rekening" id="nama_rekening" value="{{ old('nama_rekening') }}" placeholder="mis. Kas Umum Daerah" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <x-input-error :messages="$errors->get('nama_rekening')" />
                     </div>
                     <div>
                         <x-input-label for="nomor_rekening" value="Nomor Rekening" />
-                        <input type="text" name="nomor_rekening" id="nomor_rekening" value="{{ old('nomor_rekening') }}" placeholder="mis. 0010-01-000123-7" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <input type="text" name="nomor_rekening" id="nomor_rekening" value="{{ old('nomor_rekening') }}" placeholder="mis. 0010-01-000123-7" class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                         <x-input-error :messages="$errors->get('nomor_rekening')" />
                     </div>
                 </div>
@@ -41,8 +41,8 @@
                 <div>
                     <x-input-label for="saldo" value="Saldo" />
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Rp</span>
-                        <input type="number" name="saldo" id="saldo" step="0.01" value="{{ old('saldo') }}" placeholder="0" required class="w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-muted font-medium">Rp</span>
+                        <input type="number" name="saldo" id="saldo" step="0.01" value="{{ old('saldo') }}" placeholder="0" required class="w-full pl-10 pr-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                     </div>
                     <x-input-error :messages="$errors->get('saldo')" />
                 </div>

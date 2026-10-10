@@ -37,9 +37,9 @@
     </div>
 
     <x-card :padding="false">
-        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-border-light">
             <div class="flex items-center gap-2">
-                <label class="text-sm text-slate-500 font-medium">Sumber Dana</label>
+                <label class="text-sm text-content-muted font-medium">Sumber Dana</label>
                 <select name="penerimaan_id" class="input" onchange="if(this.value) window.location.href = '{{ url('transaksi-penerimaan') }}?penerimaan_id=' + this.value; else window.location.href = '{{ url('transaksi-penerimaan') }}';">
                     <option value="">Semua</option>
                     @foreach($penerimaans as $p)
@@ -52,7 +52,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[1000px]">
                 <thead>
-                    <tr class="border-b border-slate-100">
+                    <tr class="border-b border-border-light">
                         <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
                         <th class="text-left px-5 py-3 table-head w-[140px]">Nomor Registrasi</th>
                         <th class="text-left px-5 py-3 table-head w-[130px]">Tanggal</th>
@@ -64,31 +64,31 @@
                         <th class="text-center px-5 py-3 table-head w-[160px]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($transaksis as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-muted font-medium tabular-nums">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-alt text-content-secondary whitespace-nowrap">
                                     {{ $item->nomor_registrasi ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
                                     {{ $item->sumberDana?->nama_sumber_dana ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->penerimaan?->opd?->nama ?? 'Provinsi' }}</td>
-                            <td class="px-5 py-3.5 font-medium text-emerald-600 text-right whitespace-nowrap tabular-nums">
+                            <td class="px-5 py-3.5 text-content-secondary font-medium max-w-[220px] truncate">{{ $item->penerimaan?->opd?->nama ?? 'Provinsi' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-right whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($item->realisasi, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3.5 text-center">
-                                <span class="inline-flex items-center justify-center px-2 py-1 rounded-lg text-xs font-semibold {{ $item->bkus->count() > 0 ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-400' }}">
+                                <span class="inline-flex items-center justify-center px-2 py-1 rounded-lg text-xs font-semibold {{ $item->bkus->count() > 0 ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'bg-surface-alt text-content-muted' }}">
                                     {{ $item->bkus->count() }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-500 max-w-[200px] truncate">{{ $item->keterangan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-muted max-w-[200px] truncate">{{ $item->keterangan ?? '-' }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
                                     <button type="button" title="Lihat BKU"
@@ -104,11 +104,11 @@
                                                 'rekening_bank' => $b->rekeningBank?->label ?? '-',
                                             ])->values()->all()),
                                         }); $dispatch('open-modal', 'detail-bku')"
-                                        class="icon-btn hover:text-blue-600 hover:bg-blue-50">
+                                        class="icon-btn hover:text-blue-600 hover:dark:text-blue-400 hover:bg-blue-50 hover:dark:bg-blue-500/10">
                                         <x-heroicon-o-eye class="w-4 h-4"/>
                                     </button>
                                     <a href="{{ route('transaksi-penerimaan.edit', $item) }}" title="Edit"
-                                        class="icon-btn hover:text-amber-600 hover:bg-amber-50">
+                                        class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form method="POST" action="{{ route('transaksi-penerimaan.destroy', $item) }}"
@@ -116,7 +116,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus"
-                                            class="icon-btn hover:text-red-600 hover:bg-red-50">
+                                            class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -140,8 +140,8 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $transaksis->total() }}</span> transaksi penerimaan</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $transaksis->total() }}</span> transaksi penerimaan</p>
             @if(method_exists($transaksis, 'links'))
                 <div class="text-sm">
                     {{ $transaksis->withQueryString()->links() }}
@@ -161,29 +161,29 @@
         }" x-on:open-detail-bku.window="t = $event.detail">
             <div class="flex items-start justify-between gap-3 mb-5">
                 <div>
-                    <h3 class="text-base font-semibold text-slate-800">Detail BKU</h3>
-                    <p class="text-xs text-slate-400 mt-0.5" x-text="'Nomor Registrasi: ' + (t.nomor_registrasi || '-')"></p>
+                    <h3 class="text-base font-semibold text-content">Detail BKU</h3>
+                    <p class="text-xs text-content-muted mt-0.5" x-text="'Nomor Registrasi: ' + (t.nomor_registrasi || '-')"></p>
                 </div>
-                <button @click="$dispatch('close-modal', 'detail-bku')" class="icon-btn hover:bg-slate-100">
+                <button @click="$dispatch('close-modal', 'detail-bku')" class="icon-btn hover:bg-surface-alt">
                     <x-heroicon-o-x-mark class="w-4 h-4"/>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                <div class="rounded-lg bg-slate-50 border border-slate-100 p-3">
-                    <p class="text-xs text-slate-400 font-medium">Tanggal</p>
-                    <p class="text-sm font-semibold text-slate-700 mt-0.5" x-text="t.tanggal || '-'"></p>
+                <div class="rounded-lg bg-surface border border-border-light p-3">
+                    <p class="text-xs text-content-muted font-medium">Tanggal</p>
+                    <p class="text-sm font-semibold text-content-secondary mt-0.5" x-text="t.tanggal || '-'"></p>
                 </div>
-                <div class="rounded-lg bg-slate-50 border border-slate-100 p-3">
-                    <p class="text-xs text-slate-400 font-medium">Realisasi</p>
-                    <p class="text-sm font-semibold text-emerald-600 mt-0.5" x-text="formatRupiah(t.realisasi)"></p>
+                <div class="rounded-lg bg-surface border border-border-light p-3">
+                    <p class="text-xs text-content-muted font-medium">Realisasi</p>
+                    <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5" x-text="formatRupiah(t.realisasi)"></p>
                 </div>
             </div>
 
-            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <div class="overflow-x-auto border border-border rounded-xl">
                 <table class="w-full text-sm min-w-[560px]">
                     <thead>
-                        <tr class="border-b border-slate-100 bg-slate-50/50">
+                        <tr class="border-b border-border-light bg-surface/50">
                             <th class="text-left px-4 py-2.5 table-head w-10">No</th>
                             <th class="text-left px-4 py-2.5 table-head">Nomor BKU</th>
                             <th class="text-left px-4 py-2.5 table-head">Tanggal BKU</th>
@@ -191,18 +191,18 @@
                             <th class="text-left px-4 py-2.5 table-head">Rekening Bank</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border-light">
                         <template x-for="(bku, i) in (t.bkus || [])" :key="i">
                             <tr>
-                                <td class="px-4 py-2.5 text-slate-400 tabular-nums" x-text="i + 1"></td>
-                                <td class="px-4 py-2.5 font-medium text-slate-700 whitespace-nowrap" x-text="bku.nomor_bku"></td>
-                                <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap" x-text="bku.tanggal_bku || '-'"></td>
-                                <td class="px-4 py-2.5 text-right font-medium text-slate-700 whitespace-nowrap tabular-nums" x-text="formatRupiah(bku.nilai)"></td>
-                                <td class="px-4 py-2.5 text-slate-500" x-text="bku.rekening_bank || '-'"></td>
+                                <td class="px-4 py-2.5 text-content-muted tabular-nums" x-text="i + 1"></td>
+                                <td class="px-4 py-2.5 font-medium text-content-secondary whitespace-nowrap" x-text="bku.nomor_bku"></td>
+                                <td class="px-4 py-2.5 text-content-secondary whitespace-nowrap" x-text="bku.tanggal_bku || '-'"></td>
+                                <td class="px-4 py-2.5 text-right font-medium text-content-secondary whitespace-nowrap tabular-nums" x-text="formatRupiah(bku.nilai)"></td>
+                                <td class="px-4 py-2.5 text-content-muted" x-text="bku.rekening_bank || '-'"></td>
                             </tr>
                         </template>
                         <tr x-show="(t.bkus || []).length === 0">
-                            <td colspan="5" class="px-4 py-6 text-center text-sm text-slate-400">Belum ada detail BKU.</td>
+                            <td colspan="5" class="px-4 py-6 text-center text-sm text-content-muted">Belum ada detail BKU.</td>
                         </tr>
                     </tbody>
                 </table>

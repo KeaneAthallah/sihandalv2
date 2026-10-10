@@ -31,32 +31,32 @@
     <x-filter-bar>
         <form method="GET" action="{{ route('opd.show', $opd) }}" class="flex items-center gap-3 flex-wrap w-full">
             @if(auth()->user()->isAdmin())
-                <select name="nmskpd" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                <select name="nmskpd" class="px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                     <option value="">Semua NMSKPD</option>
                     @foreach(['4.01', '4.02', '4.03', '4.04', '4.05', '5.01'] as $n)
                         <option value="{{ $n }}" @selected(request('nmskpd') == $n)>{{ $n }}</option>
                     @endforeach
                 </select>
-                <select name="dinas_id" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                <select name="dinas_id" class="px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                     <option value="">Semua Dinas</option>
                     @foreach($dinas as $d)
                         <option value="{{ $d->id }}" @selected(request('dinas_id') == $d->id)>{{ $d->nama }}</option>
                     @endforeach
                 </select>
-                <select name="unit_id" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                <select name="unit_id" class="px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                     <option value="">Semua Unit</option>
                     @foreach($units as $u)
                         <option value="{{ $u->id }}" @selected(request('unit_id') == $u->id)>{{ $u->nama }}</option>
                     @endforeach
                 </select>
             @endif
-            <select name="program_id" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <select name="program_id" class="px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                 <option value="">Semua Program</option>
                 @foreach($programs as $p)
                     <option value="{{ $p->id }}" @selected(request('program_id') == $p->id)>{{ $p->nama_program }}</option>
                 @endforeach
             </select>
-            <select name="sumber_dana_id" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <select name="sumber_dana_id" class="px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                 <option value="">Semua Sumber Dana</option>
                 @foreach($sumberDanas as $sd)
                     <option value="{{ $sd->id }}" @selected(request('sumber_dana_id') == $sd->id)>{{ $sd->nama_sumber_dana }}</option>
@@ -75,25 +75,25 @@
     {{-- Hierarchy Structure --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-5">
         <x-card title="Struktur Organisasi">
-            <div class="divide-y divide-slate-100">
+            <div class="divide-y divide-border-light">
                 <div class="flex items-center justify-between py-3">
-                    <span class="text-sm text-slate-500">NMSKPD</span>
-                    <span class="text-sm font-medium text-slate-800 font-mono">{{ $opd->nmskpd ?? '-' }}</span>
+                    <span class="text-sm text-content-muted">NMSKPD</span>
+                    <span class="text-sm font-medium text-content font-mono">{{ $opd->nmskpd ?? '-' }}</span>
                 </div>
                 <div class="flex items-center justify-between py-3">
-                    <span class="text-sm text-slate-500">Dinas</span>
-                    <span class="text-sm font-medium text-slate-800 text-right">{{ $opd->dinas?->nama ?? '-' }}</span>
+                    <span class="text-sm text-content-muted">Dinas</span>
+                    <span class="text-sm font-medium text-content text-right">{{ $opd->dinas?->nama ?? '-' }}</span>
                 </div>
                 <div class="flex items-center justify-between py-3">
-                    <span class="text-sm text-slate-500">Unit</span>
-                    <span class="text-sm font-medium text-slate-800 text-right">{{ $opd->unit?->nama ?? '-' }}</span>
+                    <span class="text-sm text-content-muted">Unit</span>
+                    <span class="text-sm font-medium text-content text-right">{{ $opd->unit?->nama ?? '-' }}</span>
                 </div>
                 <div class="flex items-center justify-between py-3">
-                    <span class="text-sm text-slate-500">Kode OPD</span>
-                    <span class="text-sm font-medium text-slate-800 font-mono">{{ $opd->kode }}</span>
+                    <span class="text-sm text-content-muted">Kode OPD</span>
+                    <span class="text-sm font-medium text-content font-mono">{{ $opd->kode }}</span>
                 </div>
                 <div class="flex items-center justify-between py-3">
-                    <span class="text-sm text-slate-500">Total Pagu</span>
+                    <span class="text-sm text-content-muted">Total Pagu</span>
                     <span class="text-sm font-semibold text-primary">Rp {{ number_format($totalPagu, 0, ',', '.') }}</span>
                 </div>
             </div>
@@ -103,13 +103,13 @@
             @forelse($upts as $upt)
                 <div class="flex items-center justify-between py-2.5">
                     <div class="flex items-center gap-2">
-                        <x-heroicon-o-building-office-2 class="w-4 h-4 text-slate-400"/>
-                        <span class="text-sm font-medium text-slate-700">{{ $upt->nama }}</span>
+                        <x-heroicon-o-building-office-2 class="w-4 h-4 text-content-muted"/>
+                        <span class="text-sm font-medium text-content-secondary">{{ $upt->nama }}</span>
                     </div>
-                    <span class="text-xs text-slate-400 font-mono">{{ $upt->kode ?? '-' }}</span>
+                    <span class="text-xs text-content-muted font-mono">{{ $upt->kode ?? '-' }}</span>
                 </div>
             @empty
-                <p class="py-6 text-center text-sm text-slate-500">Belum ada UPT</p>
+                <p class="py-6 text-center text-sm text-content-muted">Belum ada UPT</p>
             @endforelse
         </x-card>
 
@@ -140,37 +140,37 @@
                         @endphp
                         <div>
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-slate-700">{{ $sd->nama }}</span>
-                                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">Rp {{ number_format($sd->pagu / 1000000000, 1, ',', '.') }} M</span>
+                                <span class="text-sm font-medium text-content-secondary">{{ $sd->nama }}</span>
+                                <span class="text-xs font-semibold text-content-muted bg-surface-alt px-2 py-0.5 rounded">Rp {{ number_format($sd->pagu / 1000000000, 1, ',', '.') }} M</span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <div class="flex-1 w-full bg-slate-100 rounded-full h-2">
+                                <div class="flex-1 w-full bg-surface-alt rounded-full h-2">
                                     <div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: {{ min($pers, 100) }}%"></div>
                                 </div>
-                                <span class="text-xs font-semibold text-slate-500 w-12 text-right">{{ $pers }}%</span>
+                                <span class="text-xs font-semibold text-content-muted w-12 text-right">{{ $pers }}%</span>
                             </div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <p class="py-8 text-center text-sm text-slate-500">Belum ada data sumber dana</p>
+                <p class="py-8 text-center text-sm text-content-muted">Belum ada data sumber dana</p>
             @endif
         </x-card>
     </div>
 
     {{-- Program & Kegiatan Hierarchy Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="flex items-center justify-between">
                 <h3 class="card-title">Program, Kegiatan, Sub Kegiatan & Belanja</h3>
-                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">{{ $programs->count() }} program</span>
+                <span class="text-xs font-semibold text-content-muted bg-surface-alt px-2.5 py-1 rounded-lg">{{ $programs->count() }} program</span>
             </div>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[900px]">
                 <thead>
-                    <tr class="divide-y divide-slate-100">
+                    <tr class="divide-y divide-border-light">
                         <th class="px-5 py-3 table-head w-10 text-left">No</th>
                         <th class="px-5 py-3 table-head text-left">Program / Kegiatan / Sub Kegiatan</th>
                         <th class="px-5 py-3 table-head w-32 text-left">Rekening</th>
@@ -179,21 +179,21 @@
                         <th class="px-5 py-3 table-head w-40 text-right">Realisasi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($programs as $idx => $program)
                         @php
                             $programPagu = $program->kegiatans->sum(fn ($k) => $k->subKegiatans->sum(fn ($s) => $s->belanjas->sum('pagu')));
                             $programRealisasi = $program->kegiatans->sum(fn ($k) => $k->subKegiatans->sum(fn ($s) => $s->belanjas->sum('realisasi')));
                         @endphp
-                        <tr class="table-row bg-slate-50/70">
-                            <td class="px-5 py-3.5 text-slate-400">{{ $idx + 1 }}</td>
+                        <tr class="table-row bg-surface/70">
+                            <td class="px-5 py-3.5 text-content-muted">{{ $idx + 1 }}</td>
                             <td colspan="5" class="px-5 py-3.5">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-xs font-mono font-semibold text-primary">{{ $program->kode_program }}</span>
-                                        <span class="text-sm font-semibold text-slate-800 ml-2">{{ $program->nama_program }}</span>
+                                        <span class="text-sm font-semibold text-content ml-2">{{ $program->nama_program }}</span>
                                     </div>
-                                    <span class="text-xs font-semibold text-slate-500">Rp {{ number_format($programPagu / 1000000000, 1, ',', '.') }} M</span>
+                                    <span class="text-xs font-semibold text-content-muted">Rp {{ number_format($programPagu / 1000000000, 1, ',', '.') }} M</span>
                                 </div>
                             </td>
                         </tr>
@@ -202,15 +202,15 @@
                                 $kegiatanPagu = $kegiatan->subKegiatans->sum(fn ($s) => $s->belanjas->sum('pagu'));
                                 $kegiatanRealisasi = $kegiatan->subKegiatans->sum(fn ($s) => $s->belanjas->sum('realisasi'));
                             @endphp
-                            <tr class="table-row bg-white">
+                            <tr class="table-row bg-card">
                                 <td></td>
                                 <td colspan="5" class="px-5 py-3">
                                     <div class="flex items-center justify-between pl-5">
                                         <div>
-                                            <span class="text-xs font-mono text-slate-500">{{ $kegiatan->kode_kegiatan }}</span>
-                                            <span class="text-sm font-medium text-slate-800 ml-2">{{ $kegiatan->nama_kegiatan }}</span>
+                                            <span class="text-xs font-mono text-content-muted">{{ $kegiatan->kode_kegiatan }}</span>
+                                            <span class="text-sm font-medium text-content ml-2">{{ $kegiatan->nama_kegiatan }}</span>
                                         </div>
-                                        <span class="text-xs font-semibold text-slate-500">Rp {{ number_format($kegiatanPagu / 1000000000, 1, ',', '.') }} M</span>
+                                        <span class="text-xs font-semibold text-content-muted">Rp {{ number_format($kegiatanPagu / 1000000000, 1, ',', '.') }} M</span>
                                     </div>
                                 </td>
                             </tr>
@@ -218,56 +218,56 @@
                                 <tr class="table-row">
                                     <td></td>
                                     <td class="px-5 py-2.5 pl-14">
-                                        <span class="text-xs font-mono text-slate-400">{{ $sub->kode_sub_kegiatan }}</span>
-                                        <span class="text-sm text-slate-600 ml-2">{{ $sub->nama_sub_kegiatan }}</span>
+                                        <span class="text-xs font-mono text-content-muted">{{ $sub->kode_sub_kegiatan }}</span>
+                                        <span class="text-sm text-content-secondary ml-2">{{ $sub->nama_sub_kegiatan }}</span>
                                     </td>
                                     <td class="px-5 py-2.5">
-                                        <span class="text-xs text-slate-400">{{ $sub->belanjas->first()?->rekening?->nama ?? '-' }}</span>
+                                        <span class="text-xs text-content-muted">{{ $sub->belanjas->first()?->rekening?->nama ?? '-' }}</span>
                                     </td>
                                     <td class="px-5 py-2.5">
-                                        <span class="text-xs text-slate-400">{{ $sub->belanjas->first()?->sumberDana?->nama_sumber_dana ?? '-' }}</span>
+                                        <span class="text-xs text-content-muted">{{ $sub->belanjas->first()?->sumberDana?->nama_sumber_dana ?? '-' }}</span>
                                     </td>
                                     <td class="px-5 py-2.5 text-right">
-                                        <span class="text-xs font-medium text-slate-500">Rp {{ number_format($sub->belanjas->sum('pagu'), 0, ',', '.') }}</span>
+                                        <span class="text-xs font-medium text-content-muted">Rp {{ number_format($sub->belanjas->sum('pagu'), 0, ',', '.') }}</span>
                                     </td>
                                     <td class="px-5 py-2.5 text-right">
-                                        <span class="text-xs font-medium text-slate-500">Rp {{ number_format($sub->belanjas->sum('realisasi'), 0, ',', '.') }}</span>
+                                        <span class="text-xs font-medium text-content-muted">Rp {{ number_format($sub->belanjas->sum('realisasi'), 0, ',', '.') }}</span>
                                     </td>
                                 </tr>
                                 @forelse($sub->belanjas as $belanja)
                                     <tr class="table-row hover:bg-primary/[0.03]">
                                         <td></td>
                                         <td class="px-5 py-1.5 pl-[4.75rem]">
-                                            <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
-                                                <x-heroicon-o-chevron-right class="w-3 h-3 text-slate-300"/>
-                                                <span class="font-mono font-medium text-slate-500">{{ $belanja->rekening?->kode ?? '-' }}</span>
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-content-secondary">
+                                                <x-heroicon-o-chevron-right class="w-3 h-3 text-content-muted"/>
+                                                <span class="font-mono font-medium text-content-muted">{{ $belanja->rekening?->kode ?? '-' }}</span>
                                                 <span class="truncate max-w-[240px]">{{ $belanja->rekening?->nama ?? 'Belanja' }}</span>
                                                 @if((float) $belanja->dana_di_commit > 0)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/70 whitespace-nowrap">Commit</span>
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30/70 whitespace-nowrap">Commit</span>
                                                 @endif
                                             </span>
                                         </td>
                                         <td class="px-5 py-1.5">
-                                            <span class="text-xs text-slate-500">{{ $belanja->rekening?->nama ?? '-' }}</span>
+                                            <span class="text-xs text-content-muted">{{ $belanja->rekening?->nama ?? '-' }}</span>
                                         </td>
                                         <td class="px-5 py-1.5">
-                                            <span class="text-xs text-slate-500">{{ $belanja->sumberDana?->nama_sumber_dana ?? '-' }}</span>
+                                            <span class="text-xs text-content-muted">{{ $belanja->sumberDana?->nama_sumber_dana ?? '-' }}</span>
                                         </td>
                                         <td class="px-5 py-1.5 text-right">
-                                            <span class="text-xs font-medium text-slate-500 tabular-nums">Rp {{ number_format((float) $belanja->pagu, 0, ',', '.') }}</span>
+                                            <span class="text-xs font-medium text-content-muted tabular-nums">Rp {{ number_format((float) $belanja->pagu, 0, ',', '.') }}</span>
                                         </td>
                                         <td class="px-5 py-1.5 text-right">
-                                            <span class="text-xs font-medium text-emerald-600 tabular-nums">Rp {{ number_format((float) $belanja->realisasi, 0, ',', '.') }}</span>
+                                            <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">Rp {{ number_format((float) $belanja->realisasi, 0, ',', '.') }}</span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr class="table-row">
-                                        <td colspan="6" class="px-5 py-1 pl-[4.75rem] text-xs text-slate-400">Tidak ada belanja pada sub kegiatan ini</td>
+                                        <td colspan="6" class="px-5 py-1 pl-[4.75rem] text-xs text-content-muted">Tidak ada belanja pada sub kegiatan ini</td>
                                     </tr>
                                 @endforelse
                             @empty
                                 <tr class="table-row">
-                                    <td colspan="6" class="px-5 py-2.5 pl-16 text-xs text-slate-400">Tidak ada sub kegiatan</td>
+                                    <td colspan="6" class="px-5 py-2.5 pl-16 text-xs text-content-muted">Tidak ada sub kegiatan</td>
                                 </tr>
                             @endforelse
                         @endforeach

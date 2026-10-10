@@ -6,9 +6,31 @@
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Tambah Program
                 </a>
+                <a href="{{ route('program-kegiatan.import.template') }}" class="btn-secondary">
+                    <x-heroicon-o-arrow-down-tray class="w-4 h-4"/>
+                    Template
+                </a>
+                <button type="button" @click="$dispatch('open-modal', 'import-program-kegiatan')" class="btn-secondary">
+                    <x-heroicon-o-arrow-up-tray class="w-4 h-4"/>
+                    Impor
+                </button>
             </x-slot>
         </x-page-header>
     </x-slot>
+
+    @if(session('success'))
+        <x-alert type="success" :dismissible="true">{{ session('success') }}</x-alert>
+    @endif
+
+    @if(session('import_errors'))
+        <x-alert type="error" :dismissible="true" title="Impor gagal">
+            <ul class="list-disc list-inside space-y-1 max-h-60 overflow-y-auto">
+                @foreach(session('import_errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </x-alert>
+    @endif
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
@@ -36,9 +58,9 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="relative flex-1 lg:flex-none">
-                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                <x-heroicon-o-magnifying-glass class="w-4 h-4 text-content-muted absolute left-3 top-1/2 -translate-y-1/2"/>
                 <input type="text" placeholder="Cari program atau kegiatan..." class="input pl-9 lg:!w-72"/>
             </div>
         </div>
@@ -46,7 +68,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="divide-y divide-slate-100">
+                    <tr class="divide-y divide-border-light">
                         <th class="px-5 py-3 table-head w-14 text-left">No</th>
                         <th class="px-5 py-3 table-head text-left">Program / Kegiatan</th>
                         <th class="px-5 py-3 table-head w-[150px] text-left">OPD</th>
@@ -55,26 +77,26 @@
                         <th class="px-5 py-3 table-head w-[90px] text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($kegiatans->groupBy('program_id')->take(20) as $programId => $group)
                         @php($program = $programs->firstWhere('id', $programId))
-                        <tr class="bg-slate-50/80">
+                        <tr class="bg-surface/80">
                             <td class="px-5 py-3"></td>
                             <td colspan="5" class="px-5 py-3">
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <span class="text-xs font-mono font-bold text-primary whitespace-nowrap">{{ $program?->kode_program }}</span>
-                                        <span class="text-sm font-semibold text-slate-800 truncate">{{ $program?->nama_program }}</span>
+                                        <span class="text-sm font-semibold text-content truncate">{{ $program?->nama_program }}</span>
                                         <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary whitespace-nowrap">{{ $group->count() }} kegiatan</span>
                                     </div>
                                     <div class="flex items-center justify-center gap-1 shrink-0">
-                                        <a href="{{ route('program-kegiatan.edit', $program) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit program">
+                                        <a href="{{ route('program-kegiatan.edit', $program) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit program">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                         <form method="POST" action="{{ route('program-kegiatan.destroy', $program) }}" x-data @submit.prevent="if(confirm('Yakin ingin menghapus program ini beserta seluruh kegiatannya?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" title="Hapus program" class="icon-btn hover:text-red-600 hover:bg-red-50">
+                                            <button type="submit" title="Hapus program" class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -84,30 +106,30 @@
                         </tr>
                         @foreach($group->take(50) as $idx => $kegiatan)
                             <tr class="table-row">
-                                <td class="px-5 py-3.5 text-slate-400">{{ $idx + 1 }}</td>
+                                <td class="px-5 py-3.5 text-content-muted">{{ $idx + 1 }}</td>
                                 <td class="px-5 py-3.5 pl-10">
                                     <span class="text-xs font-mono font-semibold text-primary whitespace-nowrap">{{ $kegiatan->kode_kegiatan }}</span>
-                                    <p class="text-sm font-medium text-slate-800">{{ $kegiatan->nama_kegiatan }}</p>
+                                    <p class="text-sm font-medium text-content">{{ $kegiatan->nama_kegiatan }}</p>
                                     @if($kegiatan->nama_sub_kegiatan)
-                                        <p class="text-xs text-slate-400 mt-0.5 truncate max-w-[320px]">{{ $kegiatan->nama_sub_kegiatan }}</p>
+                                        <p class="text-xs text-content-muted mt-0.5 truncate max-w-[320px]">{{ $kegiatan->nama_sub_kegiatan }}</p>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <span class="text-sm text-slate-600 truncate block max-w-[180px]" title="{{ $kegiatan->opd->nama ?? '-' }}">{{ $kegiatan->opd->nama ?? '-' }}</span>
+                                    <span class="text-sm text-content-secondary truncate block max-w-[180px]" title="{{ $kegiatan->opd->nama ?? '-' }}">{{ $kegiatan->opd->nama ?? '-' }}</span>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <span class="text-xs font-medium text-slate-600 whitespace-nowrap">
+                                    <span class="text-xs font-medium text-content-secondary whitespace-nowrap">
                                         {{ $kegiatan->sumberDana?->nama_sumber_dana ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5 text-right">
-                                    <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">
+                                    <span class="text-sm font-semibold text-content-secondary whitespace-nowrap">
                                         Rp {{ number_format($kegiatan->pagu, 0, ',', '.') }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('program-kegiatan.edit', $kegiatan->program) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
+                                        <a href="{{ route('program-kegiatan.edit', $kegiatan->program) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                     </div>
@@ -131,8 +153,8 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $totalProgram }}</span> program / <span class="font-semibold text-slate-700">{{ $totalKegiatan }}</span> kegiatan</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-sm text-content-muted">Menampilkan <span class="font-semibold text-content-secondary">{{ $totalProgram }}</span> program / <span class="font-semibold text-content-secondary">{{ $totalKegiatan }}</span> kegiatan</p>
             @if(method_exists($kegiatans, 'links'))
                 <div class="text-sm">
                     {{ $kegiatans->withQueryString()->links() }}
@@ -140,4 +162,25 @@
             @endif
         </div>
     </x-card>
+
+    <x-modal name="import-program-kegiatan" max-width="md">
+        <div class="p-6">
+            <h3 class="text-base font-semibold text-content mb-1">Impor Program & Kegiatan</h3>
+            <p class="mt-1 text-xs text-content-muted mb-5">Unggah file Excel/CSV sesuai template. Satu baris per kegiatan; kode yang sama akan diperbarui.</p>
+            <form method="POST" action="{{ route('program-kegiatan.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div>
+                    <x-input-label value="File Excel/CSV"/>
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv" class="input mt-1.5" required>
+                    @error('file')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="mt-5 flex items-center justify-end gap-3">
+                    <x-secondary-button @click="$dispatch('close-modal', 'import-program-kegiatan')">Batal</x-secondary-button>
+                    <x-primary-button>Impor</x-primary-button>
+                </div>
+            </form>
+        </div>
+    </x-modal>
 </x-app-layout>

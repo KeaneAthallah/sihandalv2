@@ -28,7 +28,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="border-b border-slate-100">
+                    <tr class="border-b border-border-light">
                         <th class="px-5 py-3 table-head">Tahun</th>
                         <th class="px-5 py-3 table-head">Periode</th>
                         <th class="px-5 py-3 table-head text-center">Status</th>
@@ -36,32 +36,32 @@
                         <th class="px-5 py-3 table-head text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-border-light">
                     @forelse($tahunAnggarans as $item)
                         <tr class="table-row {{ $item->is_active ? 'bg-primary/[0.03]' : '' }}">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $item->is_active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400' }}">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $item->is_active ? 'bg-primary/10 text-primary' : 'bg-surface-alt text-content-muted' }}">
                                         <x-heroicon-o-calendar class="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-slate-800">{{ $item->tahun }}</p>
-                                        <p class="text-xs text-slate-400 mt-0.5">Tahun Anggaran</p>
+                                        <p class="font-semibold text-content">{{ $item->tahun }}</p>
+                                        <p class="text-xs text-content-muted mt-0.5">Tahun Anggaran</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-5 py-3">
-                                <p class="text-sm text-slate-600">{{ $item->tanggal_mulai->format('d M Y') }}</p>
-                                <p class="text-xs text-slate-400 mt-0.5">s/d {{ $item->tanggal_selesai->format('d M Y') }}</p>
+                                <p class="text-sm text-content-secondary">{{ $item->tanggal_mulai->format('d M Y') }}</p>
+                                <p class="text-xs text-content-muted mt-0.5">s/d {{ $item->tanggal_selesai->format('d M Y') }}</p>
                             </td>
                             <td class="px-5 py-3 text-center">
                                 @if($item->status === 'open')
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 ring-1 ring-inset ring-emerald-600/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                         Terbuka
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-surface-alt px-2.5 py-1 text-xs font-semibold text-content-secondary ring-1 ring-inset ring-slate-500/10">
                                         <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                                         Tertutup
                                     </span>
@@ -75,7 +75,7 @@
                                 @else
                                     <form method="POST" action="{{ route('tahun-anggaran.activate', $item) }}" class="inline">
                                         @csrf
-                                        <button type="submit" class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500 hover:bg-primary/10 hover:text-primary transition-colors">
+                                        <button type="submit" class="inline-flex items-center gap-1 rounded-full bg-surface-alt px-2.5 py-1 text-xs font-semibold text-content-muted hover:bg-primary/10 hover:text-primary transition-colors">
                                             Aktifkan
                                         </button>
                                     </form>
@@ -87,18 +87,18 @@
                                         @csrf
                                         @method('PUT')
                                         <input type="hidden" name="status" value="{{ $item->status === 'open' ? 'closed' : 'open' }}">
-                                        <button type="submit" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors {{ $item->status === 'open' ? 'text-red-600 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50' }}">
+                                        <button type="submit" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors {{ $item->status === 'open' ? 'text-red-600 dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10' : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 hover:dark:bg-emerald-500/10' }}">
                                             {{ $item->status === 'open' ? 'Tutup' : 'Buka' }}
                                         </button>
                                     </form>
                                     @unless($item->is_active)
-                                        <span class="text-slate-200">|</span>
+                                        <span class="text-border-strong">|</span>
                                         <form method="POST" action="{{ route('tahun-anggaran.destroy', $item) }}"
                                               x-data
                                               @submit.prevent="if(confirm('Yakin ingin menghapus tahun anggaran {{ $item->tahun }}?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+                                            <button type="submit" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-content-muted hover:bg-red-50 hover:dark:bg-red-500/10 hover:text-red-600 hover:dark:text-red-400 transition-colors">
                                                 Hapus
                                             </button>
                                         </form>
@@ -110,12 +110,12 @@
                         <tr>
                             <td colspan="5" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center gap-3">
-                                    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                                        <x-heroicon-o-calendar class="h-7 w-7 text-slate-300"/>
+                                    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-surface-alt">
+                                        <x-heroicon-o-calendar class="h-7 w-7 text-content-muted"/>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-slate-500">Belum ada tahun anggaran</p>
-                                        <p class="text-xs text-slate-400 mt-1">Klik "Tambah Tahun Anggaran" untuk membuat baru</p>
+                                        <p class="text-sm font-medium text-content-muted">Belum ada tahun anggaran</p>
+                                        <p class="text-xs text-content-muted mt-1">Klik "Tambah Tahun Anggaran" untuk membuat baru</p>
                                     </div>
                                 </div>
                             </td>
@@ -126,8 +126,8 @@
         </div>
 
         @if($tahunAnggarans->total() > 0)
-            <div class="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-semibold text-slate-700">{{ $tahunAnggarans->total() }}</span> tahun anggaran</p>
+            <div class="px-6 py-3 border-t border-border-light flex items-center justify-between">
+                <p class="text-sm text-content-muted">Menampilkan <span class="font-semibold text-content-secondary">{{ $tahunAnggarans->total() }}</span> tahun anggaran</p>
                 <div class="text-sm">
                     {{ $tahunAnggarans->withQueryString()->links() }}
                 </div>
@@ -137,7 +137,7 @@
 
     <x-modal name="add-tahun-anggaran" max-width="md">
         <div class="p-6">
-            <h3 class="text-base font-semibold text-slate-800 mb-5">Tambah Tahun Anggaran</h3>
+            <h3 class="text-base font-semibold text-content mb-5">Tambah Tahun Anggaran</h3>
             <form method="POST" action="{{ route('tahun-anggaran.store') }}">
                 @csrf
                 <div class="space-y-4">

@@ -11,51 +11,51 @@
     ];
 
     $sourceColors = [
-        'DAK' => 'bg-blue-50 text-blue-700 border-blue-200/80',
-        'DAU' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-        'DBH' => 'bg-amber-50 text-amber-700 border-amber-200/80',
-        'PAD' => 'bg-purple-50 text-purple-700 border-purple-200/80',
+        'DAK' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30/80',
+        'DAU' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30/80',
+        'DBH' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30/80',
+        'PAD' => 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200/80',
         'SILPA' => 'bg-cyan-50 text-cyan-700 border-cyan-200/80',
         'Hibah' => 'bg-pink-50 text-pink-700 border-pink-200/80',
     ];
 @endphp
 
 <x-card :padding="false">
-    <div class="px-5 py-4 border-b border-slate-100">
-        <h3 class="text-sm font-semibold text-slate-800">Daftar Permintaan Dana</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Data demo untuk referensi tampilan</p>
+    <div class="px-5 py-4 border-b border-border-light">
+        <h3 class="text-sm font-semibold text-content">Daftar Permintaan Dana</h3>
+        <p class="text-xs text-content-muted mt-0.5">Data demo untuk referensi tampilan</p>
     </div>
 
     <div class="overflow-x-auto">
         <table class="w-full text-sm min-w-[800px]">
             <thead>
-                <tr class="border-b border-slate-100">
-                    <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide w-12">No</th>
-                    <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Tanggal</th>
-                    <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Nomor</th>
-                    <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">OPD</th>
-                    <th class="text-left px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Sumber Dana</th>
-                    <th class="text-right px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Nilai</th>
-                    <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
-                    <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Prioritas</th>
-                    <th class="text-center px-5 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Aksi</th>
+                <tr class="border-b border-border-light">
+                    <th class="text-left px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide w-12">No</th>
+                    <th class="text-left px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Tanggal</th>
+                    <th class="text-left px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Nomor</th>
+                    <th class="text-left px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">OPD</th>
+                    <th class="text-left px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Sumber Dana</th>
+                    <th class="text-right px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Nilai</th>
+                    <th class="text-center px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Status</th>
+                    <th class="text-center px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Prioritas</th>
+                    <th class="text-center px-5 py-3 text-xs font-medium text-content-muted uppercase tracking-wide">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-border-light">
                 @foreach($requests as $req)
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-5 py-3 text-xs text-slate-400 font-medium">{{ $req['no'] }}</td>
-                        <td class="px-5 py-3 text-sm text-slate-600">{{ \Carbon\Carbon::parse($req['date'])->format('d M Y') }}</td>
+                    <tr class="hover:bg-surface transition-colors">
+                        <td class="px-5 py-3 text-xs text-content-muted font-medium">{{ $req['no'] }}</td>
+                        <td class="px-5 py-3 text-sm text-content-secondary">{{ \Carbon\Carbon::parse($req['date'])->format('d M Y') }}</td>
                         <td class="px-5 py-3">
                             <span class="text-sm font-mono font-semibold text-primary">{{ $req['number'] }}</span>
                         </td>
-                        <td class="px-5 py-3 text-sm text-slate-700 max-w-[180px] truncate" title="{{ $req['opd'] }}">{{ $req['opd'] }}</td>
+                        <td class="px-5 py-3 text-sm text-content-secondary max-w-[180px] truncate" title="{{ $req['opd'] }}">{{ $req['opd'] }}</td>
                         <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border {{ $sourceColors[$req['source']] ?? 'bg-slate-50 text-slate-600 border-slate-200/80' }}">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border {{ $sourceColors[$req['source']] ?? 'bg-surface text-content-secondary border-border/80' }}">
                                 {{ $req['source'] }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-sm font-semibold text-slate-800 text-right whitespace-nowrap">
+                        <td class="px-5 py-3 text-sm font-semibold text-content text-right whitespace-nowrap">
                             Rp {{ number_format($req['amount'], 0, ',', '.') }}
                         </td>
                         <td class="px-5 py-3 text-center">
@@ -66,13 +66,13 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-center gap-1">
-                                <button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition" title="Lihat Detail">
+                                <button class="p-1.5 text-content-muted hover:text-primary hover:bg-primary/10 rounded-lg transition" title="Lihat Detail">
                                     <x-heroicon-o-eye class="w-4 h-4"/>
                                 </button>
-                                <button class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
+                                <button class="p-1.5 text-content-muted hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10 rounded-lg transition" title="Edit">
                                     <x-heroicon-o-pencil class="w-4 h-4"/>
                                 </button>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition" title="Lainnya">
+                                <button class="p-1.5 text-content-muted hover:text-content-secondary hover:bg-surface-alt rounded-lg transition" title="Lainnya">
                                     <x-heroicon-o-ellipsis-vertical class="w-4 h-4"/>
                                 </button>
                             </div>
@@ -83,14 +83,14 @@
         </table>
     </div>
 
-    <div class="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
-        <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">1-8</span> dari <span class="font-medium text-slate-700">24</span> permintaan</p>
+    <div class="px-5 py-4 border-t border-border-light flex items-center justify-between">
+        <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">1-8</span> dari <span class="font-medium text-content-secondary">24</span> permintaan</p>
         <div class="flex items-center gap-1">
-            <button class="px-3 py-1.5 text-sm text-slate-400 bg-slate-50 rounded-lg cursor-not-allowed">Sebelumnya</button>
+            <button class="px-3 py-1.5 text-sm text-content-muted bg-surface rounded-lg cursor-not-allowed">Sebelumnya</button>
             <button class="px-3 py-1.5 text-sm text-white bg-primary rounded-lg font-medium shadow-sm">1</button>
-            <button class="px-3 py-1.5 text-sm text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition">2</button>
-            <button class="px-3 py-1.5 text-sm text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition">3</button>
-            <button class="px-3 py-1.5 text-sm text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition">Selanjutnya</button>
+            <button class="px-3 py-1.5 text-sm text-content-secondary bg-surface rounded-lg hover:bg-surface-alt transition">2</button>
+            <button class="px-3 py-1.5 text-sm text-content-secondary bg-surface rounded-lg hover:bg-surface-alt transition">3</button>
+            <button class="px-3 py-1.5 text-sm text-content-secondary bg-surface rounded-lg hover:bg-surface-alt transition">Selanjutnya</button>
         </div>
     </div>
 </x-card>

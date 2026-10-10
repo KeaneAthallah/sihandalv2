@@ -25,7 +25,7 @@
                         </div>
                         <div>
                             <x-input-label for="tipe" value="Tipe Rekening" />
-                            <select name="tipe" id="tipe" x-model="tipe" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <select name="tipe" id="tipe" x-model="tipe" required class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih tipe...</option>
                                 <option value="kas">Kas</option>
                                 <option value="non-kas">Non-Kas</option>
@@ -42,10 +42,10 @@
                         <x-input-error :messages="$errors->get('nama')" class="mt-1" />
                     </div>
 
-                    <div x-show="tipe" x-cloak class="rounded-lg bg-slate-50 border border-slate-200 p-4">
+                    <div x-show="tipe" x-cloak class="rounded-lg bg-surface border border-border p-4">
                         <x-input-label for="parent_id" value="Rekening Induk (Opsional)" />
-                        <p class="mt-1 text-xs text-slate-400">Pilih rekening induk untuk menjadikan rekening ini sebagai rekening detail (sub rekening). Kosongkan untuk mengembalikannya menjadi rekening utama. Induk harus bertipe sama.</p>
-                        <select name="parent_id" id="parent_id" x-model="parentId" class="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                        <p class="mt-1 text-xs text-content-muted">Pilih rekening induk untuk menjadikan rekening ini sebagai rekening detail (sub rekening). Kosongkan untuk mengembalikannya menjadi rekening utama. Induk harus bertipe sama.</p>
+                        <select name="parent_id" id="parent_id" x-model="parentId" class="mt-2 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                             <option value="">Tanpa Induk (Rekening Utama)</option>
                             <template x-for="r in indukOptions" :key="r.id">
                                 <option :value="r.id" x-text="r.kode + ' - ' + r.nama"></option>

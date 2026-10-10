@@ -11,12 +11,12 @@
     </x-slot>
 
     {{-- Report Header --}}
-    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-6">
+    <div class="bg-card rounded-xl border border-border mb-6 p-6">
         <div class="text-center mb-4">
-            <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Laporan Realisasi Pengeluaran</h2>
-            <p class="text-sm text-slate-500 mt-1">Rekapitulasi pengeluaran dan realisasi anggaran per OPD</p>
+            <h2 class="text-lg font-bold text-content uppercase tracking-wide">Laporan Realisasi Pengeluaran</h2>
+            <p class="text-sm text-content-muted mt-1">Rekapitulasi pengeluaran dan realisasi anggaran per OPD</p>
         </div>
-        <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+        <div class="flex items-center justify-center gap-6 text-xs text-content-muted">
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-calendar class="w-3.5 h-3.5"/>
                 Periode: {{ now()->translatedFormat('F Y') }}
@@ -48,13 +48,13 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="card-title">Detail Laporan Pengeluaran</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Realisasi pengeluaran per OPD dan kegiatan</p>
+                    <p class="text-xs text-content-muted mt-0.5">Realisasi pengeluaran per OPD dan kegiatan</p>
                 </div>
-                <div class="flex items-center gap-3 text-xs text-slate-500">
+                <div class="flex items-center gap-3 text-xs text-content-muted">
                     <span class="flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ≥95%
                     </span>
@@ -84,17 +84,17 @@
                         <th class="px-5 py-3 table-head text-right w-40">Jumlah (Rp)</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($pengeluarans as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->permintaanDana?->nomor_permintaan ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600">{{ $item->keperluan ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->no_sp2d ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-center text-content-muted font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-content">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->permintaanDana?->nomor_permintaan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary">{{ $item->kegiatan?->nama_kegiatan ?? $item->nama_kegiatan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary">{{ $item->keperluan ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->no_sp2d ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-right font-semibold text-content font-mono text-xs">
                                 Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
                         </tr>
@@ -113,14 +113,14 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $pengeluarans->total() }}</span> data pengeluaran</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-xs text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $pengeluarans->total() }}</span> data pengeluaran</p>
             @if(method_exists($pengeluarans, 'links'))
                 <div class="text-sm">
                     {{ $pengeluarans->withQueryString()->links() }}
                 </div>
             @endif
-            <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
+            <p class="text-xs text-content-muted">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>
 </x-app-layout>

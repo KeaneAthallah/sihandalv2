@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ImportsMasterData;
+use App\Http\Requests\ImportMasterDataRequest;
 use App\Http\Requests\StoreUptRequest;
 use App\Http\Requests\UpdateUptRequest;
+use App\Imports\Definitions\UptImportDefinition;
 use App\Models\Upt;
 use Illuminate\Http\Request;
 
 class UptController extends Controller
 {
+    use ImportsMasterData;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -63,5 +68,15 @@ class UptController extends Controller
         $upt->delete();
 
         return back()->with('success', 'UPT berhasil dihapus.');
+    }
+
+    public function template()
+    {
+        return $this->templateMaster(new UptImportDefinition);
+    }
+
+    public function import(ImportMasterDataRequest $request)
+    {
+        return $this->importMaster($request, new UptImportDefinition);
     }
 }

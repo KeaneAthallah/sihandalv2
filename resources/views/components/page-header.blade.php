@@ -11,13 +11,13 @@
         <div class="min-w-0">
             <h1 class="page-heading">{{ $title }}</h1>
             @if(count($breadcrumbs) > 0)
-                <nav class="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400" aria-label="Breadcrumb">
+                <nav class="flex items-center gap-1.5 mt-1.5 text-xs text-content-muted" aria-label="Breadcrumb">
                     @foreach($breadcrumbs as $index => $crumb)
                         @if(!$loop->first)
                             <x-heroicon-o-chevron-right class="w-3 h-3"/>
                         @endif
                         @if($loop->last)
-                            <span class="text-slate-600 font-medium">{{ $crumb }}</span>
+                            <span class="text-content-secondary font-medium">{{ $crumb }}</span>
                         @else
                             <span>{{ $crumb }}</span>
                         @endif

@@ -21,7 +21,7 @@
                             <x-input-error :messages="$errors->get('nama_program')" class="mt-1" />
                         </div>
                     </div>
-                    <p class="text-xs text-slate-400">Setelah program dibuat, kegiatan dapat ditambahkan dari halaman edit program.</p>
+                    <p class="text-xs text-content-muted">Setelah program dibuat, kegiatan dapat ditambahkan dari halaman edit program.</p>
                 </div>
             </x-card>
 

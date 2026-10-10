@@ -28,7 +28,7 @@
     </div>
 
     <x-card :padding="false">
-        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-border-light">
             <h3 class="card-title">Detail Posisi Kas</h3>
         </div>
 
@@ -36,7 +36,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-sm min-w-[800px]">
                     <thead>
-                        <tr class="border-b border-slate-100">
+                        <tr class="border-b border-border-light">
                             <th class="text-left px-5 py-3 table-head w-12">No</th>
                             <th class="text-left px-5 py-3 table-head w-[110px]">Tanggal</th>
                             <th class="text-left px-5 py-3 table-head">OPD</th>
@@ -46,26 +46,26 @@
                             <th class="text-center px-5 py-3 table-head w-[80px]">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border-light">
                         @foreach($posisiKas as $idx => $item)
                             <tr class="table-row">
-                                <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
-                                <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                                <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
-                                <td class="px-5 py-3.5 text-slate-600 max-w-[220px] truncate">{{ $item->nama_rekening }}</td>
-                                <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->nomor_rekening ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-content-muted font-medium tabular-nums">{{ $idx + 1 }}</td>
+                                <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-content-secondary font-medium max-w-[200px] truncate">{{ $item->opd->nama ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-content-secondary max-w-[220px] truncate">{{ $item->nama_rekening }}</td>
+                                <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->nomor_rekening ?? '-' }}</td>
                                 <td class="px-5 py-3.5 text-right whitespace-nowrap">
-                                    <span class="font-bold tabular-nums text-slate-800">Rp {{ number_format($item->saldo / 1000000000, 1, ',', '.') }} M</span>
+                                    <span class="font-bold tabular-nums text-content">Rp {{ number_format($item->saldo / 1000000000, 1, ',', '.') }} M</span>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('posisi-kas.edit', $item) }}" class="icon-btn hover:text-amber-600 hover:bg-amber-50" title="Edit">
+                                        <a href="{{ route('posisi-kas.edit', $item) }}" class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10" title="Edit">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                         <form method="POST" action="{{ route('posisi-kas.destroy', $item) }}" x-data @submit.prevent="if(confirm('Yakin ingin menghapus data posisi kas ini?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" title="Hapus" class="icon-btn hover:text-red-600 hover:bg-red-50">
+                                            <button type="submit" title="Hapus" class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -77,8 +77,8 @@
                 </table>
             </div>
 
-            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $posisiKas->total() }}</span> data posisi kas</p>
+            <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+                <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $posisiKas->total() }}</span> data posisi kas</p>
                 @if(method_exists($posisiKas, 'links'))
                     <div class="text-sm">
                         {{ $posisiKas->withQueryString()->links() }}

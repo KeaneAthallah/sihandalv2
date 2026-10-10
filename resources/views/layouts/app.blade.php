@@ -9,9 +9,11 @@
     <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <title>{{ $title ?? 'Sihandal' }} - Sistem Informasi Keuangan Daerah</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700">
+    @include('layouts.theme-init')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-surface text-slate-800">
+<body class="font-sans antialiased bg-surface text-content">
     {{-- Global toast notifications --}}
     <div
         x-data
@@ -27,10 +29,10 @@
                 x-transition:enter="animate-toast-enter"
                 x-transition:leave="animate-toast-exit"
                 :class="{
-                    'border-emerald-200 bg-emerald-50 text-emerald-800': toast.type === 'success',
-                    'border-red-200 bg-red-50 text-red-800': toast.type === 'error',
-                    'border-amber-200 bg-amber-50 text-amber-800': toast.type === 'warning',
-                    'border-slate-200 bg-white text-slate-700': toast.type === 'info'
+                    'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300': toast.type === 'success',
+                    'border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300': toast.type === 'error',
+                    'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300': toast.type === 'warning',
+                    'border-border bg-card text-content-secondary': toast.type === 'info'
                 }"
                 class="pointer-events-auto w-full max-w-sm rounded-xl border px-4 py-3 shadow-lg backdrop-blur-sm"
             >
@@ -45,7 +47,7 @@
                         <svg class="h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
                     </template>
                     <template x-if="toast.type === 'info'">
-                        <svg class="h-5 w-5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                        <svg class="h-5 w-5 shrink-0 text-content-muted" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                     </template>
                     <p class="text-sm font-medium" x-text="toast.message"></p>
                 </div>
@@ -68,7 +70,7 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             @click="mobileOpen = false"
-            class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+            class="fixed inset-0 z-40 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm lg:hidden"
             style="display: none;"
         ></div>
 
@@ -84,7 +86,7 @@
                     {{ $slot }}
                 </div>
             </main>
-            <footer class="border-t border-slate-200/80 px-4 lg:px-6 py-4 text-center text-xs text-slate-400 print:hidden">
+            <footer class="border-t border-border px-4 lg:px-6 py-4 text-center text-xs text-content-muted print:hidden">
                 © {{ date('Y') }} Sihandal — Sistem Informasi Keuangan Daerah
             </footer>
         </div>

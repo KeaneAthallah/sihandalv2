@@ -11,12 +11,12 @@
     </x-slot>
 
     {{-- Report Header --}}
-    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-6">
+    <div class="bg-card rounded-xl border border-border mb-6 p-6">
         <div class="text-center mb-4">
-            <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Laporan Realisasi Penerimaan</h2>
-            <p class="text-sm text-slate-500 mt-1">Rekapitulasi target dan realisasi penerimaan daerah</p>
+            <h2 class="text-lg font-bold text-content uppercase tracking-wide">Laporan Realisasi Penerimaan</h2>
+            <p class="text-sm text-content-muted mt-1">Rekapitulasi target dan realisasi penerimaan daerah</p>
         </div>
-        <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+        <div class="flex items-center justify-center gap-6 text-xs text-content-muted">
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-calendar class="w-3.5 h-3.5"/>
                 Periode: {{ now()->translatedFormat('F Y') }}
@@ -58,13 +58,13 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="card-title">Detail Laporan Penerimaan</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Rekapitulasi target dan realisasi penerimaan per OPD</p>
+                    <p class="text-xs text-content-muted mt-0.5">Rekapitulasi target dan realisasi penerimaan per OPD</p>
                 </div>
-                <div class="flex items-center gap-3 text-xs text-slate-500">
+                <div class="flex items-center gap-3 text-xs text-content-muted">
                     <span class="flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ≥100%
                     </span>
@@ -94,7 +94,7 @@
                         <th class="px-5 py-3 table-head text-right w-36">Selisih (Rp)</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($penerimaans as $idx => $item)
                         @php
                             $selisih = $item->realisasi - $item->target;
@@ -112,18 +112,18 @@
                             };
                         @endphp
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
+                            <td class="px-5 py-3.5 text-center text-content-muted font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-content">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-100">
                                     {{ $item->rekening?->nama ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right text-content-secondary font-mono text-xs">
                                 Rp {{ number_format($item->target / 1000000000, 1, ',', '.') }} M
                             </td>
-                            <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right font-semibold text-content font-mono text-xs">
                                 Rp {{ number_format($item->realisasi / 1000000000, 1, ',', '.') }} M
                             </td>
                             <td class="px-5 py-3.5">
@@ -131,10 +131,10 @@
                                     <div class="flex-1 {{ $barTrackColor }} rounded-full h-2 min-w-[60px] max-w-[100px]">
                                         <div class="{{ $barColor }} h-2 rounded-full transition-all duration-300" style="width: {{ min($item->persentase, 100) }}%"></div>
                                     </div>
-                                    <span class="text-xs font-bold text-slate-600 w-11 text-right tabular-nums">{{ $item->persentase }}%</span>
+                                    <span class="text-xs font-bold text-content-secondary w-11 text-right tabular-nums">{{ $item->persentase }}%</span>
                                 </div>
                             </td>
-                            <td class="px-5 py-3.5 text-right font-semibold font-mono text-xs {{ $selisih >= 0 ? 'text-emerald-600' : 'text-red-500' }}">
+                            <td class="px-5 py-3.5 text-right font-semibold font-mono text-xs {{ $selisih >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500' }}">
                                 {{ $selisih >= 0 ? '+' : '' }}Rp {{ number_format($selisih / 1000000000, 1, ',', '.') }} M
                             </td>
                         </tr>
@@ -153,14 +153,14 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $penerimaans->total() }}</span> laporan penerimaan</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-xs text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $penerimaans->total() }}</span> laporan penerimaan</p>
             @if(method_exists($penerimaans, 'links'))
                 <div class="text-sm">
                     {{ $penerimaans->withQueryString()->links() }}
                 </div>
             @endif
-            <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
+            <p class="text-xs text-content-muted">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>
 </x-app-layout>

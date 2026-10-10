@@ -37,7 +37,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label value="Role" />
-                            <select name="role" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
+                            <select name="role" class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition" required>
                                 <option value="opd" {{ old('role', 'opd') == 'opd' ? 'selected' : '' }}>OPD</option>
                                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
@@ -48,7 +48,7 @@
 
                         <div>
                             <x-input-label value="OPD" />
-                            <select name="opd_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                            <select name="opd_id" class="w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                                 <option value="">Pilih OPD</option>
                                 @foreach($opds as $opd)
                                     <option value="{{ $opd->id }}" {{ old('opd_id') == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -60,8 +60,8 @@
                         </div>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100">
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Keamanan</p>
+                    <div class="pt-2 border-t border-border-light">
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wide mb-4">Keamanan</p>
                     </div>
 
                     <div>

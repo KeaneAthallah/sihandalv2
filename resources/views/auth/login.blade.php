@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-900">Masuk</h2>
-        <p class="text-sm text-slate-500 mt-1">Masuk ke akun Sihandal Anda</p>
+        <h2 class="text-2xl font-bold text-content">Masuk</h2>
+        <p class="text-sm text-content-muted mt-1">Masuk ke akun Sihandal Anda</p>
     </div>
 
     <x-auth-session-status class="mb-6" :status="session('status')" />
@@ -10,9 +10,9 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium text-slate-700">{{ __('Email') }}</label>
+            <label for="email" class="block text-sm font-medium text-content-secondary">{{ __('Email') }}</label>
             <input id="email"
-                class="mt-1.5 block w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                class="mt-1.5 block w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 type="email"
                 name="email"
                 value="{{ old('email') }}"
@@ -24,9 +24,9 @@
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium text-slate-700">{{ __('Password') }}</label>
+            <label for="password" class="block text-sm font-medium text-content-secondary">{{ __('Password') }}</label>
             <input id="password"
-                class="mt-1.5 block w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                class="mt-1.5 block w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 type="password"
                 name="password"
                 required
@@ -38,9 +38,9 @@
         <div class="flex items-center justify-between">
             <label for="remember_me" class="inline-flex items-center gap-2 cursor-pointer">
                 <input id="remember_me" type="checkbox"
-                    class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                    class="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary/20"
                     name="remember">
-                <span class="text-sm text-slate-500">{{ __('Ingat saya') }}</span>
+                <span class="text-sm text-content-muted">{{ __('Ingat saya') }}</span>
             </label>
 
             @if (Route::has('password.request'))

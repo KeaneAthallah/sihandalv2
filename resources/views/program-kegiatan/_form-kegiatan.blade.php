@@ -2,7 +2,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
             <x-input-label for="{{ $idPrefix }}_opd_id" value="OPD" />
-            <select name="opd_id" id="{{ $idPrefix }}_opd_id" required class="mt-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <select name="opd_id" id="{{ $idPrefix }}_opd_id" required class="mt-1.5 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                 <option value="">Pilih OPD</option>
                 @foreach($opds as $opd)
                     <option value="{{ $opd->id }}" {{ old('opd_id', $kegiatan?->opd_id) == $opd->id ? 'selected' : '' }}>{{ $opd->nama }}</option>
@@ -12,7 +12,7 @@
         </div>
         <div>
             <x-input-label for="{{ $idPrefix }}_sumber_dana_id" value="Sumber Dana" />
-            <select name="sumber_dana_id" id="{{ $idPrefix }}_sumber_dana_id" class="mt-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+            <select name="sumber_dana_id" id="{{ $idPrefix }}_sumber_dana_id" class="mt-1.5 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
                 <option value="">Pilih Sumber Dana</option>
                 @foreach($sumberDanas as $sd)
                     <option value="{{ $sd->id }}" {{ old('sumber_dana_id', $kegiatan?->sumber_dana_id) == $sd->id ? 'selected' : '' }}>{{ $sd->nama_sumber_dana }}</option>
@@ -49,7 +49,7 @@
 
     <div>
         <x-input-label for="{{ $idPrefix }}_rekening_id" value="Rekening" />
-        <select name="rekening_id" id="{{ $idPrefix }}_rekening_id" class="mt-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+        <select name="rekening_id" id="{{ $idPrefix }}_rekening_id" class="mt-1.5 w-full px-3 py-2 bg-card border border-border-strong rounded-lg text-sm text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
             <option value="">Pilih Rekening (Opsional)</option>
             @foreach($rekenings as $rekening)
                 <option value="{{ $rekening->id }}" {{ old('rekening_id', $kegiatan?->rekening_id) == $rekening->id ? 'selected' : '' }}>{{ $rekening->kode . ' - ' . $rekening->nama }}</option>
@@ -67,7 +67,7 @@
         <div>
             <x-input-label for="{{ $idPrefix }}_realisasi" value="Realisasi" />
             <x-text-input type="number" name="realisasi" id="{{ $idPrefix }}_realisasi" value="{{ old('realisasi', $kegiatan?->realisasi ?? 0) }}" placeholder="0" step="0.01" min="0" class="mt-1.5" />
-            <p class="text-xs text-slate-400 mt-1.5">Dapat dikosongkan atau diisi nanti.</p>
+            <p class="text-xs text-content-muted mt-1.5">Dapat dikosongkan atau diisi nanti.</p>
             <x-input-error :messages="$errors->get('realisasi')" class="mt-1" />
         </div>
     </div>

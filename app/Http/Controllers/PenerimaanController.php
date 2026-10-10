@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ImportsMasterData;
+use App\Http\Requests\ImportMasterDataRequest;
 use App\Http\Requests\StorePenerimaanRequest;
 use App\Http\Requests\UpdatePenerimaanRequest;
+use App\Imports\Definitions\PenerimaanImportDefinition;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use App\Models\TahunAnggaran;
@@ -12,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class PenerimaanController extends Controller
 {
+    use ImportsMasterData;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -157,5 +162,15 @@ class PenerimaanController extends Controller
                 'label' => $r->kode.' - '.$r->nama,
             ])->values())
             ->all();
+    }
+
+    public function template()
+    {
+        return $this->templateMaster(new PenerimaanImportDefinition);
+    }
+
+    public function import(ImportMasterDataRequest $request)
+    {
+        return $this->importMaster($request, new PenerimaanImportDefinition);
     }
 }

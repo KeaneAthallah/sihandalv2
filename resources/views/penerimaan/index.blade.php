@@ -6,6 +6,14 @@
                     <x-heroicon-o-plus class="w-4 h-4"/>
                     Penerimaan Baru
                 </a>
+                <a href="{{ route('master-data.penerimaan.import.template') }}" class="btn-secondary">
+                    <x-heroicon-o-arrow-down-tray class="w-4 h-4"/>
+                    Template
+                </a>
+                <button type="button" @click="$dispatch('open-modal', 'import-penerimaan')" class="btn-secondary">
+                    <x-heroicon-o-arrow-up-tray class="w-4 h-4"/>
+                    Impor
+                </button>
             </x-slot>
         </x-page-header>
     </x-slot>
@@ -17,6 +25,16 @@
         <x-alert type="error">
             <ul class="list-disc list-inside space-y-1">
                 @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </x-alert>
+    @endif
+
+    @if(session('import_errors'))
+        <x-alert type="error" :dismissible="true" title="Impor gagal">
+            <ul class="list-disc list-inside space-y-1 max-h-60 overflow-y-auto">
+                @foreach(session('import_errors') as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
@@ -47,13 +65,13 @@
     </div>
 
     <x-card :padding="false">
-        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-border-light">
             <div class="flex items-center gap-2">
-                <label class="text-sm text-slate-500 font-medium">Dari</label>
+                <label class="text-sm text-content-muted font-medium">Dari</label>
                 <input type="text" value="{{ request('from', '2026-01-01') }}" class="input datepicker" />
             </div>
             <div class="flex items-center gap-2">
-                <label class="text-sm text-slate-500 font-medium">Sampai</label>
+                <label class="text-sm text-content-muted font-medium">Sampai</label>
                 <input type="text" value="{{ request('to', '2026-12-31') }}" class="input datepicker" />
             </div>
             <select name="rekening_id" class="input">
@@ -71,7 +89,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="border-b border-slate-100">
+                    <tr class="border-b border-border-light">
                         <th class="text-left px-5 py-3 table-head w-[50px]">No</th>
                         <th class="text-left px-5 py-3 table-head w-[200px]">Rekening</th>
                         <th class="text-left px-5 py-3 table-head">OPD</th>
@@ -81,10 +99,10 @@
                         <th class="text-center px-5 py-3 table-head w-[100px]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($penerimaans as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-muted font-medium tabular-nums">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="space-y-1.5">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
@@ -97,25 +115,25 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-5 py-3.5 text-slate-700 font-medium max-w-[220px] truncate">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
-                            <td class="px-5 py-3.5 font-medium tabular-nums text-slate-700 text-right whitespace-nowrap">
+                            <td class="px-5 py-3.5 text-content-secondary font-medium max-w-[220px] truncate">{{ $item->opd?->nama ?? 'Provinsi' }}</td>
+                            <td class="px-5 py-3.5 font-medium tabular-nums text-content-secondary text-right whitespace-nowrap">
                                 Rp {{ number_format($item->target, 0, ',', '.') }}
                             </td>
-                            <td class="px-5 py-3.5 font-medium text-emerald-600 text-right whitespace-nowrap tabular-nums">
+                            <td class="px-5 py-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-right whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($item->realisasi, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-2.5 justify-center">
-                                    <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="w-20 bg-surface-alt rounded-full h-2 overflow-hidden">
                                         <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($item->persentase, 100) }}%"></div>
                                     </div>
-                                    <span class="text-xs font-medium text-slate-500 w-10 text-right tabular-nums">{{ $item->persentase }}%</span>
+                                    <span class="text-xs font-medium text-content-muted w-10 text-right tabular-nums">{{ $item->persentase }}%</span>
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-center gap-1">
                                     <a href="{{ route('master-data.penerimaan.edit', $item) }}" title="Edit"
-                                        class="icon-btn hover:text-amber-600 hover:bg-amber-50">
+                                        class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10">
                                         <x-heroicon-o-pencil class="w-4 h-4"/>
                                     </a>
                                     <form method="POST" action="{{ route('master-data.penerimaan.destroy', $item) }}"
@@ -123,7 +141,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus"
-                                            class="icon-btn hover:text-red-600 hover:bg-red-50">
+                                            class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10">
                                             <x-heroicon-o-trash class="w-4 h-4"/>
                                         </button>
                                     </form>
@@ -147,8 +165,8 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $penerimaans->total() }}</span> data penerimaan</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $penerimaans->total() }}</span> data penerimaan</p>
             @if(method_exists($penerimaans, 'links'))
                 <div class="text-sm">
                     {{ $penerimaans->withQueryString()->links() }}
@@ -156,4 +174,25 @@
             @endif
         </div>
     </x-card>
+
+    <x-modal name="import-penerimaan" max-width="md">
+        <div class="p-6">
+            <h3 class="text-base font-semibold text-content mb-1">Impor Penerimaan</h3>
+            <p class="mt-1 text-xs text-content-muted mb-5">Unggah file Excel/CSV sesuai template. Satu baris per OPD, rekening, dan tahun anggaran.</p>
+            <form method="POST" action="{{ route('master-data.penerimaan.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div>
+                    <x-input-label value="File Excel/CSV"/>
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv" class="input mt-1.5" required>
+                    @error('file')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="mt-5 flex items-center justify-end gap-3">
+                    <x-secondary-button @click="$dispatch('close-modal', 'import-penerimaan')">Batal</x-secondary-button>
+                    <x-primary-button>Impor</x-primary-button>
+                </div>
+            </form>
+        </div>
+    </x-modal>
 </x-app-layout>

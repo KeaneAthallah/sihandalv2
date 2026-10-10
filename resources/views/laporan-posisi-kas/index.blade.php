@@ -11,12 +11,12 @@
     </x-slot>
 
     {{-- Report Header --}}
-    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-6">
+    <div class="bg-card rounded-xl border border-border mb-6 p-6">
         <div class="text-center mb-4">
-            <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Laporan Posisi Kas</h2>
-            <p class="text-sm text-slate-500 mt-1">Rekapan saldo kas per OPD dan rekening</p>
+            <h2 class="text-lg font-bold text-content uppercase tracking-wide">Laporan Posisi Kas</h2>
+            <p class="text-sm text-content-muted mt-1">Rekapan saldo kas per OPD dan rekening</p>
         </div>
-        <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+        <div class="flex items-center justify-center gap-6 text-xs text-content-muted">
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-calendar class="w-3.5 h-3.5"/>
                 Periode: {{ now()->translatedFormat('F Y') }}
@@ -48,13 +48,13 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="card-title">Detail Laporan Posisi Kas</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Rekapan saldo kas per OPD dan rekening</p>
+                    <p class="text-xs text-content-muted mt-0.5">Rekapan saldo kas per OPD dan rekening</p>
                 </div>
-                <div class="text-xs text-slate-400 hidden sm:block">
+                <div class="text-xs text-content-muted hidden sm:block">
                     Semua nilai dalam Miliar Rupiah (M)
                 </div>
             </div>
@@ -71,15 +71,15 @@
                         <th class="px-5 py-3 table-head text-right w-36">Saldo</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($posisiKas as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-slate-600">{{ $item->nama_rekening }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->nomor_rekening ?? '-' }}</td>
-                            <td class="px-5 py-3.5 text-right font-bold text-slate-800 font-mono text-xs border-l-2 border-slate-200">
+                            <td class="px-5 py-3.5 text-center text-content-muted font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-content">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary">{{ $item->nama_rekening }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->nomor_rekening ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-right font-bold text-content font-mono text-xs border-l-2 border-border">
                                 Rp {{ number_format($item->saldo / 1000000000, 1, ',', '.') }} M
                             </td>
                         </tr>
@@ -98,14 +98,14 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $posisiKas->total() }}</span> data posisi kas</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-xs text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $posisiKas->total() }}</span> data posisi kas</p>
             @if(method_exists($posisiKas, 'links'))
                 <div class="text-sm">
                     {{ $posisiKas->withQueryString()->links() }}
                 </div>
             @endif
-            <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
+            <p class="text-xs text-content-muted">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>
 </x-app-layout>

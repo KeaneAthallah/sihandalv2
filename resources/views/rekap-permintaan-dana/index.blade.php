@@ -11,12 +11,12 @@
     </x-slot>
 
     {{-- Report Header --}}
-    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-6">
+    <div class="bg-card rounded-xl border border-border mb-6 p-6">
         <div class="text-center mb-4">
-            <h2 class="text-lg font-bold text-slate-800 uppercase tracking-wide">Rekapitulasi Permintaan Dana</h2>
-            <p class="text-sm text-slate-500 mt-1">Ringkasan seluruh permintaan dana berdasarkan status</p>
+            <h2 class="text-lg font-bold text-content uppercase tracking-wide">Rekapitulasi Permintaan Dana</h2>
+            <p class="text-sm text-content-muted mt-1">Ringkasan seluruh permintaan dana berdasarkan status</p>
         </div>
-        <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+        <div class="flex items-center justify-center gap-6 text-xs text-content-muted">
             <span class="flex items-center gap-1.5">
                 <x-heroicon-o-calendar class="w-3.5 h-3.5"/>
                 Periode: {{ now()->translatedFormat('F Y') }}
@@ -78,9 +78,9 @@
             'draft' => 'Draft',
         ];
     @endphp
-    <div class="bg-white rounded-xl border border-slate-200 mb-6 p-5">
-        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Distribusi Status Permintaan</h3>
-        <div class="w-full bg-slate-100 rounded-full h-3 flex overflow-hidden mb-4">
+    <div class="bg-card rounded-xl border border-border mb-6 p-5">
+        <h3 class="text-sm font-bold text-content uppercase tracking-wide mb-4">Distribusi Status Permintaan</h3>
+        <div class="w-full bg-surface-alt rounded-full h-3 flex overflow-hidden mb-4">
             @foreach($statusCounts as $status => $count)
                 @if($count > 0)
                     <div class="{{ $statusColors[$status] }} h-3 transition-all duration-500" style="width: {{ ($count / $total) * 100 }}%" title="{{ $statusLabels[$status] }}: {{ $count }}"></div>
@@ -92,9 +92,9 @@
                 @if($count > 0)
                     <span class="flex items-center gap-1.5">
                         <span class="w-2.5 h-2.5 rounded-full {{ $statusColors[$status] }}"></span>
-                        <span class="text-slate-600 font-medium">{{ $statusLabels[$status] }}</span>
-                        <span class="text-slate-800 font-bold">{{ $count }}</span>
-                        <span class="text-slate-400">({{ round(($count / $total) * 100, 1) }}%)</span>
+                        <span class="text-content-secondary font-medium">{{ $statusLabels[$status] }}</span>
+                        <span class="text-content font-bold">{{ $count }}</span>
+                        <span class="text-content-muted">({{ round(($count / $total) * 100, 1) }}%)</span>
                     </span>
                 @endif
             @endforeach
@@ -103,9 +103,9 @@
 
     {{-- Data Table --}}
     <x-card :padding="false">
-        <div class="px-5 py-4 border-b border-slate-100">
+        <div class="px-5 py-4 border-b border-border-light">
             <h3 class="card-title">Daftar Permintaan Dana</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Detail seluruh permintaan dana yang tercatat</p>
+            <p class="text-xs text-content-muted mt-0.5">Detail seluruh permintaan dana yang tercatat</p>
         </div>
 
         <div class="overflow-x-auto">
@@ -121,19 +121,19 @@
                         <th class="px-5 py-3 table-head text-center w-32">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($permintaanDanas as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-center text-slate-400 font-medium">{{ $idx + 1 }}</td>
-                            <td class="px-5 py-3.5 font-semibold text-slate-800">{{ $item->nomor_permintaan }}</td>
-                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
-                            <td class="px-5 py-3.5 font-medium text-slate-800">{{ $item->opd->nama ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-center text-content-muted font-medium">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 font-semibold text-content">{{ $item->nomor_permintaan }}</td>
+                            <td class="px-5 py-3.5 text-content-secondary whitespace-nowrap">{{ $item->tanggal?->format('d M Y') ?? '-' }}</td>
+                            <td class="px-5 py-3.5 font-medium text-content">{{ $item->opd->nama ?? '-' }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-100">
                                     {{ $item->sumberDana?->nama_sumber_dana ?? $item->sumber_dana ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3.5 text-right font-semibold text-slate-800 font-mono text-xs">
+                            <td class="px-5 py-3.5 text-right font-semibold text-content font-mono text-xs">
                                 Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3.5 text-center">
@@ -155,14 +155,14 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> data permintaan dana</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-xs text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $permintaanDanas->total() }}</span> data permintaan dana</p>
             @if(method_exists($permintaanDanas, 'links'))
                 <div class="text-sm">
                     {{ $permintaanDanas->withQueryString()->links() }}
                 </div>
             @endif
-            <p class="text-xs text-slate-400">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
+            <p class="text-xs text-content-muted">Dicetak: {{ now()->translatedFormat('d F Y H:i') }}</p>
         </div>
     </x-card>
 </x-app-layout>

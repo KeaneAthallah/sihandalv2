@@ -48,10 +48,10 @@
     </div>
 
     <x-card :padding="false">
-        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-border-light">
             <h3 class="card-title">Daftar Permintaan Dana</h3>
             <div class="ml-auto relative w-full sm:w-72">
-                <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
+                <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-content-muted pointer-events-none"/>
                 <input type="text" placeholder="Cari nomor, OPD, keperluan..."
                     class="input pl-9"/>
             </div>
@@ -60,7 +60,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[800px]">
                 <thead>
-                    <tr class="border-b border-slate-100">
+                    <tr class="border-b border-border-light">
                         <th class="text-left px-5 py-3 table-head w-12">No</th>
                         <th class="text-left px-5 py-3 table-head">Nomor</th>
                         <th class="text-left px-5 py-3 table-head">OPD</th>
@@ -71,29 +71,29 @@
                         <th class="text-center px-5 py-3 table-head">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border-light">
                     @forelse($permintaanDanas as $idx => $item)
                         <tr class="table-row">
-                            <td class="px-5 py-3.5 text-slate-400 font-medium tabular-nums">{{ $idx + 1 }}</td>
+                            <td class="px-5 py-3.5 text-content-muted font-medium tabular-nums">{{ $idx + 1 }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-sm font-mono font-semibold text-primary">{{ $item->nomor_permintaan }}</span>
-                                    <span class="text-xs text-slate-400">{{ $item->tanggal ? $item->tanggal->format('d M Y') : '-' }}</span>
+                                    <span class="text-xs text-content-muted">{{ $item->tanggal ? $item->tanggal->format('d M Y') : '-' }}</span>
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm text-slate-700 max-w-[180px] truncate block" title="{{ $item->opd->nama ?? '-' }}">{{ $item->opd->nama ?? '-' }}</span>
+                                <span class="text-sm text-content-secondary max-w-[180px] truncate block" title="{{ $item->opd->nama ?? '-' }}">{{ $item->opd->nama ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface text-content-secondary border border-border whitespace-nowrap">
                                     {{ $item->sumberDana?->nama_sumber_dana ?? $item->sumber_dana ?? '-' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-sm text-slate-600 max-w-[220px] truncate block" title="{{ $item->keperluan }}">{{ $item->keperluan }}</span>
+                                <span class="text-sm text-content-secondary max-w-[220px] truncate block" title="{{ $item->keperluan }}">{{ $item->keperluan }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-right">
-                                <span class="text-sm font-medium tabular-nums text-slate-700 whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
+                                <span class="text-sm font-medium tabular-nums text-content-secondary whitespace-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</span>
                             </td>
                             <td class="px-5 py-3.5 text-center">
                                 <x-status-badge :status="$item->status"/>
@@ -123,7 +123,7 @@
 
                                     @if(in_array($item->status, ['draft', 'ditolak']))
                                         <a href="{{ route('permintaan-dana.edit', $item) }}" title="Edit"
-                                           class="icon-btn hover:text-amber-600 hover:bg-amber-50">
+                                           class="icon-btn hover:text-amber-600 hover:dark:text-amber-400 hover:bg-amber-50 hover:dark:bg-amber-500/10">
                                             <x-heroicon-o-pencil class="w-4 h-4"/>
                                         </a>
                                     @endif
@@ -134,7 +134,7 @@
                                               @submit.prevent="if(confirm('Ajukan permintaan ini? Dana akan di-commit dari pagu sumber dana.')) $el.submit()">
                                             @csrf
                                             <button type="submit" title="Ajukan"
-                                                    class="icon-btn hover:text-blue-600 hover:bg-blue-50">
+                                                    class="icon-btn hover:text-blue-600 hover:dark:text-blue-400 hover:bg-blue-50 hover:dark:bg-blue-500/10">
                                                 <x-heroicon-o-paper-airplane class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -147,7 +147,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" title="Hapus"
-                                                    class="icon-btn hover:text-red-600 hover:bg-red-50">
+                                                    class="icon-btn hover:text-red-600 hover:dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/10">
                                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                             </button>
                                         </form>
@@ -172,8 +172,8 @@
             </table>
         </div>
 
-        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-sm text-slate-500">Menampilkan <span class="font-medium text-slate-700">{{ $permintaanDanas->total() }}</span> permintaan dana</p>
+        <div class="px-5 py-3 border-t border-border-light flex items-center justify-between">
+            <p class="text-sm text-content-muted">Menampilkan <span class="font-medium text-content-secondary">{{ $permintaanDanas->total() }}</span> permintaan dana</p>
             @if(method_exists($permintaanDanas, 'links'))
                 <div class="text-sm">
                     {{ $permintaanDanas->withQueryString()->links() }}
@@ -183,13 +183,13 @@
     </x-card>
 
     <x-modal name="view-permintaan-dana" maxWidth="2xl">
-        <div class="px-6 py-5 border-b border-slate-100">
+        <div class="px-6 py-5 border-b border-border-light">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold text-slate-800">Detail Permintaan Dana</h3>
-                    <p class="text-sm text-slate-400 mt-0.5" x-data x-on:open-view-permintaan.window="$el.textContent = 'Nomor: ' + ($event.detail.nomor || '')" x-init="$el.textContent = ''"></p>
+                    <h3 class="text-lg font-semibold text-content">Detail Permintaan Dana</h3>
+                    <p class="text-sm text-content-muted mt-0.5" x-data x-on:open-view-permintaan.window="$el.textContent = 'Nomor: ' + ($event.detail.nomor || '')" x-init="$el.textContent = ''"></p>
                 </div>
-                <button @click="$dispatch('close-modal', 'view-permintaan-dana')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
+                <button @click="$dispatch('close-modal', 'view-permintaan-dana')" class="p-2 text-content-muted hover:text-content-secondary hover:bg-surface-alt rounded-lg transition">
                     <x-heroicon-o-x-mark class="w-5 h-5"/>
                 </button>
             </div>
@@ -199,77 +199,77 @@
             <div class="space-y-5">
                 <div class="flex items-center gap-3 p-4 rounded-xl"
                      :class="{
-                         'bg-slate-50 border border-slate-200': viewData.status === 'draft',
-                         'bg-amber-50 border border-amber-200': viewData.status === 'menunggu',
-                         'bg-emerald-50 border border-emerald-200': viewData.status === 'disetujui',
-                         'bg-red-50 border border-red-200': viewData.status === 'ditolak',
+                         'bg-surface border border-border': viewData.status === 'draft',
+                         'bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30': viewData.status === 'menunggu',
+                         'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30': viewData.status === 'disetujui',
+                         'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30': viewData.status === 'ditolak',
                      }">
                     <div class="p-2 rounded-lg"
                          :class="{
-                             'bg-slate-200 text-slate-600': viewData.status === 'draft',
-                             'bg-amber-200 text-amber-700': viewData.status === 'menunggu',
-                             'bg-emerald-200 text-emerald-700': viewData.status === 'disetujui',
-                             'bg-red-200 text-red-700': viewData.status === 'ditolak',
+                             'bg-border text-content-secondary': viewData.status === 'draft',
+                             'bg-amber-200 text-amber-700 dark:text-amber-400': viewData.status === 'menunggu',
+                             'bg-emerald-200 text-emerald-700 dark:text-emerald-400': viewData.status === 'disetujui',
+                             'bg-red-200 text-red-700 dark:text-red-400': viewData.status === 'ditolak',
                          }">
                         <x-heroicon-o-document-text class="w-5 h-5"/>
                     </div>
                     <div>
                         <p class="text-sm font-semibold" :class="{
-                            'text-slate-700': viewData.status === 'draft',
-                            'text-amber-700': viewData.status === 'menunggu',
-                            'text-emerald-700': viewData.status === 'disetujui',
-                            'text-red-700': viewData.status === 'ditolak',
+                            'text-content-secondary': viewData.status === 'draft',
+                            'text-amber-700 dark:text-amber-400': viewData.status === 'menunggu',
+                            'text-emerald-700 dark:text-emerald-400': viewData.status === 'disetujui',
+                            'text-red-700 dark:text-red-400': viewData.status === 'ditolak',
                         }" x-text="viewData.status === 'draft' ? 'Draft' : viewData.status === 'menunggu' ? 'Menunggu Persetujuan' : viewData.status === 'disetujui' ? 'Disetujui' : 'Ditolak'"></p>
                         <p class="text-xs opacity-70" :class="{
-                            'text-slate-600': viewData.status === 'draft',
-                            'text-amber-600': viewData.status === 'menunggu',
-                            'text-emerald-600': viewData.status === 'disetujui',
-                            'text-red-600': viewData.status === 'ditolak',
+                            'text-content-secondary': viewData.status === 'draft',
+                            'text-amber-600 dark:text-amber-400': viewData.status === 'menunggu',
+                            'text-emerald-600 dark:text-emerald-400': viewData.status === 'disetujui',
+                            'text-red-600 dark:text-red-400': viewData.status === 'ditolak',
                         }">Status permintaan saat ini</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Nomor Permintaan</p>
-                        <p class="text-sm font-mono font-semibold text-slate-800" x-text="viewData.nomor"></p>
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Nomor Permintaan</p>
+                        <p class="text-sm font-mono font-semibold text-content" x-text="viewData.nomor"></p>
                     </div>
                     <div>
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Tanggal</p>
-                        <p class="text-sm text-slate-700" x-text="viewData.tanggal"></p>
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Tanggal</p>
+                        <p class="text-sm text-content-secondary" x-text="viewData.tanggal"></p>
                     </div>
                     <div>
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">OPD</p>
-                        <p class="text-sm text-slate-700" x-text="viewData.opd"></p>
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">OPD</p>
+                        <p class="text-sm text-content-secondary" x-text="viewData.opd"></p>
                     </div>
                     <div>
-                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Sumber Dana</p>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200" x-text="viewData.sumber_dana"></span>
+                        <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Sumber Dana</p>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-alt text-content-secondary border border-border" x-text="viewData.sumber_dana"></span>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-100 pt-4">
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Keperluan</p>
-                    <p class="text-sm text-slate-700" x-text="viewData.keperluan"></p>
+                <div class="border-t border-border-light pt-4">
+                    <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Keperluan</p>
+                    <p class="text-sm text-content-secondary" x-text="viewData.keperluan"></p>
                 </div>
 
                 @if(isset($item) && $item->kegiatan)
                 <div x-show="viewData.kegiatan && viewData.kegiatan !== '-'">
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Kegiatan</p>
-                    <p class="text-sm text-slate-600" x-text="viewData.kegiatan"></p>
+                    <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Kegiatan</p>
+                    <p class="text-sm text-content-secondary" x-text="viewData.kegiatan"></p>
                 </div>
                 @endif
 
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Jumlah Permintaan</p>
-                    <p class="text-2xl font-bold text-slate-800" x-text="'Rp ' + viewData.jumlah"></p>
+                <div class="p-4 bg-surface rounded-xl border border-border">
+                    <p class="text-xs font-medium text-content-muted uppercase tracking-wider mb-1">Jumlah Permintaan</p>
+                    <p class="text-2xl font-bold text-content" x-text="'Rp ' + viewData.jumlah"></p>
                 </div>
 
-                <div class="text-xs text-slate-400" x-text="'Dibuat: ' + viewData.created"></div>
+                <div class="text-xs text-content-muted" x-text="'Dibuat: ' + viewData.created"></div>
             </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-slate-100 flex justify-end">
+        <div class="px-6 py-4 border-t border-border-light flex justify-end">
             <x-secondary-button @click="$dispatch('close-modal', 'view-permintaan-dana')">Tutup</x-secondary-button>
         </div>
     </x-modal>

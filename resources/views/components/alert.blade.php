@@ -6,11 +6,11 @@
 
 @php
     $config = match ($type) {
-        'success' => ['wrapper' => 'bg-emerald-50 border-emerald-200 text-emerald-700', 'icon' => 'text-emerald-500', 'name' => 'check-circle'],
-        'error', 'danger' => ['wrapper' => 'bg-red-50 border-red-200 text-red-700', 'icon' => 'text-red-500', 'name' => 'x-circle'],
-        'warning' => ['wrapper' => 'bg-amber-50 border-amber-200 text-amber-700', 'icon' => 'text-amber-500', 'name' => 'exclamation-triangle'],
-        'info' => ['wrapper' => 'bg-blue-50 border-blue-200 text-blue-700', 'icon' => 'text-blue-500', 'name' => 'information-circle'],
-        default => ['wrapper' => 'bg-slate-50 border-slate-200 text-slate-700', 'icon' => 'text-slate-500', 'name' => 'information-circle'],
+        'success' => ['wrapper' => 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300', 'icon' => 'text-emerald-500', 'name' => 'check-circle'],
+        'error', 'danger' => ['wrapper' => 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300', 'icon' => 'text-red-500', 'name' => 'x-circle'],
+        'warning' => ['wrapper' => 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300', 'icon' => 'text-amber-500', 'name' => 'exclamation-triangle'],
+        'info' => ['wrapper' => 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300', 'icon' => 'text-blue-500', 'name' => 'information-circle'],
+        default => ['wrapper' => 'bg-surface-alt border-border text-content-secondary', 'icon' => 'text-content-muted', 'name' => 'information-circle'],
     };
 @endphp
 
